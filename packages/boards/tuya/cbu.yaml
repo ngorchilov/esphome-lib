@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-cbu
+  friendly_name: Base Board CBU
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny-beken.yaml
+
+bk72xx:
+  board: cbu

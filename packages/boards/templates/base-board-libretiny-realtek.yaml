@@ -1,0 +1,15 @@
+substitutions:
+  name: base-board-libretiny-realtek
+  friendly_name: Base Board LibreTiny (Realtek)
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny.yaml
+
+rtl87xx:
+  framework:
+    version: 0.0.0
+    source: https://github.com/prokoma/libretiny#55aacc8 # add support for ota on rtl8720cf
+
+captive_portal: !remove # incompatible with this source
+
+

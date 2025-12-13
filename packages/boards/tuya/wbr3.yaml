@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-wbr3
+  friendly_name: Base Board WBR3
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny-realtek.yaml
+
+rtl87xx:
+  board: bw15 # use this instead of generic-rtl8720cf-2mb-992k in order to enable TX0/RX0 pins

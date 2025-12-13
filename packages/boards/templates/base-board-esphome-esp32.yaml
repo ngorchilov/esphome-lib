@@ -1,0 +1,10 @@
+substitutions:
+  name: base-board-esphome-esp32
+  friendly_name: Base Board ESPHome (ESP32)
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-esphome.yaml
+
+esp32:
+  framework:
+    type: esp-idf

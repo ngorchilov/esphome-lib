@@ -1,0 +1,12 @@
+substitutions:
+  name: base-board-esphome-esp8266
+  friendly_name: Base Board ESPHome (ESP8266)
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-esphome.yaml
+
+logger:
+  baud_rate: 0
+
+sensor:
+  - id: !remove mcu_temperature # not available in esp8266

@@ -1,0 +1,10 @@
+substitutions:
+  name: base-board-esp32-s3-devkitc-1
+  friendly_name: Base Board ESP32-S3-DevKitC-1
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-esphome-esp32.yaml
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3

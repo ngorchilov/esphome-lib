@@ -1,0 +1,90 @@
+substitutions:
+  name: base-board
+  friendly_name: Base Board
+
+  log_level: INFO
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+logger:
+  level: ${log_level}
+
+api:
+  id: hapi
+
+ota:
+  - platform: esphome
+
+mdns:
+  disabled: false
+
+button:
+  - platform: restart
+    name: MCU Restart
+    id: mcu_restart
+
+sensor:
+  - platform: uptime
+    name: Uptime (s)
+    id: mcu_uptime_s
+    device_class: duration
+    unit_of_measurement: s
+    accuracy_decimals: 0
+    state_class: measurement
+    entity_category: diagnostic
+    disabled_by_default: true
+    on_value: # update the pretty text sensor when the raw value changes
+      then:
+        - lambda: |-
+            const uint32_t secs = (uint32_t)x;
+            uint32_t days  = secs / 86400;
+            uint32_t hours = (secs % 86400) / 3600;
+            uint32_t mins  = (secs % 3600) / 60;
+            uint32_t s     = secs % 60;
+            char buf[48];
+            if (days > 0)       snprintf(buf, sizeof(buf), "%ud %uh %um", days, hours, mins);
+            else if (hours > 0) snprintf(buf, sizeof(buf), "%uh %um %us", hours, mins, s);
+            else if (mins > 0)  snprintf(buf, sizeof(buf), "%um %us", mins, s);
+            else                snprintf(buf, sizeof(buf), "%us", s);
+            id(mcu_uptime).publish_state(std::string(buf));
+
+  - platform: internal_temperature
+    name: MCU Temperature
+    id: mcu_temperature
+    device_class: temperature
+    unit_of_measurement: °C
+    accuracy_decimals: 0
+    state_class: measurement
+    entity_category: diagnostic
+    disabled_by_default: true
+    filters:
+      - delta: 1
+
+binary_sensor:
+  - platform: status
+    name: Status
+    id: mcu_status
+    device_class: connectivity
+    entity_category: diagnostic
+    disabled_by_default: true
+
+text_sensor:
+  - platform: template
+    name: Uptime
+    id: mcu_uptime
+    entity_category: diagnostic
+    icon: mdi:clock-outline
+    update_interval: never
+
+  - platform: version
+    name: ESPhome Version
+    id: mcu_version_esphome
+    entity_category: diagnostic
+    hide_timestamp: true
+    disabled_by_default: true
+
+time:
+  - platform: homeassistant
+    id: ha_time

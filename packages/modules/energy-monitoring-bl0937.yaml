@@ -1,0 +1,42 @@
+# BL0937 Energy Monitoring Module
+# Usage: Include this package in devices using the BL0937 chip for energy monitoring.
+
+substitutions:
+  bl0937_cf_pin: GPIO6 # Default CF pin for BL0937 (can be overridden in the main config)
+  bl0937_cf1_pin: GPIO8 # Default CF1 pin for BL0937 (can be overridden in the main config)
+  bl0937_sel_pin: GPIO11 # Default SEL pin for BL0937 (can be overridden in the main config)
+  bl0937_voltage_divider: 775 # Default voltage divider (must be a string)
+  bl0937_current_resistor: 0.00104 ohm # Default current resistor (must be a string)
+  bl0937_current_multiply: 1 # Default current multiplier (must be a string)
+  bl0937_update_interval: 30s # Default interval for sending measurements
+
+sensor:
+  - platform: hlw8012
+    id: energy_monitor
+    model: BL0937
+    cf_pin:
+      number: ${bl0937_cf_pin}
+      inverted: true
+    cf1_pin:
+      number: ${bl0937_cf1_pin}
+      inverted: true
+    sel_pin:
+      number: ${bl0937_sel_pin}
+      inverted: true
+    current:
+      name: Current
+      id: current
+      filters:
+        - multiply: ${bl0937_current_multiply}
+    voltage:
+      name: Voltage
+      id: voltage
+    power:
+      name: Power
+      id: power
+    energy:
+      name: Energy
+      id: energy
+    voltage_divider: ${bl0937_voltage_divider}
+    current_resistor: ${bl0937_current_resistor}
+    update_interval: ${bl0937_update_interval}

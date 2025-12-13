@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-cb3s
+  friendly_name: Base Board CB3S
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny-beken.yaml
+
+bk72xx:
+  board: cb3s

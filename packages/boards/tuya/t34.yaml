@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-bk7231n-generic
+  friendly_name: Base Board BK7231N Generic
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny-beken.yaml
+
+bk72xx:
+  board: generic-bk7231n-qfn32-tuya

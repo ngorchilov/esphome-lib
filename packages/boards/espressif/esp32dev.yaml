@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-esp32dev
+  friendly_name: Base Board ESP32 Dev Module
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-esphome-esp32.yaml
+
+esp32:
+  board: esp32dev

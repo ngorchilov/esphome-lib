@@ -1,0 +1,14 @@
+substitutions:
+  name: base-board-libretiny
+  friendly_name: Base Board LibreTiny
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board.yaml
+
+text_sensor:
+  - platform: libretiny
+    version:
+      name: LibreTiny Version
+      id: mcu_version_libretiny
+      entity_category: diagnostic
+      disabled_by_default: true

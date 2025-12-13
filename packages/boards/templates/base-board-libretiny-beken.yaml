@@ -1,0 +1,6 @@
+substitutions:
+  name: base-board-libretiny-beken
+  friendly_name: Base Board LibreTiny (Beken)
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny.yaml

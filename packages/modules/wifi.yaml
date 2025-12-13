@@ -1,0 +1,50 @@
+substitutions:
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  ap_ssid: ESPHome-${name}
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+
+  ap:
+    ssid: ${ap_ssid}
+
+captive_portal:
+
+sensor:
+  - id: !remove mcu_temperature
+
+  - platform: wifi_signal
+    name: WiFi Signal
+    id: mcu_wifi_signal
+    device_class: signal_strength
+    unit_of_measurement: dBm
+    accuracy_decimals: 0
+    state_class: measurement
+    entity_category: diagnostic
+    disabled_by_default: true
+    filters:
+      - delta: 1
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: IP
+      id: mcu_ip
+      entity_category: diagnostic
+    ssid:
+      name: SSID
+      id: mcu_ssid
+      entity_category: diagnostic
+      disabled_by_default: true
+    bssid:
+      name: BSSID
+      id: mcu_bssid
+      entity_category: diagnostic
+      disabled_by_default: true
+    mac_address:
+      name: MAC Address
+      id: mcu_mac_address
+      entity_category: diagnostic
+      disabled_by_default: true
