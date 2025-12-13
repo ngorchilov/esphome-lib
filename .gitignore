@@ -3,7 +3,7 @@
 # You can modify this file to suit your needs.
 .*
 !.gitignore
-/secrets.yaml
+secrets.yaml
 
 # Python bytecode and caches
 __pycache__/
