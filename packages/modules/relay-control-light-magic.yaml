@@ -13,7 +13,6 @@ binary_sensor:
   - id: !remove rocker_switch
 
 magic_switch:
-  name: Rocker Switch
   id: rocker_switch
   pin:
     number: ${rocker_pin}
