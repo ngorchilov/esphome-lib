@@ -1,0 +1,28 @@
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
+
+external_components:
+  - source: github://ssieb/esphome_components
+    components: [magic_switch]
+
+switch:
+  - id: !extend relay_switch
+    internal: true
+
+binary_sensor:
+  - id: !remove rocker_switch
+
+magic_switch:
+  name: Rocker Switch
+  id: rocker_switch
+  pin:
+    number: ${rocker_pin}
+    inverted: ${rocker_inverted}
+    mode:
+      input: true
+      pullup: ${rocker_inverted}
+      pulldown: ${not rocker_inverted}
+    ignore_strapping_warning: ${rocker_strapping}
+  timeout: 1ms
+  on_switch:
+    - switch.toggle: relay_switch

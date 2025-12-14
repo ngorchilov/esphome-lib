@@ -1,0 +1,67 @@
+# Relay Control Module
+# Usage: Include this package in devices with a relay, button, and LED.
+
+substitutions:
+  relay_pin: GPIO7
+  relay_inverted: false
+  relay_strapping: false
+  button_pin: GPIO23
+  button_inverted: true
+  button_strapping: false
+  led_pin: GPIO26
+  led_inverted: false
+  led_strapping: false
+
+esphome:
+  on_boot:
+    - if:
+        condition:
+          switch.is_on: relay_switch
+        then:
+          - light.turn_on: relay_led
+        else:
+          - light.turn_off: relay_led
+
+switch:
+  - platform: gpio
+    name: None
+    id: relay_switch
+    pin:
+      number: ${relay_pin}
+      inverted: ${relay_inverted}
+      ignore_strapping_warning: ${relay_strapping}
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - light.turn_on: relay_led
+    on_turn_off:
+      - light.turn_off: relay_led
+
+binary_sensor:
+  - platform: gpio
+    name: Button
+    pin:
+      number: ${button_pin}
+      mode:
+        input: true
+        pullup: ${button_inverted}
+        pulldown: ${not button_inverted}
+      inverted: ${button_inverted}
+      ignore_strapping_warning: ${button_strapping}
+    on_click:
+      - switch.toggle: relay_switch
+
+### LED Indicator ###
+output:
+  - id: relay_led_output
+    platform: gpio
+    pin:
+      number: ${led_pin}
+      inverted: ${led_inverted}
+      ignore_strapping_warning: ${led_strapping}
+
+light:
+  - platform: binary
+    name: LED
+    id: relay_led
+    output: relay_led_output
+    internal: true

@@ -1,0 +1,46 @@
+substitutions:
+  rocker_pin: GPIO14 # S1/S2 rocker switch pin (onoff1)
+  rocker_inverted: true
+  rocker_strapping: false
+
+packages:
+  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-switch.yaml
+
+switch:
+  - id: !extend relay_switch
+    internal: true
+
+binary_sensor:
+  - platform: gpio
+    name: Rocker Switch
+    id: rocker_switch
+    pin:
+      number: ${rocker_pin}
+      mode:
+        input: true
+        pullup: ${rocker_inverted}
+        pulldown: ${not rocker_inverted}
+      inverted: ${rocker_inverted}
+      ignore_strapping_warning: ${rocker_strapping}
+    on_state:
+      then:
+        - switch.toggle: relay_switch
+
+output:
+  - platform: template
+    id: light_output
+    type: binary
+    write_action:
+      - if:
+          condition:
+            lambda: return state;
+          then:
+            - switch.turn_on: relay_switch
+          else:
+            - switch.turn_off: relay_switch
+
+light:
+  - platform: binary
+    name: None
+    output: output_light
+    restore_mode: RESTORE_DEFAULT_OFF
