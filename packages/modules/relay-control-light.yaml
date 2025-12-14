@@ -9,6 +9,14 @@ packages:
 switch:
   - id: !extend relay_switch
     internal: true
+    # Keep the light entity in sync even when the relay is toggled locally (rocker/button/on_boot).
+    # Note: declaring on_turn_on/off here may override the base package triggers, so we restate LED sync too.
+    on_turn_on:
+      - light.turn_on: relay_light
+      - light.turn_on: relay_led
+    on_turn_off:
+      - light.turn_off: relay_light
+      - light.turn_off: relay_led
 
 binary_sensor:
   - platform: gpio
@@ -41,6 +49,7 @@ output:
 
 light:
   - platform: binary
+    id: relay_light
     name: None
     output: light_output
     restore_mode: RESTORE_DEFAULT_OFF
