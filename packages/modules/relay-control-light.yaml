@@ -42,5 +42,5 @@ output:
 light:
   - platform: binary
     name: None
-    output: output_light
+    output: light_output
     restore_mode: RESTORE_DEFAULT_OFF
