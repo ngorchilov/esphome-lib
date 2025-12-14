@@ -2,8 +2,22 @@ substitutions:
   # Home Assistant light entity to control (override this from the main device YAML)
   ha_light_entity: light.example_light
 
+  rocker_timeout: 1ms
+
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light-magic.yaml
+  # TODO: Fix magic_switch component to support !extend and inherit relay-control-light-mmagic instead of duplicating its content
+  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
+
+external_components:
+  - source: github://ssieb/esphome_components
+    components: [magic_switch]
+
+switch:
+  - id: !extend relay_switch
+    internal: true
+
+binary_sensor:
+  - id: !remove rocker_switch
 
 magic_switch:
   id: rocker_switch
@@ -21,13 +35,3 @@ magic_switch:
         action: light.toggle
         data:
           entity_id: ${ha_light_entity}
-#
-# TODO: Fix magic_switch component to support !extend
-#
-# magic_switch:
-#   id: !extend rocker_switch
-#   on_switch:
-#     - homeassistant.action:
-#         action: light.toggle
-#         data:
-#           entity_id: ${ha_light_entity}
