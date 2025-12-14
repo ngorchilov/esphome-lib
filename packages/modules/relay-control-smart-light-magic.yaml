@@ -6,9 +6,28 @@ packages:
   Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light-magic.yaml
 
 magic_switch:
-  id: !extend rocker_switch
+  id: rocker_switch
+  pin:
+    number: ${rocker_pin}
+    inverted: ${rocker_inverted}
+    mode:
+      input: true
+      pullup: ${rocker_inverted}
+      pulldown: ${not rocker_inverted}
+    ignore_strapping_warning: ${rocker_strapping}
+  timeout: ${rocker_timeout}
   on_switch:
     - homeassistant.action:
         action: light.toggle
         data:
           entity_id: ${ha_light_entity}
+#
+# TODO: Fix magic_switch component to support !extend
+#
+# magic_switch:
+#   id: !extend rocker_switch
+#   on_switch:
+#     - homeassistant.action:
+#         action: light.toggle
+#         data:
+#           entity_id: ${ha_light_entity}
