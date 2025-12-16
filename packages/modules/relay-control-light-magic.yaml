@@ -15,6 +15,11 @@ switch:
 binary_sensor:
   - id: !remove rocker_switch
 
+  - platform: template
+    name: Rocker Switch
+    id: rocker_switch
+    lambda: return {};
+
 magic_switch:
   id: rocker_switch
   pin:
@@ -28,3 +33,6 @@ magic_switch:
   timeout: ${rocker_timeout}
   on_switch:
     - switch.toggle: relay_switch
+    - binary_sensor.template.publish:
+        id: rocker_switch
+        state: !lambda 'return !id(rocker_switch).state;'
