@@ -20,6 +20,8 @@ binary_sensor:
   - id: !extend rocker_switch
     platform: template
     lambda: return {};
+    pin: !remove
+    on_state: !remove
 
 magic_switch:
   id: rocker_switch
