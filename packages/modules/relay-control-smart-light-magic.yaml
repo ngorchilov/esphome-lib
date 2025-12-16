@@ -17,9 +17,8 @@ switch:
     internal: true
 
 binary_sensor:
-  - platform: template
-    name: Rocker Switch
-    id: rocker_switch
+  - id: !extend rocker_switch
+    platform: template
     lambda: return {};
 
 magic_switch:
