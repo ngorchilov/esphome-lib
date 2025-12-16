@@ -13,8 +13,6 @@ switch:
     internal: true
 
 binary_sensor:
-  - id: !remove rocker_switch
-
   - platform: template
     name: Rocker Switch
     id: rocker_switch
