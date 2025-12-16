@@ -13,9 +13,11 @@ switch:
     internal: true
 
 binary_sensor:
+  - id: !remove rocker_switch
+
   - platform: template
     name: Rocker Switch
-    id: rocker_switch
+    id: rocker_switch_virtual
     lambda: return {};
 
 magic_switch:
@@ -32,5 +34,5 @@ magic_switch:
   on_switch:
     - switch.toggle: relay_switch
     - binary_sensor.template.publish:
-        id: rocker_switch
-        state: !lambda 'return !id(rocker_switch).state;'
+        id: rocker_switch_virtual
+        state: !lambda 'return !id(rocker_switch_virtual).state;'

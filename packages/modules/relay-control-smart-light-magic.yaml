@@ -17,11 +17,12 @@ switch:
     internal: true
 
 binary_sensor:
-  - id: !extend rocker_switch
-    platform: template
+  - id: !remove rocker_switch
+
+  - platform: template
+    name: Rocker Switch
+    id: rocker_switch_virtual
     lambda: return {};
-    pin: !remove
-    on_state: !remove
 
 magic_switch:
   id: rocker_switch
@@ -40,5 +41,5 @@ magic_switch:
         data:
           entity_id: ${ha_light_entity}
     - binary_sensor.template.publish:
-        id: rocker_switch
-        state: !lambda 'return !id(rocker_switch).state;'
+        id: rocker_switch_virtual
+        state: !lambda 'return !id(rocker_switch_virtual).state;'
