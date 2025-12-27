@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board ESPHome (ESP32)
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-esphome.yaml
+  Base: !include base-board-esphome.yaml
 
 esp32:
   framework:

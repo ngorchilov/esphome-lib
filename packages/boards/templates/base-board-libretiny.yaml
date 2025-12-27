@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board LibreTiny
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board.yaml
+  Base: !include base-board.yaml
 
 text_sensor:
   - platform: libretiny

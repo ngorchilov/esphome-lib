@@ -3,4 +3,4 @@ substitutions:
   friendly_name: Base Board ESPHome
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board.yaml
+  Base: !include base-board.yaml

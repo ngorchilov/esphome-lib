@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board CB3S
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/boards/templates/base-board-libretiny-beken.yaml
+  Base: !include ../templates/base-board-libretiny-beken.yaml
 
 bk72xx:
   board: cb3s

@@ -13,8 +13,6 @@ wifi:
 captive_portal:
 
 sensor:
-  - id: !remove mcu_temperature
-
   - platform: wifi_signal
     name: WiFi Signal
     id: mcu_wifi_signal
