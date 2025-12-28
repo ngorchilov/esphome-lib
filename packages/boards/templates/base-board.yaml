@@ -4,21 +4,15 @@ substitutions:
 
   log_level: INFO
 
+packages:
+  Networking: !include ../../modules/networking.yaml
+
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
 
 logger:
   level: ${log_level}
-
-api:
-  id: hapi
-
-ota:
-  - platform: esphome
-
-mdns:
-  disabled: false
 
 button:
   - platform: restart

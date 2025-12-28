@@ -1,0 +1,17 @@
+substitutions:
+  networking_mode: 'wifi' # wifi | ethernet | none
+
+  net_wifi: !include networking-wifi.yaml
+  net_ethernet: !include networking-ethernet.yaml
+
+packages:
+  networking: ${ net_wifi if networking_mode == 'wifi' else net_ethernet if networking_mode == 'ethernet' else {} }
+
+api:
+  id: hapi
+
+ota:
+  - platform: esphome
+
+mdns:
+  disabled: false

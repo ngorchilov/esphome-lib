@@ -1,0 +1,69 @@
+substitutions:
+  firmware_family: esphome
+  eth_type: LAN8720 # LAN8720 | RTL8201 | DP83848 | IP101 | JL1101 | KSZ8081 | KSZ8081RNA | W5500 | OPENETH | DM9051 | LAN8670
+
+  eth_mdc_pin: GPIO23
+  eth_mdc_strapping: false
+  eth_mdc_pin_cfg_esp:
+    number: ${eth_mdc_pin}
+    ignore_strapping_warning: ${eth_mdc_strapping}
+  eth_mdc_pin_cfg_lt:
+    number: ${eth_mdc_pin}
+
+  eth_mdio_pin: GPIO18
+  eth_mdio_strapping: false
+  eth_mdio_pin_cfg_esp:
+    number: ${eth_mdio_pin}
+    ignore_strapping_warning: ${eth_mdio_strapping}
+  eth_mdio_pin_cfg_lt:
+    number: ${eth_mdio_pin}
+
+  eth_clk_pin: GPIO0
+  eth_clk_strapping: true
+  eth_clk_mode: CLK_EXT_IN # CLK_EXT_IN | CLK_OUT
+  eth_clk_pin_cfg_esp:
+    number: ${eth_clk_pin}
+    ignore_strapping_warning: ${eth_clk_strapping}
+  eth_clk_pin_cfg_lt:
+    number: ${eth_clk_pin}
+
+  # Optional: if eth_power_pin is left empty, power_pin will not be configured.
+  eth_power_pin: '' # e.g. GPIO5
+  eth_power_strapping: false
+  eth_power_cfg_esp:
+    ethernet:
+      power_pin:
+        number: ${eth_power_pin}
+        ignore_strapping_warning: ${eth_power_strapping}
+  eth_power_cfg_lt:
+    ethernet:
+      power_pin:
+        number: ${eth_power_pin}
+
+  eth_phy_addr: 1
+
+packages:
+  ethernet_power: ${ (eth_power_cfg_esp if firmware_family == 'esphome' else eth_power_cfg_lt) if eth_power_pin else {} }
+
+ethernet:
+  type: ${eth_type}
+  mdc_pin: ${ eth_mdc_pin_cfg_esp if firmware_family == 'esphome' else eth_mdc_pin_cfg_lt }
+  mdio_pin: ${ eth_mdio_pin_cfg_esp if firmware_family == 'esphome' else eth_mdio_pin_cfg_lt }
+  clk:
+    pin: ${ eth_clk_pin_cfg_esp if firmware_family == 'esphome' else eth_clk_pin_cfg_lt }
+    mode: ${eth_clk_mode}
+  phy_addr: ${eth_phy_addr}
+
+text_sensor:
+  - platform: ethernet_info
+    ip_address:
+      name: IP Address
+      id: mcu_ip_address
+      entity_category: diagnostic
+      icon: mdi:ip-network
+    mac_address:
+      name: MAC Address
+      id: mcu_mac_address
+      entity_category: diagnostic
+      disabled_by_default: true
+      icon: mdi:lan

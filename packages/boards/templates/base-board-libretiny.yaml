@@ -2,6 +2,8 @@ substitutions:
   name: base-board-libretiny
   friendly_name: Base Board LibreTiny
 
+  firmware_family: libretiny
+
 packages:
   Base: !include base-board.yaml
 

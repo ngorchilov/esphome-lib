@@ -1,0 +1,9 @@
+substitutions:
+  name: m5stack-core-esp32
+  friendly_name: M5Stack Core2 ESP32 IoT Development Kit
+
+packages:
+  Base: !include ../templates/base-board-esphome-esp32.yaml
+
+esp32:
+  board: m5stack-core-esp32

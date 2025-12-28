@@ -5,12 +5,17 @@ substitutions:
   relay_pin: GPIO7
   relay_inverted: false
   relay_strapping: false
+  relay_strapping_opt: ${ 'ignore_strapping_warning: ' ~ relay_strapping if firmware_family == 'esphome' else '' }
+
   button_pin: GPIO23
   button_inverted: true
   button_strapping: false
+  button_strapping_opt: ${ 'ignore_strapping_warning: ' ~ button_strapping if firmware_family == 'esphome' else '' }
+
   led_pin: GPIO26
   led_inverted: false
   led_strapping: false
+  led_strapping_opt: ${ 'ignore_strapping_warning: ' ~ led_strapping if firmware_family == 'esphome' else '' }
 
 esphome:
   on_boot:
@@ -29,7 +34,7 @@ switch:
     pin:
       number: ${relay_pin}
       inverted: ${relay_inverted}
-      ignore_strapping_warning: ${relay_strapping}
+      ${relay_strapping_opt}
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - light.turn_on: relay_led
@@ -46,7 +51,7 @@ binary_sensor:
         pullup: ${button_inverted}
         pulldown: ${not button_inverted}
       inverted: ${button_inverted}
-      ignore_strapping_warning: ${button_strapping}
+      ${button_strapping_opt}
     on_click:
       - switch.toggle: relay_switch
 
@@ -57,7 +62,7 @@ output:
     pin:
       number: ${led_pin}
       inverted: ${led_inverted}
-      ignore_strapping_warning: ${led_strapping}
+      ${led_strapping_opt}
 
 light:
   - platform: binary
