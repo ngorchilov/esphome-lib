@@ -1,0 +1,11 @@
+external_components:
+  # https://github.com/rednblkx/HAP-ESPHome
+  source: github://rednblkx/HAP-ESPHome@main
+  refresh: 0s
+
+esp32:
+  framework:
+    sdkconfig_options:
+      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_LWIP_MAX_SOCKETS: '16'
+      CONFIG_MBEDTLS_HKDF_C: y
