@@ -1,11 +1,31 @@
 substitutions:
-  networking_mode: 'wifi' # wifi | ethernet | none
+  networking_mode: wifi # wifi | ethernet | none
 
-  net_wifi: !include networking-wifi.yaml
-  net_ethernet: !include networking-ethernet.yaml
+  # default wifi settings
+  net_wifi_module: !include networking-wifi.yaml
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  ap_ssid: ESPHome-${name}
+
+  # default ethernet settings
+  net_eth_module: !include networking-ethernet.yaml
+  net_eth_power_module: !include networking-ethernet-power.yaml
+  eth_type: LAN8720 # LAN8720 | RTL8201 | DP83848 | IP101 | JL1101 | KSZ8081 | KSZ8081RNA | W5500 | OPENETH | DM9051 | LAN8670
+  eth_mdc_pin: GPIO23
+  eth_mdc_strapping: false
+  eth_mdio_pin: GPIO18
+  eth_mdio_strapping: false
+  eth_clk_pin: GPIO0
+  eth_clk_strapping: true
+  eth_clk_mode: CLK_EXT_IN # CLK_EXT_IN | CLK_OUT
+  eth_power_pin: ''
+  eth_power_strapping: false
+  eth_phy_addr: 1
 
 packages:
-  networking: ${ net_wifi if networking_mode == 'wifi' else net_ethernet if networking_mode == 'ethernet' else {} }
+  - ${ (networking_mode == 'wifi') and net_wifi_module or {} }
+  - ${ (networking_mode == 'ethernet') and net_eth_module or {} }
+  - ${ networking_mode == 'ethernet' and eth_power_pin and net_eth_power_module or {} }
 
 api:
   id: hapi

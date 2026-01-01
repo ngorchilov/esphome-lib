@@ -1,0 +1,2 @@
+ethernet:
+  power_pin: ${ {'number':eth_power_pin,'ignore_strapping_warning':eth_power_strapping} if firmware_family=='esphome' else {'number':eth_power_pin} }
