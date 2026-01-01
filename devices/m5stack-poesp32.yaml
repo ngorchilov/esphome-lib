@@ -16,3 +16,8 @@ substitutions:
 
 packages:
   Base: !include ../packages/boards/espressif/m5stack-core-esp32.yaml
+
+esphome:
+  project:
+    name: M5Stack.PoESP32
+    version: 1.0.0
