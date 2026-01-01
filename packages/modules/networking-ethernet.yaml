@@ -13,7 +13,7 @@ substitutions:
   eth_phy_addr: 1
 
 packages:
-  eth_power: ${ networking_mode == 'ethernet' and eth_power_pin and net_eth_power_module or {} }
+  - ${ networking_mode == 'ethernet' and eth_power_pin and net_eth_power_module or {} }
 
 ethernet:
   type: ${eth_type}

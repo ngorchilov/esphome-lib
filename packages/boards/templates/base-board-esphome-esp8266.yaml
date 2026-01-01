@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board ESPHome (ESP8266)
 
 packages:
-  Base: !include base-board-esphome.yaml
+  - !include base-board-esphome.yaml
 
 logger:
   baud_rate: 0

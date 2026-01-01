@@ -5,7 +5,7 @@ substitutions:
   firmware_family: libretiny
 
 packages:
-  Base: !include base-board.yaml
+  - !include base-board.yaml
 
 text_sensor:
   - platform: libretiny

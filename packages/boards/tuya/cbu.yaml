@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board CBU
 
 packages:
-  Base: !include ../templates/base-board-libretiny-beken.yaml
+  - !include ../templates/base-board-libretiny-beken.yaml
 
 bk72xx:
   board: cbu

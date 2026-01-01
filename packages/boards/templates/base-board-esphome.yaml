@@ -5,4 +5,4 @@ substitutions:
   firmware_family: esphome
 
 packages:
-  Base: !include base-board.yaml
+  - !include base-board.yaml

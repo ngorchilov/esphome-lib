@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board CB2S
 
 packages:
-  Base: !include ../templates/base-board-libretiny-beken.yaml
+  - !include ../templates/base-board-libretiny-beken.yaml
 
 bk72xx:
   board: cb2s

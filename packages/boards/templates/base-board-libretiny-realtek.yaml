@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board LibreTiny (Realtek)
 
 packages:
-  Base: !include base-board-libretiny.yaml
+  - !include base-board-libretiny.yaml
 
 rtl87xx:
   framework:

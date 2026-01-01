@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board NodeMCU-32S
 
 packages:
-  Base: !include ../templates/base-board-esphome-esp32.yaml
+  - !include ../templates/base-board-esphome-esp32.yaml
 
 esp32:
   board: nodemcu-32s

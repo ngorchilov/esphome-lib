@@ -5,7 +5,7 @@ substitutions:
   log_level: INFO
 
 packages:
-  Networking: !include ../../modules/networking.yaml
+  - !include ../../modules/networking.yaml
 
 esphome:
   name: ${name}

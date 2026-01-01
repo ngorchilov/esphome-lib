@@ -5,17 +5,14 @@ substitutions:
   relay_pin: GPIO7
   relay_inverted: false
   relay_strapping: false
-  relay_strapping_opt: ${ 'ignore_strapping_warning: ' ~ relay_strapping if firmware_family == 'esphome' else '' }
 
   button_pin: GPIO23
   button_inverted: true
   button_strapping: false
-  button_strapping_opt: ${ 'ignore_strapping_warning: ' ~ button_strapping if firmware_family == 'esphome' else '' }
 
   led_pin: GPIO26
   led_inverted: false
   led_strapping: false
-  led_strapping_opt: ${ 'ignore_strapping_warning: ' ~ led_strapping if firmware_family == 'esphome' else '' }
 
 esphome:
   on_boot:
@@ -31,10 +28,7 @@ switch:
   - platform: gpio
     name: None
     id: relay_switch
-    pin:
-      number: ${relay_pin}
-      inverted: ${relay_inverted}
-      ${relay_strapping_opt}
+    pin: ${"{'number':relay_pin,'inverted':relay_inverted,'ignore_strapping_warning':relay_strapping}" if firmware_family=='esphome' else "{'number':relay_pin,'inverted':relay_inverted}"}
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - light.turn_on: relay_led
@@ -44,14 +38,7 @@ switch:
 binary_sensor:
   - platform: gpio
     name: Button
-    pin:
-      number: ${button_pin}
-      mode:
-        input: true
-        pullup: ${button_inverted}
-        pulldown: ${not button_inverted}
-      inverted: ${button_inverted}
-      ${button_strapping_opt}
+    pin: ${"{'number':button_pin,'mode':{'input':True,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted,'ignore_strapping_warning':button_strapping}" if firmware_family=='esphome' else "{'number':button_pin,'mode':{'input':True,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted}"}
     on_click:
       - switch.toggle: relay_switch
 
@@ -59,10 +46,7 @@ binary_sensor:
 output:
   - id: relay_led_output
     platform: gpio
-    pin:
-      number: ${led_pin}
-      inverted: ${led_inverted}
-      ${led_strapping_opt}
+    pin: ${"{'number':led_pin,'inverted':led_inverted,'ignore_strapping_warning':led_strapping}" if firmware_family=='esphome' else "{'number':led_pin,'inverted':led_inverted}"}
 
 light:
   - platform: binary

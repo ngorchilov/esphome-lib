@@ -3,7 +3,7 @@ substitutions:
   ha_light_entity: light.example_light
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
+  - github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
 
 binary_sensor:
   - !extend rocker_switch

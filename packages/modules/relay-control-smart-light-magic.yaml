@@ -6,7 +6,7 @@ substitutions:
 
 packages:
   # TODO: Fix magic_switch component to support !extend and inherit relay-control-light-mmagic instead of duplicating its content
-  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
+  - github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
 
 external_components:
   - source: github://ssieb/esphome_components

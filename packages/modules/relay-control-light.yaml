@@ -4,7 +4,7 @@ substitutions:
   rocker_strapping: false
 
 packages:
-  Base: github://ngorchilov/esphome-lib/packages/modules/relay-control-switch.yaml
+  - github://ngorchilov/esphome-lib/packages/modules/relay-control-switch.yaml
 
 switch:
   - id: !extend relay_switch

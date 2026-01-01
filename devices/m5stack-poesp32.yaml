@@ -15,7 +15,7 @@ substitutions:
   eth_phy_addr: 1
 
 packages:
-  Base: !include ../packages/boards/espressif/m5stack-core-esp32.yaml
+  - !include ../packages/boards/espressif/m5stack-core-esp32.yaml
 
 esphome:
   project:

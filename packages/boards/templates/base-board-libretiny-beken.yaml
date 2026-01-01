@@ -3,4 +3,4 @@ substitutions:
   friendly_name: Base Board LibreTiny (Beken)
 
 packages:
-  Base: !include base-board-libretiny.yaml
+  - !include base-board-libretiny.yaml
