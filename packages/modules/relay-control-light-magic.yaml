@@ -2,7 +2,7 @@ substitutions:
   rocker_timeout: 1ms
 
 packages:
-  - github://ngorchilov/esphome-lib/packages/modules/relay-control-light.yaml
+  - !include relay-control-light.yaml
 
 external_components:
   - source: github://ssieb/esphome_components
