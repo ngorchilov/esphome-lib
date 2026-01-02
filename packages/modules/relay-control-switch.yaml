@@ -28,7 +28,7 @@ switch:
   - platform: gpio
     name: None
     id: relay_switch
-    pin: ${"{'number':relay_pin,'inverted':relay_inverted,'ignore_strapping_warning':relay_strapping}" if firmware_family=='esphome' else "{'number':relay_pin,'inverted':relay_inverted}"}
+    pin: ${ {'number':relay_pin,'inverted':relay_inverted,'ignore_strapping_warning':relay_strapping} if firmware_family=='esphome' else {'number':relay_pin,'inverted':relay_inverted} }
     restore_mode: RESTORE_DEFAULT_OFF
     on_turn_on:
       - light.turn_on: relay_led
@@ -38,7 +38,7 @@ switch:
 binary_sensor:
   - platform: gpio
     name: Button
-    pin: ${"{'number':button_pin,'mode':{'input':True,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted,'ignore_strapping_warning':button_strapping}" if firmware_family=='esphome' else "{'number':button_pin,'mode':{'input':True,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted}"}
+    pin: ${ {'number':button_pin,'mode':{'input':true,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted,'ignore_strapping_warning':button_strapping} if firmware_family=='esphome' else {'number':button_pin,'mode':{'input':true,'pullup':button_inverted,'pulldown':(not button_inverted)},'inverted':button_inverted} }
     on_click:
       - switch.toggle: relay_switch
 
@@ -46,7 +46,7 @@ binary_sensor:
 output:
   - id: relay_led_output
     platform: gpio
-    pin: ${"{'number':led_pin,'inverted':led_inverted,'ignore_strapping_warning':led_strapping}" if firmware_family=='esphome' else "{'number':led_pin,'inverted':led_inverted}"}
+    pin: ${ {'number':led_pin,'inverted':led_inverted,'ignore_strapping_warning':led_strapping} if firmware_family=='esphome' else {'number':led_pin,'inverted':led_inverted} }
 
 light:
   - platform: binary
