@@ -11,6 +11,9 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
 
+  # 2025.12.0: Conditional Package Inclusion (https://esphome.io/changelog/2025.12.0/#conditional-package-inclusion)
+  min_version: 2025.12.0
+
 logger:
   level: ${log_level}
 
