@@ -1,0 +1,31 @@
+# Optional "appliance" light facade
+# Targets CONTROL (so detached mode behaves naturally in HA).
+
+defaults:
+  rc_id: rc1
+  rc_name: Relay
+
+  control_restore_mode: RESTORE_DEFAULT_OFF
+  expose_light_internal: false
+
+output:
+  - platform: template
+    id: ${rc_id}_control_output
+    type: binary
+    write_action:
+      - if:
+          condition:
+            lambda: |-
+              return state;
+          then:
+            - script.execute: ${rc_id}_control_on
+          else:
+            - script.execute: ${rc_id}_control_off
+
+light:
+  - platform: binary
+    name: ${rc_name}
+    id: ${rc_id}_control_light
+    output: ${rc_id}_control_output
+    restore_mode: ${control_restore_mode}
+    internal: ${expose_light_internal}

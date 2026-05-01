@@ -1,0 +1,24 @@
+# Optional external "magic" switch adapter
+# - ext_magic_source_id must refer to an existing binary_sensor id (created elsewhere, e.g. custom component)
+# - We keep a virtual state in a template binary_sensor.
+
+defaults:
+  rc_id: rc1
+  ext_magic_source_id: external_magic_source
+  magic_state_internal: false
+
+binary_sensor:
+  - platform: template
+    name: ${rc_id} External Magic State
+    id: ${rc_id}_external_magic_state
+    internal: ${magic_state_internal}
+    publish_initial_state: true
+
+  - id: !extend ${ext_magic_source_id}
+    on_press:
+      then:
+        - binary_sensor.template.publish:
+            id: ${rc_id}_external_magic_state
+            state: !lambda |-
+              return !id(${rc_id}_external_magic_state).state;
+        - script.execute: ${rc_id}_control_toggle

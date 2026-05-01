@@ -1,0 +1,13 @@
+number: ${number}
+inverted: ${inverted}
+allow_other_uses: ${allow_other_uses}
+mode:
+  input: ${input}
+  output: ${output}
+  pullup: ${pullup}
+  pulldown: ${pulldown}
+  open_drain: ${open_drain}
+# esp32 specific:
+drive_strength: ${drive_strength}
+ignore_strapping_warning: ${ignore_strapping_warning}
+ignore_pin_validation_error: ${ignore_pin_validation_error}

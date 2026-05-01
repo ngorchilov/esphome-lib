@@ -1,0 +1,24 @@
+substitutions:
+  name: sonoff-basic-r4
+  friendly_name: Sonoff BASIC R4
+
+  relay_pin: GPIO4
+  relay_inverted: false
+  relay_strapping: false
+
+  button_pin: GPIO9
+  button_inverted: true
+  button_strapping: true
+
+  led_pin: GPIO6
+  led_inverted: false
+  led_strapping: false
+
+  rocker_pin: GPIO5 # Sonoff Magic Switch
+  rocker_inverted: false
+  rocker_strapping: false
+
+packages:
+  Board: github://ngorchilov/esphome-lib/packages/boards/espressif/esp32-c3-devkitm-1.yaml
+  WiFi: github://ngorchilov/esphome-lib/packages/modules/wifi.yaml
+  Relay: github://ngorchilov/esphome-lib/packages/modules/relay-control-light-magic.yaml

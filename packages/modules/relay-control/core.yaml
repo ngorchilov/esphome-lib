@@ -1,0 +1,73 @@
+# Relay Control (core)
+# - Power relay switch is ALWAYS present (safety / power-cycle).
+# - "Control" scripts are implemented by relay-control/control-target/*.yaml via !extend.
+# - Indicator LED (if present) hooks into ${rc_id}_after_power_change (via !extend).
+
+defaults:
+  rc_id: rc1
+  rc_name: Relay
+
+  relay_pin: GPIO0
+  relay_inverted: false
+  relay_strapping: false
+  relay_restore_mode: RESTORE_DEFAULT_OFF
+
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - script.execute: ${rc_id}_after_power_change
+
+switch:
+  - platform: gpio
+    name: ${rc_name} Power
+    id: ${rc_id}_power_relay
+    pin: ${ {'number':relay_pin,'inverted':relay_inverted,'ignore_strapping_warning':relay_strapping} if firmware_family=='esphome' else {'number':relay_pin,'inverted':relay_inverted} }
+    restore_mode: ${relay_restore_mode}
+    on_turn_on:
+      - script.execute: ${rc_id}_after_power_change
+    on_turn_off:
+      - script.execute: ${rc_id}_after_power_change
+
+script:
+  # Hook: extended by indicator-led.yaml (and possibly others).
+  - id: ${rc_id}_after_power_change
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  # Power relay control (always local)
+  - id: ${rc_id}_power_on
+    mode: single
+    then:
+      - switch.turn_on: ${rc_id}_power_relay
+
+  - id: ${rc_id}_power_off
+    mode: single
+    then:
+      - switch.turn_off: ${rc_id}_power_relay
+
+  - id: ${rc_id}_power_toggle
+    mode: single
+    then:
+      - switch.toggle: ${rc_id}_power_relay
+
+  # Control (local relay OR HA entity, depending on control_mode)
+  - id: ${rc_id}_control_on
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  - id: ${rc_id}_control_off
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  - id: ${rc_id}_control_toggle
+    mode: single
+    then:
+      - lambda: |-
+          return;

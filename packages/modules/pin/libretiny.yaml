@@ -1,0 +1,9 @@
+number: ${number}
+inverted: ${inverted}
+allow_other_uses: ${allow_other_uses}
+mode:
+  input: ${input}
+  output: ${output}
+  pullup: ${pullup}
+  pulldown: ${pulldown}
+  open_drain: ${open_drain}

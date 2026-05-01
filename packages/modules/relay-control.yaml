@@ -1,0 +1,133 @@
+# Relay Control (assembler)
+# Public entrypoint. Composes core + selected control target + optional plugins.
+
+defaults:
+  rc_id: rc1
+  rc_name: Relay
+
+  # Control:
+  # - local: external control toggles the local relay
+  # - detached: external control toggles a HA entity (relay remains always controllable via Power switch)
+  control_mode: local
+
+  # Detached control target (used only when control_mode: detached)
+  control_entity_id: ''
+  control_service_on: light.turn_on
+  control_service_off: light.turn_off
+  control_service_toggle: light.toggle
+
+  # Optional plugins
+  has_indicator_led: false
+  has_integrated_button: false
+  has_external_switch_gpio: false
+  has_external_magic: false
+  has_expose_light: false
+
+  # Indicator LED vars (used only when has_indicator_led: true)
+  led_pin: GPIO0
+  led_inverted: false
+  led_strapping: false
+  led_internal: false
+
+  # Integrated button vars (used only when has_integrated_button: true)
+  button_pin: GPIO0
+  button_inverted: false
+  button_strapping: false
+  button_internal: false
+
+  # External GPIO switch vars (used only when has_external_switch_gpio: true)
+  ext_pin: GPIO0
+  ext_inverted: false
+  ext_strapping: false
+  ext_mode: rocker
+
+  # External magic vars (used only when has_external_magic: true)
+  ext_magic_source_id: external_magic_source
+  magic_state_internal: false
+
+  # Light facade vars (used only when has_expose_light: true)
+  control_restore_mode: RESTORE_DEFAULT_OFF
+  expose_light_internal: false
+
+  # Power relay (always present)
+  relay_pin: GPIO0
+  relay_inverted: false
+  relay_strapping: false
+  relay_restore_mode: RESTORE_DEFAULT_OFF
+
+  # Internal package refs (loaded via !include so vars are valid package template vars)
+  _rc_target_local_pkg: !include
+    file: relay-control/control-target/local.yaml
+    vars:
+      rc_id: ${rc_id}
+
+  _rc_target_detached_pkg: !include
+    file: relay-control/control-target/detached.yaml
+    vars:
+      rc_id: ${rc_id}
+      control_entity_id: ${control_entity_id}
+      control_service_on: ${control_service_on}
+      control_service_off: ${control_service_off}
+      control_service_toggle: ${control_service_toggle}
+
+  _rc_indicator_led_pkg: !include
+    file: relay-control/indicator-led.yaml
+    vars:
+      rc_id: ${rc_id}
+      rc_name: ${rc_name}
+      led_pin: ${led_pin}
+      led_inverted: ${led_inverted}
+      led_strapping: ${led_strapping}
+      led_internal: ${led_internal}
+
+  _rc_integrated_button_pkg: !include
+    file: relay-control/input/integrated-button-gpio.yaml
+    vars:
+      rc_id: ${rc_id}
+      button_pin: ${button_pin}
+      button_inverted: ${button_inverted}
+      button_strapping: ${button_strapping}
+      button_internal: ${button_internal}
+
+  _rc_external_switch_gpio_pkg: !include
+    file: relay-control/input/external-gpio.yaml
+    vars:
+      rc_id: ${rc_id}
+      ext_pin: ${ext_pin}
+      ext_inverted: ${ext_inverted}
+      ext_strapping: ${ext_strapping}
+      ext_mode: ${ext_mode}
+
+  _rc_expose_light_pkg: !include
+    file: relay-control/expose/light.yaml
+    vars:
+      rc_id: ${rc_id}
+      rc_name: ${rc_name}
+      control_restore_mode: ${control_restore_mode}
+      expose_light_internal: ${expose_light_internal}
+
+  _rc_external_magic_pkg: !include
+    file: relay-control/input/external-magic.yaml
+    vars:
+      rc_id: ${rc_id}
+      ext_magic_source_id: ${ext_magic_source_id}
+      magic_state_internal: ${magic_state_internal}
+
+packages:
+  - !include
+    file: relay-control/core.yaml
+    vars:
+      rc_id: ${rc_id}
+      rc_name: ${rc_name}
+      relay_pin: ${relay_pin}
+      relay_inverted: ${relay_inverted}
+      relay_strapping: ${relay_strapping}
+      relay_restore_mode: ${relay_restore_mode}
+
+  - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
+
+  - ${ has_indicator_led and _rc_indicator_led_pkg or {} }
+  - ${ has_integrated_button and _rc_integrated_button_pkg or {} }
+  - ${ has_external_switch_gpio and _rc_external_switch_gpio_pkg or {} }
+  - ${ has_expose_light and _rc_expose_light_pkg or {} }
+  - ${ has_external_magic and _rc_external_magic_pkg or {} }

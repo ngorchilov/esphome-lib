@@ -1,0 +1,27 @@
+# Optional integrated push button
+# Always toggles POWER relay (safety / hardwired behavior).
+
+defaults:
+  rc_id: rc1
+
+  button_pin: GPIO0
+  button_inverted: true
+  button_strapping: false
+  button_internal: false
+
+binary_sensor:
+  - platform: gpio
+    name: ${rc_id} Integrated Button
+    id: ${rc_id}_integrated_button
+    internal: ${button_internal}
+    pin: !include
+      file: ../../pin.yaml
+      vars:
+        number: ${button_pin}
+        inverted: ${button_inverted}
+        input: true
+        pullup: ${button_inverted}
+        pulldown: ${not button_inverted}
+        ignore_strapping_warning: ${button_strapping}
+    on_click:
+      - script.execute: ${rc_id}_power_toggle

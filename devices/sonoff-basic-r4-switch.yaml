@@ -1,0 +1,64 @@
+substitutions:
+  name: sonoff-basic-r4
+  friendly_name: Sonoff BASIC R4
+
+  # relay_pin: GPIO4
+  # relay_inverted: false
+  # relay_strapping: false
+
+  # button_pin1: GPIO9
+  # button_inverted: true
+  # button_strapping: true
+
+  # led_pin: GPIO6
+  # led_inverted: false
+  # led_strapping: false
+
+  # rocker_pin: GPIO5 # Sonoff Magic Switch
+  # rocker_inverted: false
+  # rocker_strapping: false
+
+packages:
+  - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc_id: sbr4
+      rc_name: none
+
+      # Power relay (always present)
+      relay_pin: GPIO4
+      relay_inverted: false
+      relay_strapping: false
+
+      # Control target for external switches
+      control_mode: local
+
+      # Indicator LED (follows power relay)
+      has_indicator_led: true
+      led_pin: GPIO6
+      led_inverted: false
+      led_strapping: false
+
+      # Integrated button (toggles power relay)
+      has_integrated_button: true
+      button_pin: GPIO9
+      button_inverted: true
+      button_strapping: false
+      button_internal: false
+
+      # External switch input (Sonoff "magic" switch wired to GPIO)
+      has_external_switch_gpio: true
+      ext_pin: GPIO5 # Sonoff Magic Switch
+      ext_inverted: false
+      ext_strapping: false
+      ext_mode: rocker
+
+      # Optional exposed light facade (off by default)
+      has_expose_light: false
+      has_external_magic: false
+
+esphome:
+  project:
+    name: SONOFF.BASICR4
+    version: 1.0.0

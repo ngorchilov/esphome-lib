@@ -1,0 +1,18 @@
+# Control target: local
+# Implements ${rc_id}_control_* by delegating to ${rc_id}_power_*.
+
+defaults:
+  rc_id: rc1
+
+script:
+  - id: !extend ${rc_id}_control_on
+    then:
+      - script.execute: ${rc_id}_power_on
+
+  - id: !extend ${rc_id}_control_off
+    then:
+      - script.execute: ${rc_id}_power_off
+
+  - id: !extend ${rc_id}_control_toggle
+    then:
+      - script.execute: ${rc_id}_power_toggle

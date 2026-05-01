@@ -1,0 +1,47 @@
+# Control target: detached
+# Implements ${rc_id}_control_* by calling Home Assistant actions on ${control_entity_id}.
+# Note: requires `api:` enabled.
+
+defaults:
+  rc_id: rc1
+  control_entity_id: '' # e.g. light.kitchen
+  control_service_on: light.turn_on
+  control_service_off: light.turn_off
+  control_service_toggle: light.toggle
+
+script:
+  - id: !extend ${rc_id}_control_on
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return std::string("${control_entity_id}").size() > 0;
+          then:
+            - homeassistant.service:
+                service: ${control_service_on}
+                data:
+                  entity_id: ${control_entity_id}
+
+  - id: !extend ${rc_id}_control_off
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return std::string("${control_entity_id}").size() > 0;
+          then:
+            - homeassistant.service:
+                service: ${control_service_off}
+                data:
+                  entity_id: ${control_entity_id}
+
+  - id: !extend ${rc_id}_control_toggle
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return std::string("${control_entity_id}").size() > 0;
+          then:
+            - homeassistant.service:
+                service: ${control_service_toggle}
+                data:
+                  entity_id: ${control_entity_id}

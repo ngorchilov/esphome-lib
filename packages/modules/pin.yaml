@@ -1,0 +1,23 @@
+defaults:
+  inverted: false
+  allow_other_uses: false
+  input: false
+  output: false
+  pullup: false
+  pulldown: false
+  open_drain: false
+
+  # ESP-only (safe defaults)
+  drive_strength: 20mA
+  ignore_strapping_warning: false
+  ignore_pin_validation_error: false
+
+number: ${number}
+inverted: ${inverted}
+allow_other_uses: ${allow_other_uses}
+mode:
+  input: ${input}
+  output: ${output}
+  pullup: ${pullup}
+  pulldown: ${pulldown}
+  open_drain: ${open_drain}

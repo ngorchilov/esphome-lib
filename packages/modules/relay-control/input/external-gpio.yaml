@@ -1,0 +1,30 @@
+# Optional external mechanical switch input (GPIO)
+# - ext_mode: momentary | rocker
+# Always toggles CONTROL. momentary: toggle on press. rocker: toggle on any state change.
+
+defaults:
+  rc_id: rc1
+
+  ext_pin: GPIO0
+  ext_inverted: false
+  ext_strapping: false
+  ext_mode: rocker
+
+binary_sensor:
+  - platform: gpio
+    name: ${rc_id} External Switch
+    id: ${rc_id}_external_switch
+    pin: ${ {'number':ext_pin,'mode':{'input':true,'pullup':(not ext_inverted),'pulldown':ext_inverted},'inverted':ext_inverted,'ignore_strapping_warning':ext_strapping} if firmware_family=='esphome' else {'number':ext_pin,'mode':{'input':true,'pullup':(not ext_inverted),'pulldown':ext_inverted},'inverted':ext_inverted} }
+
+    # momentary: toggle on press
+    # rocker: toggle on any state change
+    on_press:
+      - script.execute: ${rc_id}_control_toggle
+
+    on_release:
+      - if:
+          condition:
+            lambda: |-
+              return std::string("${ext_mode}") == "rocker";
+          then:
+            - script.execute: ${rc_id}_control_toggle

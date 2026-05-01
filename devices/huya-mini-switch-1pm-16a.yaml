@@ -1,0 +1,109 @@
+substitutions:
+  name: light-lounge-ceiling
+  friendly_name: Light Lounge Ceiling
+
+  relay_pin: GPIO7 # Relay pin (rl1_pin)
+  relay_inverted: 'false' # Relay level (rl1_lv)
+
+  button_pin: GPIO24 # Button pin (total_bt_pin)
+  button_inverted: 'true' # Button level (total_bt_lv)
+
+  led_pin: GPIO26 # LED pin (netled1_pin)
+  led_inverted: 'true' # LED level (netled1_lv)
+
+  rocker_pin: GPIO6 # S1/S2 MAGIC switch pin
+  rocker_inverted: true
+  rocker_timeout: 1ms
+
+  bl0942_rx_pin: GPIO10 # RX pin for BL0942 (ele_rx)
+  bl0942_tx_pin: GPIO11 # TX pin for BL0942 (ele_tx)
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml
+  - !include ../packages/modules/energy-monitoring-bl0942.yaml
+
+external_components:
+  - source: github://ssieb/esphome_components
+    components: [magic_switch]
+
+logger:
+  level: DEBUG
+
+esphome:
+  on_boot:
+    - if:
+        condition:
+          light.is_on: relay_light
+        then:
+          - light.turn_on: relay_led
+        else:
+          - light.turn_off: relay_led
+
+magic_switch:
+  id: rocker_switch
+  pin:
+    number: ${rocker_pin}
+    inverted: ${rocker_inverted}
+    mode:
+      input: true
+      pullup: ${rocker_inverted}
+      pulldown: ${not rocker_inverted}
+    # ignore_strapping_warning: ${rocker_strapping}
+  timeout: ${rocker_timeout}
+  on_switch:
+    - light.toggle: relay_light
+    - binary_sensor.template.publish:
+        id: rocker_switch_virtual
+        state: !lambda 'return !id(rocker_switch_virtual).state;'
+
+binary_sensor:
+  - platform: gpio
+    name: Button
+    pin:
+      number: ${button_pin}
+      mode:
+        input: true
+        pullup: ${button_inverted}
+        pulldown: ${not button_inverted}
+      inverted: ${button_inverted}
+      # ignore_strapping_warning: ${button_strapping}
+    on_click:
+      - light.toggle: relay_light
+
+  - platform: template
+    name: Rocker Switch
+    id: rocker_switch_virtual
+    lambda: return {};
+
+### LED Indicator ###
+output:
+  - platform: gpio
+    id: relay_led_output
+    pin:
+      number: ${led_pin}
+      inverted: ${led_inverted}
+      # ignore_strapping_warning: ${led_strapping}
+
+  - platform: gpio
+    id: relay_output
+    pin:
+      number: ${relay_pin}
+      inverted: ${relay_inverted}
+      # ignore_strapping_warning: ${relay_strapping}
+
+light:
+  - platform: binary
+    name: LED
+    id: relay_led
+    output: relay_led_output
+    internal: true
+
+  - platform: binary
+    id: relay_light
+    name: None
+    output: relay_output
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - light.turn_on: relay_led
+    on_turn_off:
+      - light.turn_off: relay_led
