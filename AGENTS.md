@@ -1,33 +1,272 @@
-# AGENTS.md — esphome-lib
+# AGENTS.md - esphome-lib
 
-## Purpose
+## What This Repository Is
 
-This repository is an ESPHome package library for reusable device, board, networking, and module templates.
+`esphome-lib` is a reusable ESPHome package library. It provides:
 
-It is actively used. Do not treat it as a throwaway experiment. Make small, careful, testable changes.
+- board packages that describe MCU families and physical board targets
+- base-board packages that add common ESPHome services and diagnostics
+- networking packages for Wi-Fi, Ethernet, API, OTA, and mDNS
+- functional modules for relays, lights, switches, energy monitors, and integrations
+- concrete `devices/*.yaml` files that compose those packages into real devices
 
-Primary current workstream: refactor and extend the `relay-control` module so it can replace older one-off relay/switch/light modules while remaining reusable across ESPHome and LibreTiny boards.
+This repository is actively used. Treat it like production infrastructure: make small, deliberate,
+validated changes, and preserve intentional device values.
 
-## How to work in this repository
+Current task plans, migration notes, known temporary decisions, and session handoff notes belong in
+`.codex/progress.md`. Keep this file durable and generally applicable.
 
-- Prefer KISS.
-- Prefer minimal diffs.
-- Do not rewrite unrelated files.
-- Do not rename files or move directories unless explicitly asked.
-- Do not “fix” values that are intentionally chosen by the user.
-- When unsure, inspect the current file tree and current YAML before editing.
-- Preserve the user’s style unless a change is required for ESPHome compatibility.
-- After a change, run the smallest relevant ESPHome validation command before broad compile attempts.
+## Composition Model
 
-## Validation commands
+The library is layered. Most concrete devices follow this shape:
 
-Typical working directory for device validation:
+```text
+devices/<device>.yaml
+  -> packages/boards/<vendor-or-family>/<board>.yaml
+    -> packages/boards/templates/base-board-<family>.yaml
+      -> packages/boards/templates/base-board.yaml
+        -> packages/modules/networking.yaml
+  -> optional packages/modules/*.yaml
+  -> device-specific components and overrides
+```
+
+### Devices
+
+`devices/*.yaml` files are concrete firmware configurations. They should mostly:
+
+- define device substitutions such as `name`, `friendly_name`, pins, inversion flags, and feature choices
+- include exactly one board package
+- include reusable modules when possible
+- contain device-specific behavior only when it truly belongs to that one device
+
+Do not casually change project metadata, names, pins, restore modes, or entity names in device files.
+Values like `none`, `None`, quoted booleans, commented pin options, or unusual defaults may be
+intentional for a specific device or for Home Assistant entity behavior.
+
+### Board Packages
+
+`packages/boards/*/*.yaml` files describe hardware targets. They should:
+
+- include the appropriate base-board template
+- define the ESPHome platform component (`esp32`, `esp8266`, `bk72xx`, `rtl87xx`, etc.)
+- set board, variant, framework, and family-specific compatibility options
+- avoid device behavior such as relay logic, sensors, lights, and user-facing automations
+
+Board packages may define platform facts such as `firmware_family` through the base-board pipeline.
+
+### Base-Board Packages
+
+`packages/boards/templates/base-board*.yaml` files provide shared firmware foundations:
+
+- `esphome` name/friendly name and minimum ESPHome version
+- logger defaults
+- API, OTA, mDNS, and networking through `packages/modules/networking.yaml`
+- common diagnostics such as uptime, status, version, restart button, and time
+- family-specific adjustments for ESPHome, LibreTiny, ESP8266, ESP32, Beken, and Realtek
+
+Keep base-board packages broad and boring. If a behavior is not useful across many devices, it
+probably belongs in a device file or a functional module instead.
+
+### Functional Modules
+
+`packages/modules/*.yaml` files add reusable behavior. Modules should be designed around explicit
+inputs and narrow responsibilities.
+
+Important modules:
+
+- `networking.yaml` selects Wi-Fi, Ethernet, or no network support and owns API/OTA/mDNS defaults.
+- `pin.yaml` is the shared pin schema wrapper used by modules that need ESPHome/LibreTiny-safe pins.
+- `relay-control.yaml` is the public relay-control assembler and composes smaller relay-control packages.
+- `energy-monitoring-bl0937.yaml` and `energy-monitoring-bl0942.yaml` expose reusable energy monitor setups.
+- `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
+
+Prefer a module over copy/paste device logic when the behavior is reusable. Prefer device-local YAML
+when the behavior is unique, experimental, or depends on one physical product.
+
+## Firmware Families
+
+The project currently distinguishes at least:
+
+```yaml
+firmware_family: esphome
+firmware_family: libretiny
+```
+
+This value is defined by the board/base-board layer. Modules included through normal device configs
+may assume it exists.
+
+Important compatibility rule:
+
+- ESPHome/ESP32 pin schemas may accept ESP-specific keys such as `ignore_strapping_warning`.
+- LibreTiny pin schemas reject ESP-specific keys.
+
+## Shared Pin Infrastructure
+
+Use `packages/modules/pin.yaml` for reusable module pins unless there is a proven reason not to.
+It supports:
+
+- full GPIO pin schemas for switches, binary sensors, UART pins, outputs, and similar components
+- `schema: number` for components such as Ethernet that accept pin-number schemas rather than full GPIO mappings
+- ESP-specific pin keys only when `firmware_family == 'esphome'`
+- LibreTiny-safe mappings when `firmware_family == 'libretiny'`
+
+`packages/modules/pin/esphome.yaml` and `packages/modules/pin/libretiny.yaml` exist as platform
+variants. The preferred long-term design is for `pin.yaml` to wrap those variants, but nested dynamic
+include behavior has been unreliable. The current expression-generated mapping in `pin.yaml` is a
+contained compatibility workaround. Do not copy that pattern into unrelated modules unless it has
+been validated and documented in `.codex/progress.md`.
+
+## Networking Framework
+
+`packages/modules/networking.yaml` is included by `base-board.yaml` and chooses the network stack via:
+
+```yaml
+networking_mode: wifi # wifi | ethernet | none
+```
+
+Responsibilities:
+
+- include Wi-Fi support when `networking_mode: wifi`
+- include Ethernet support when `networking_mode: ethernet`
+- expose API, OTA, and mDNS defaults
+- use `pin.yaml` for Ethernet pin-number fields
+
+The networking module uses conditional package inclusion. Preserve the existing include style unless
+you have validated a different approach with concrete devices.
+
+## Relay-Control Framework
+
+`packages/modules/relay-control.yaml` is the public entrypoint for reusable relay, switch, and light
+control behavior. It is an assembler package: it composes core relay behavior, one control target,
+and optional feature packages.
+
+Relay-control concepts:
+
+- POWER is the local physical relay.
+- CONTROL is the logical target for external inputs and optional light facade.
+- CONTROL may map to POWER locally, call a detached Home Assistant entity, or remain no-op.
+
+Core invariants:
+
+- The local power relay switch is always present.
+- The power relay is always directly controllable, even in detached mode.
+- Indicator LEDs, when present, follow the power relay state for safety.
+- Integrated physical buttons, when present, toggle the power relay.
+- External wall-switch inputs toggle CONTROL.
+- The optional light facade targets CONTROL while the power switch remains independent.
+
+`control_mode` values:
+
+- `local`: CONTROL delegates to POWER.
+- `detached`: CONTROL calls Home Assistant service/action on `control_entity_id`.
+- `none`: CONTROL scripts remain no-op.
+
+Relay-control is multi-instance by design. Every generated id must include `rc_id` or another
+caller-provided unique prefix. Do not move instance-specific values into global substitutions unless
+there is no workable alternative.
+
+Preferred include shape:
+
+```yaml
+packages:
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc_id: r1
+      rc_name: none
+      relay_pin: GPIO4
+      relay_inverted: false
+      relay_strapping: false
+      control_mode: local
+```
+
+## Package Design Standards
+
+### Defaults, Vars, And Substitutions
+
+- Use `defaults:` plus `vars:` for reusable, multi-instance modules.
+- Use global `substitutions:` for device values, board facts, and single-instance legacy modules.
+- Avoid global substitutions for instance-specific reusable module values.
+- Internal package references may use private-looking names such as `_rc_target_local_pkg`.
+- Keep defaults close to the module that owns them.
+
+### IDs And Names
+
+- Generated ids in reusable modules must be deterministic and collision-safe.
+- Multi-instance modules must include an instance prefix such as `rc_id` in every generated id.
+- Shared base-board diagnostics may use stable `mcu_*` ids.
+- Single-instance modules may use simple ids only when the module is clearly not multi-instance.
+- Do not change entity names just because they look odd. Some names intentionally influence Home
+  Assistant display behavior.
+
+### Optional Features
+
+- Optional subcomponents should be opt-in and easy to disable.
+- Prefer clear booleans such as `has_indicator_led`, `has_external_switch_gpio`, or `has_expose_light`.
+- Disabled optional packages should contribute no components.
+- Feature flags should not require callers to pass irrelevant pins or entity ids.
+
+### Includes And Conditional Packages
+
+- Prefer list-form `packages:` entries:
+
+```yaml
+packages:
+  - !include ../packages/modules/example.yaml
+```
+
+- Use real `!include` blocks with `vars:` when passing module variables.
+- Be careful with named package entries; use them only when they are clearly needed.
+- Do not return raw `{file: ..., vars: ...}` package dictionaries from expressions.
+- Validate conditional include behavior with `esphome config` before applying it broadly.
+
+## YAML Coding Standards
+
+- Avoid quotes unless YAML requires them.
+  - Empty string values may use `''`.
+  - Plain values such as `local`, `detached`, `rocker`, `light.turn_on`, and `RESTORE_DEFAULT_OFF` should remain unquoted.
+- Preserve existing quoted values when they appear intentional.
+- Prefer readable YAML over compact one-liners.
+- Keep comments short and useful.
+- Do not add explanatory comments for obvious YAML.
+
+ESPHome component attribute order:
+
+```text
+platform
+name
+id
+visibility/internal/entity category
+pin/output/entity-specific options
+automations/actions
+```
+
+When both `name` and `id` are present, prefer `name` before `id`.
+
+## ESPHome Templating Standards
+
+ESPHome templating behavior depends on version and context. Be conservative.
+
+Known fragile patterns:
+
+- returning schema-sensitive mappings from `${ ... }`
+- using dynamic paths inside nested `!include` wrappers
+- using YAML merge (`<<`) with `${ ... }` values
+- returning raw package dictionaries with `file` / `vars` from expressions
+- relying on named package entries where list-form entries are clearer
+
+If a templating approach is required for reusable infrastructure, validate it with `esphome config`
+on concrete ESPHome and LibreTiny devices when applicable.
+
+## Validation Standards
+
+Run validation from:
 
 ```bash
 cd /Users/ngorchilov/Desktop/dev/esphome-lib/devices
 ```
 
-Preferred first check:
+Run `esphome config` before compile:
 
 ```bash
 esphome config sonoff-basic-r4-switch.yaml
@@ -39,407 +278,29 @@ Compile only after config succeeds:
 esphome compile sonoff-basic-r4-switch.yaml
 ```
 
-For other devices, replace the YAML filename accordingly.
+Choose validation targets by impact:
 
-When a command fails, focus on the first real error block. Do not chase warnings unless they block validation or clearly indicate a broken template.
+- Base-board, networking, or common diagnostics: validate at least one Wi-Fi ESPHome device and one relevant Ethernet or LibreTiny device.
+- Pin wrapper changes: validate an ESPHome device and a LibreTiny device.
+- Relay-control changes: validate a relay-control device and any device mode touched by the change.
+- Device-only changes: validate that device.
 
-## Coding style
+When validation fails, report the first real error block and the file involved.
 
-### YAML style
+## Editing Discipline
 
-- Avoid quotes unless YAML requires them.
-  - Empty string values may use `''`.
-  - Plain strings like `local`, `detached`, `rocker`, `light.turn_on`, `RESTORE_DEFAULT_OFF` should remain unquoted.
-- Prefer readable YAML over clever one-liners when parser or templating behavior is ambiguous.
-- For ESPHome components, keep a consistent attribute order:
-  - `platform`
-  - `name`
-  - `id`
-  - visibility/internal
-  - pin/output/entity-specific options
-  - automations/actions
-- When both `name` and `id` are present, prefer `name` before `id`.
-- Keep comments short and useful.
-- Do not add noisy explanatory comments for obvious YAML.
+- Inspect before editing.
+- Change only files relevant to the task.
+- Preserve unrelated user changes.
+- Do not clean up generated ESPHome cache/build output unless explicitly asked.
+- Do not rename, move, or reorganize packages unless explicitly asked.
+- Put task plans, temporary decisions, and follow-up notes in `.codex/progress.md`, not in this file.
 
-### ESPHome style
+## Reporting Back
 
-- Prefer package templates with `defaults:` and `vars:` for reusable, multi-instance modules.
-- Avoid global `substitutions:` for instance-specific module values when the same module may be included multiple times.
-- It is acceptable for board/base templates to define global platform facts such as `firmware_family`.
-- Prefer list-form `packages:` when package names can be confused with component names or when nesting becomes fragile.
+When reporting changes:
 
-Example preferred include style for multi-instance modules:
-
-```yaml
-packages:
-  - !include
-    file: ../packages/modules/relay-control.yaml
-    vars:
-      rc_id: r1
-      rc_name: none
-      relay_pin: GPIO4
-      relay_inverted: false
-```
-
-`rc_name: none` may be intentional to let Home Assistant inherit/use the device name. Do not change it to `${friendly_name}` unless explicitly asked.
-
-## Current repository structure
-
-Important paths:
-
-```text
-packages/
-  boards/                         # board/base-board packages
-  modules/                        # reusable functional modules
-    networking.yaml
-    networking/
-    relay-control.yaml             # public relay-control assembler / entrypoint
-    relay-control/
-      core.yaml
-      indicator-led.yaml
-      control-target/
-        local.yaml
-        detached.yaml
-      input/
-        integrated-button-gpio.yaml
-        external-gpio.yaml
-        external-magic.yaml
-      expose/
-        light.yaml
-    pin.yaml                       # shared GPIO pin wrapper / current investigation area
-    pin/
-      esphome.yaml
-      libretiny.yaml
-
-devices/                           # concrete device YAMLs
-```
-
-If the actual tree differs, inspect it and use the actual tree. Do not invent paths.
-
-## Firmware families
-
-The project currently distinguishes at least:
-
-```yaml
-firmware_family: esphome
-firmware_family: libretiny
-```
-
-This is defined earlier in the board/base pipeline. Modules may assume it exists when included through normal device configs.
-
-Important ESPHome-vs-LibreTiny difference already encountered:
-
-- ESPHome/ESP32 pin schema supports options such as `ignore_strapping_warning`.
-- LibreTiny pin schema rejects ESP-specific options.
-
-Do not emit ESP-specific pin keys into LibreTiny configs.
-
-## Relay-control architecture
-
-### Goal
-
-`packages/modules/relay-control.yaml` is the public entrypoint for a flexible relay control module.
-
-It should replace older one-off modules such as:
-
-- `relay-control-switch.yaml`
-- `relay-control-light.yaml`
-- `relay-control-light-magic.yaml`
-- `relay-control-smart-light.yaml`
-- `relay-control-smart-light-magic.yaml`
-
-without duplicating component logic.
-
-### Invariants
-
-- The local power relay switch is always present.
-- The power relay is always directly controllable, even in detached mode.
-- The indicator LED, when present, always reflects the power relay state for safety.
-- The integrated physical button, when present, always toggles the power relay.
-- External wall-switch inputs toggle CONTROL.
-- CONTROL may target the local relay or a detached Home Assistant entity.
-
-### Control modes
-
-`control_mode` values:
-
-- `local`: control actions delegate to the power relay.
-- `detached`: control actions call Home Assistant service/action on `control_entity_id`.
-- `none`: control scripts remain no-op.
-
-### Optional subcomponents
-
-Optional relay-control subcomponents must be opt-in and easy to disable:
-
-```yaml
-has_indicator_led: false
-has_integrated_button: false
-has_external_switch_gpio: false
-has_external_magic: false
-has_expose_light: false
-```
-
-### Relay-control file contracts
-
-`packages/modules/relay-control/core.yaml`
-
-- Defines the always-present power relay switch.
-- Defines scripts:
-  - `${rc_id}_after_power_change`
-  - `${rc_id}_power_on`
-  - `${rc_id}_power_off`
-  - `${rc_id}_power_toggle`
-  - `${rc_id}_control_on`
-  - `${rc_id}_control_off`
-  - `${rc_id}_control_toggle`
-- `control_*` scripts are placeholders/no-op in core and are implemented by control-target packages via `!extend`.
-
-`packages/modules/relay-control/control-target/local.yaml`
-
-- Extends `control_*` scripts.
-- Delegates control to `power_*` scripts.
-
-`packages/modules/relay-control/control-target/detached.yaml`
-
-- Extends `control_*` scripts.
-- Calls Home Assistant service/action on `control_entity_id`.
-- Requires ESPHome `api:` to be enabled by the broader config.
-
-`packages/modules/relay-control/indicator-led.yaml`
-
-- Optional.
-- LED must follow the power relay state, not the detached/control target state.
-- Hooks into `${rc_id}_after_power_change` via `!extend`.
-
-`packages/modules/relay-control/input/integrated-button-gpio.yaml`
-
-- Optional.
-- Integrated button toggles the power relay only.
-- This is a safety/power-cut behavior and should not be redirected to detached/control target.
-
-`packages/modules/relay-control/input/external-gpio.yaml`
-
-- Optional.
-- External switch toggles CONTROL.
-- `ext_mode: momentary` means toggle on press; release is ignored.
-- `ext_mode: rocker` means toggle on every state change; both press and release toggle.
-- The actual physical rocker state is not authoritative because multi-way switch wiring is possible.
-
-`packages/modules/relay-control/input/external-magic.yaml`
-
-- Optional.
-- Used for custom/magic switch style inputs.
-- May preserve a virtual state in a template binary sensor.
-- Still emits CONTROL toggles, not direct power toggles, unless explicitly changed.
-
-`packages/modules/relay-control/expose/light.yaml`
-
-- Optional.
-- Exposes a light facade for appliance/light semantics.
-- The power switch still exists independently.
-
-## Multi-instance requirement
-
-Relay-control must support multiple independent instances in one device.
-
-Do not convert instance values to global substitutions unless there is no alternative.
-
-Preferred pattern:
-
-```yaml
-packages:
-  - !include
-    file: ../packages/modules/relay-control.yaml
-    vars:
-      rc_id: r1
-      rc_name: none
-      relay_pin: GPIO4
-      relay_inverted: false
-      relay_strapping: false
-      control_mode: local
-      has_indicator_led: true
-      led_pin: GPIO13
-      led_inverted: true
-      led_strapping: false
-
-  - !include
-    file: ../packages/modules/relay-control.yaml
-    vars:
-      rc_id: r2
-      rc_name: Channel 2
-      relay_pin: GPIO5
-      relay_inverted: false
-      relay_strapping: false
-      control_mode: local
-```
-
-All generated ids must include `rc_id` or another caller-provided unique prefix.
-
-## ESPHome templating pitfalls already discovered
-
-These are known-bad or fragile in the current ESPHome 2025.12.x environment.
-
-### 1. Do not return schema-sensitive mappings via `${ ... }`
-
-This is fragile:
-
-```yaml
-pin: ${ firmware_family == 'esphome' and _pin_esphome or _pin_libretiny }
-```
-
-ESPHome may treat the expression result as an `EStr`/string scalar instead of a YAML mapping. Pin validation then sees a string like `{...}` rather than a mapping.
-
-### 2. Dynamic `!include file:` path may not expand variables
-
-This failed:
-
-```yaml
-!include
-file: pin/${firmware_family}.yaml
-```
-
-ESPHome attempted to open the literal path containing `${firmware_family}`.
-
-### 3. YAML merge cannot merge `${ ... }`
-
-This failed:
-
-```yaml
-<<: ${ _pin_esphome if firmware_family == 'esphome' else _pin_libretiny }
-```
-
-YAML merge expects a real mapping node, but ESPHome provided an `EStr`.
-
-### 4. Do not return raw package dicts with `file` / `vars` from Jinja`
-
-This is fragile or invalid:
-
-```yaml
-packages:
-  - ${ {'file':'relay-control/input/external-gpio.yaml','vars':{...}} if has_external_switch_gpio else {} }
-```
-
-If `vars:` is needed, it should usually be under a real `!include` block, not a raw dict produced by an expression.
-
-### 5. Be careful with named package entries
-
-Named package entries like this can be misread in some contexts:
-
-```yaml
-packages:
-  relay: !include
-    file: ../packages/modules/relay-control.yaml
-    vars:
-      rc_id: r1
-```
-
-During this refactor, prefer list-form package entries:
-
-```yaml
-packages:
-  - !include
-    file: ../packages/modules/relay-control.yaml
-    vars:
-      rc_id: r1
-```
-
-## Shared pin abstraction status
-
-There is an active investigation around:
-
-```text
-packages/modules/pin.yaml
-packages/modules/pin/esphome.yaml
-packages/modules/pin/libretiny.yaml
-```
-
-Intended goal:
-
-- Modules can include a shared pin wrapper instead of duplicating pin schemas.
-- ESPHome-family configs may include ESP-specific pin options.
-- LibreTiny configs must not include ESP-specific pin options.
-- The call site should pass only values relevant to that pin use case.
-- Defaults should live in the pin wrapper or pin implementation where possible.
-
-Example desired call-site shape:
-
-```yaml
-pin: !include
-  file: ../../pin.yaml
-  vars:
-    number: ${button_pin}
-    inverted: ${button_inverted}
-    input: true
-    pullup: ${button_inverted}
-    pulldown: ${!button_inverted}
-    ignore_strapping_warning: ${button_strapping}
-```
-
-Known failed approaches are listed in the templating pitfalls above.
-
-If ESPHome's newer templating system has gained a safe way to select mappings/includes, verify it by running `esphome config` before applying broadly.
-
-If a generic `pin.yaml` wrapper cannot be made reliable, propose the least-bad alternative with minimal duplication. Possible alternatives:
-
-1. Keep `pin.yaml` as a common/libretiny-safe subset and add small ESP-only patch packages where necessary.
-2. Use package-level conditional includes per component type.
-3. Use board-level static selection only if verified to work with the current ESPHome version.
-
-Do not reintroduce expression-generated pin mappings unless verified by validation.
-
-## Networking module context
-
-The repository also contains a reusable networking module:
-
-```text
-packages/modules/networking.yaml
-packages/modules/networking/
-```
-
-Networking has used conditional package inclusion successfully in some cases.
-
-Do not break it while working on relay-control or pin helpers.
-
-## Device migration context: Sonoff Basic R4
-
-`devices/sonoff-basic-r4-switch.yaml` is the current test migration target from old `relay-control-switch.yaml` to the new `relay-control.yaml`.
-
-Expected behavior:
-
-- Power relay switch is present.
-- `rc_name: none` may be intentional.
-- Indicator LED follows the power relay.
-- Integrated button toggles the power relay.
-- External GPIO switch is rocker mode and toggles CONTROL.
-- Current control mode is `local`.
-- Optional light facade is disabled unless explicitly enabled.
-- Optional magic switch is disabled unless explicitly enabled.
-
-Do not alter unrelated metadata, project fields, board package selection, networking settings, or naming unless required to compile.
-
-## Editing workflow for Codex
-
-Before editing:
-
-1. Inspect the relevant files.
-2. Identify the smallest likely cause.
-3. Explain the intended minimal change if the user asked for discussion first.
-
-When editing:
-
-1. Edit only files relevant to the issue.
-2. Preserve existing style and intentional values.
-3. Avoid broad formatting-only changes.
-4. Run `esphome config` on the target device after changes when possible.
-
-When reporting back:
-
-- Summarize what changed.
-- Mention files changed.
-- Include the validation result or the first remaining error.
-- Be explicit if a workaround relies on an ESPHome version-specific behavior.
-
-```
-
-```
+- summarize what changed
+- mention files changed
+- include validation results or the first remaining error
+- call out any ESPHome-version-specific workaround
