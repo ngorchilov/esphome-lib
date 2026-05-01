@@ -2,21 +2,21 @@ substitutions:
   name: sonoff-basic-r4
   friendly_name: Sonoff BASIC R4
 
-  # relay_pin: GPIO4
-  # relay_inverted: false
-  # relay_strapping: false
+  relay_pin: GPIO4
+  relay_inverted: false
+  relay_strapping: false
 
-  # button_pin1: GPIO9
-  # button_inverted: true
-  # button_strapping: true
+  button_pin: GPIO9
+  button_inverted: true
+  button_strapping: true
 
-  # led_pin: GPIO6
-  # led_inverted: false
-  # led_strapping: false
+  led_pin: GPIO6
+  led_inverted: false
+  led_strapping: false
 
-  # rocker_pin: GPIO5 # Sonoff Magic Switch
-  # rocker_inverted: false
-  # rocker_strapping: false
+  rocker_pin: GPIO5 # Sonoff Magic Switch
+  rocker_inverted: false
+  rocker_strapping: false
 
 packages:
   - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml
@@ -26,35 +26,28 @@ packages:
       rc_id: sbr4
       rc_name: none
 
-      # Power relay (always present)
-      relay_pin: GPIO4
-      relay_inverted: false
-      relay_strapping: false
+      relay_pin: ${relay_pin}
+      relay_inverted: ${relay_inverted}
+      relay_strapping: ${relay_strapping}
 
-      # Control target for external switches
       control_mode: local
 
-      # Indicator LED (follows power relay)
       has_indicator_led: true
-      led_pin: GPIO6
-      led_inverted: false
-      led_strapping: false
+      led_pin: ${led_pin}
+      led_inverted: ${led_inverted}
+      led_strapping: ${led_strapping}
 
-      # Integrated button (toggles power relay)
       has_integrated_button: true
-      button_pin: GPIO9
-      button_inverted: true
-      button_strapping: false
-      button_internal: false
+      button_pin: ${button_pin}
+      button_inverted: ${button_inverted}
+      button_strapping: ${button_strapping}
 
-      # External switch input (Sonoff "magic" switch wired to GPIO)
       has_external_switch_gpio: true
-      ext_pin: GPIO5 # Sonoff Magic Switch
-      ext_inverted: false
-      ext_strapping: false
+      ext_pin: ${rocker_pin}
+      ext_inverted: ${rocker_inverted}
+      ext_strapping: ${rocker_strapping}
       ext_mode: rocker
 
-      # Optional exposed light facade (off by default)
       has_expose_light: false
       has_external_magic: false
 

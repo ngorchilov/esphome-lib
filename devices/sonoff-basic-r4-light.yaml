@@ -19,6 +19,34 @@ substitutions:
   rocker_strapping: false
 
 packages:
-  Board: github://ngorchilov/esphome-lib/packages/boards/espressif/esp32-c3-devkitm-1.yaml
-  WiFi: github://ngorchilov/esphome-lib/packages/modules/wifi.yaml
-  Relay: github://ngorchilov/esphome-lib/packages/modules/relay-control-light-magic.yaml
+  - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc_id: sbr4
+      rc_name: none
+
+      relay_pin: ${relay_pin}
+      relay_inverted: ${relay_inverted}
+      relay_strapping: ${relay_strapping}
+
+      control_mode: local
+
+      has_indicator_led: true
+      led_pin: ${led_pin}
+      led_inverted: ${led_inverted}
+      led_strapping: ${led_strapping}
+
+      has_integrated_button: true
+      button_pin: ${button_pin}
+      button_inverted: ${button_inverted}
+      button_strapping: ${button_strapping}
+
+      has_external_switch_gpio: true
+      ext_pin: ${rocker_pin}
+      ext_inverted: ${rocker_inverted}
+      ext_strapping: ${rocker_strapping}
+      ext_mode: rocker
+
+      has_expose_light: true
+      has_external_magic: false
