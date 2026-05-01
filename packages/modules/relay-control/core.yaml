@@ -22,7 +22,13 @@ switch:
   - platform: gpio
     name: ${rc_name} Power
     id: ${rc_id}_power_relay
-    pin: ${ {'number':relay_pin,'inverted':relay_inverted,'ignore_strapping_warning':relay_strapping} if firmware_family=='esphome' else {'number':relay_pin,'inverted':relay_inverted} }
+    pin: !include
+      file: ../pin.yaml
+      vars:
+        number: ${relay_pin}
+        inverted: ${relay_inverted}
+        output: true
+        ignore_strapping_warning: ${relay_strapping}
     restore_mode: ${relay_restore_mode}
     on_turn_on:
       - script.execute: ${rc_id}_after_power_change

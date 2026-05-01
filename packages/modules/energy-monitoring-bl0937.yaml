@@ -14,15 +14,24 @@ sensor:
   - platform: hlw8012
     id: energy_monitor
     model: BL0937
-    cf_pin:
-      number: ${bl0937_cf_pin}
-      inverted: true
-    cf1_pin:
-      number: ${bl0937_cf1_pin}
-      inverted: true
-    sel_pin:
-      number: ${bl0937_sel_pin}
-      inverted: true
+    cf_pin: !include
+      file: pin.yaml
+      vars:
+        number: ${bl0937_cf_pin}
+        inverted: true
+        input: true
+    cf1_pin: !include
+      file: pin.yaml
+      vars:
+        number: ${bl0937_cf1_pin}
+        inverted: true
+        input: true
+    sel_pin: !include
+      file: pin.yaml
+      vars:
+        number: ${bl0937_sel_pin}
+        inverted: true
+        output: true
     current:
       name: Current
       id: current

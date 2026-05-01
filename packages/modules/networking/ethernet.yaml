@@ -17,10 +17,25 @@ packages:
 
 ethernet:
   type: ${eth_type}
-  mdc_pin: ${ {'number':eth_mdc_pin,'ignore_strapping_warning':eth_mdc_strapping} if firmware_family=='esphome' else {'number':eth_mdc_pin} }
-  mdio_pin: ${ {'number':eth_mdio_pin,'ignore_strapping_warning':eth_mdio_strapping} if firmware_family=='esphome' else {'number':eth_mdio_pin} }
+  mdc_pin: !include
+    file: ../pin.yaml
+    vars:
+      schema: number
+      number: ${eth_mdc_pin}
+      ignore_strapping_warning: ${eth_mdc_strapping}
+  mdio_pin: !include
+    file: ../pin.yaml
+    vars:
+      schema: number
+      number: ${eth_mdio_pin}
+      ignore_strapping_warning: ${eth_mdio_strapping}
   clk:
-    pin: ${ {'number':eth_clk_pin,'ignore_strapping_warning':eth_clk_strapping} if firmware_family=='esphome' else {'number':eth_clk_pin} }
+    pin: !include
+      file: ../pin.yaml
+      vars:
+        schema: number
+        number: ${eth_clk_pin}
+        ignore_strapping_warning: ${eth_clk_strapping}
     mode: ${eth_clk_mode}
   phy_addr: ${eth_phy_addr}
 

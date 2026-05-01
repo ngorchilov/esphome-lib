@@ -14,7 +14,15 @@ binary_sensor:
   - platform: gpio
     name: ${rc_id} External Switch
     id: ${rc_id}_external_switch
-    pin: ${ {'number':ext_pin,'mode':{'input':true,'pullup':(not ext_inverted),'pulldown':ext_inverted},'inverted':ext_inverted,'ignore_strapping_warning':ext_strapping} if firmware_family=='esphome' else {'number':ext_pin,'mode':{'input':true,'pullup':(not ext_inverted),'pulldown':ext_inverted},'inverted':ext_inverted} }
+    pin: !include
+      file: ../../pin.yaml
+      vars:
+        number: ${ext_pin}
+        inverted: ${ext_inverted}
+        input: true
+        pullup: ${not ext_inverted}
+        pulldown: ${ext_inverted}
+        ignore_strapping_warning: ${ext_strapping}
 
     # momentary: toggle on press
     # rocker: toggle on any state change

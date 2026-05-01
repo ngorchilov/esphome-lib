@@ -13,7 +13,13 @@ defaults:
 output:
   - platform: gpio
     id: ${rc_id}_indicator_output
-    pin: ${ {'number':led_pin,'inverted':led_inverted,'ignore_strapping_warning':led_strapping} if firmware_family=='esphome' else {'number':led_pin,'inverted':led_inverted} }
+    pin: !include
+      file: ../pin.yaml
+      vars:
+        number: ${led_pin}
+        inverted: ${led_inverted}
+        output: true
+        ignore_strapping_warning: ${led_strapping}
 
 light:
   - platform: binary

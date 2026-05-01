@@ -8,8 +8,16 @@ substitutions:
   bl0942_update_interval: 30s # Default interval for sending measurements
 
 uart:
-  tx_pin: ${bl0942_tx_pin}
-  rx_pin: ${bl0942_rx_pin}
+  tx_pin: !include
+    file: pin.yaml
+    vars:
+      number: ${bl0942_tx_pin}
+      output: true
+  rx_pin: !include
+    file: pin.yaml
+    vars:
+      number: ${bl0942_rx_pin}
+      input: true
   baud_rate: ${bl0942_baud_rate}
 
 sensor:
