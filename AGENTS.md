@@ -13,9 +13,6 @@
 This repository is actively used. Treat it like production infrastructure: make small, deliberate,
 validated changes, and preserve intentional device values.
 
-Current task plans, migration notes, known temporary decisions, and session handoff notes belong in
-`.codex/progress.md`. Keep this file durable and generally applicable.
-
 ## Composition Model
 
 The library is layered. Most concrete devices follow this shape:
@@ -129,7 +126,7 @@ pin: !include
 variants. The preferred long-term design is for `pin.yaml` to wrap those variants, but nested dynamic
 include behavior has been unreliable. The current expression-generated mapping in `pin.yaml` is a
 contained compatibility workaround. Do not copy that pattern into unrelated modules unless it has
-been validated and documented in `.codex/progress.md`.
+been validated and documented.
 
 ## Networking Framework
 
@@ -308,7 +305,7 @@ on concrete ESPHome and LibreTiny devices when applicable.
 Run validation from:
 
 ```bash
-cd /Users/ngorchilov/Desktop/dev/esphome-lib/devices
+cd devices
 ```
 
 Run `esphome config` before compile:
@@ -339,7 +336,6 @@ When validation fails, report the first real error block and the file involved.
 - Preserve unrelated user changes.
 - Do not clean up generated ESPHome cache/build output unless explicitly asked.
 - Do not rename, move, or reorganize packages unless explicitly asked.
-- Put task plans, temporary decisions, and follow-up notes in `.codex/progress.md`, not in this file.
 
 ## Reporting Back
 

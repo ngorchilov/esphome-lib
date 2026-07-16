@@ -19,7 +19,7 @@ substitutions:
   rocker_strapping: false
   rocker_timeout: 1ms
 
-  ha_light_entity: light.light_group_master
+  ha_light_entity: light.demo_light
 
 packages:
   - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml

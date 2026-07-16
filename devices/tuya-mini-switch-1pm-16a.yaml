@@ -1,6 +1,6 @@
 substitutions:
-  name: light-lounge-ceiling
-  friendly_name: Light Lounge Ceiling
+  name: tuya-mini-switch-1pm-16a
+  friendly_name: Huya Mini Switch (1PM 16A)
 
   relay_pin: GPIO7 # Relay pin (rl1_pin)
   relay_inverted: 'false' # Relay level (rl1_lv)
