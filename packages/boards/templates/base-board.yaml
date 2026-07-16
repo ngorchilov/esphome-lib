@@ -41,10 +41,20 @@ sensor:
             uint32_t mins  = (secs % 3600) / 60;
             uint32_t s     = secs % 60;
             char buf[48];
-            if (days > 0)       snprintf(buf, sizeof(buf), "%ud %uh %um", days, hours, mins);
-            else if (hours > 0) snprintf(buf, sizeof(buf), "%uh %um %us", hours, mins, s);
-            else if (mins > 0)  snprintf(buf, sizeof(buf), "%um %us", mins, s);
-            else                snprintf(buf, sizeof(buf), "%us", s);
+            if (days > 0) {
+              snprintf(buf, sizeof(buf), "%lud %luh %lum",
+                       static_cast<unsigned long>(days), static_cast<unsigned long>(hours),
+                       static_cast<unsigned long>(mins));
+            } else if (hours > 0) {
+              snprintf(buf, sizeof(buf), "%luh %lum %lus",
+                       static_cast<unsigned long>(hours), static_cast<unsigned long>(mins),
+                       static_cast<unsigned long>(s));
+            } else if (mins > 0) {
+              snprintf(buf, sizeof(buf), "%lum %lus",
+                       static_cast<unsigned long>(mins), static_cast<unsigned long>(s));
+            } else {
+              snprintf(buf, sizeof(buf), "%lus", static_cast<unsigned long>(s));
+            }
             id(mcu_uptime).publish_state(std::string(buf));
 
   - platform: internal_temperature
