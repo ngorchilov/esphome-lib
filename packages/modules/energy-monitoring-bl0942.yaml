@@ -1,23 +1,28 @@
 # BL0942 Energy Monitoring Module
 # Usage: Include this package in devices using the BL0942 chip for energy monitoring.
 
-substitutions:
-  bl0942_tx_pin: GPIO11 # Default TX pin for BL0942 (can be overridden in the main config)
-  bl0942_rx_pin: GPIO10 # Default RX pin for BL0942 (can be overridden in the main config)
-  bl0942_baud_rate: 4800 # Default baud rate for BL0942 (can be overridden in the main config)
-  bl0942_update_interval: 30s # Default interval for sending measurements
+defaults:
+  energy: ${ energy | default({}) }
+  bl0942_tx_pin: ${ energy.get("tx_pin", "GPIO11") }
+  bl0942_rx_pin: ${ energy.get("rx_pin", "GPIO10") }
+  bl0942_baud_rate: ${ energy.get("baud_rate", 4800) }
+  bl0942_update_interval: ${ energy.get("update_interval", "30s") }
 
 uart:
   tx_pin: !include
     file: pin.yaml
     vars:
-      number: ${bl0942_tx_pin}
-      output: true
+      pin:
+        number: ${bl0942_tx_pin}
+        mode:
+          output: true
   rx_pin: !include
     file: pin.yaml
     vars:
-      number: ${bl0942_rx_pin}
-      input: true
+      pin:
+        number: ${bl0942_rx_pin}
+        mode:
+          input: true
   baud_rate: ${bl0942_baud_rate}
 
 sensor:

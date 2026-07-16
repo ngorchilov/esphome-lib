@@ -1,7 +1,15 @@
+defaults:
+  firmware_family: ${ firmware_family | default("esphome") }
+  networking: ${ networking | default({}) }
+  networking_ethernet: ${ networking.get("ethernet", {}) }
+  eth_power_pin: ${ networking_ethernet.get("power_pin", "") }
+  eth_power_strapping: ${ networking_ethernet.get("power_strapping", false) }
+
 ethernet:
   power_pin: !include
     file: ../pin.yaml
     vars:
-      schema: number
-      number: ${eth_power_pin}
-      ignore_strapping_warning: ${eth_power_strapping}
+      pin:
+        schema: number
+        number: ${eth_power_pin}
+        ignore_strapping_warning: ${eth_power_strapping}

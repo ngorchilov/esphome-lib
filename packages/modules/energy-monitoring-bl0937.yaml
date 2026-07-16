@@ -1,14 +1,15 @@
 # BL0937 Energy Monitoring Module
 # Usage: Include this package in devices using the BL0937 chip for energy monitoring.
 
-substitutions:
-  bl0937_cf_pin: GPIO6 # Default CF pin for BL0937 (can be overridden in the main config)
-  bl0937_cf1_pin: GPIO8 # Default CF1 pin for BL0937 (can be overridden in the main config)
-  bl0937_sel_pin: GPIO11 # Default SEL pin for BL0937 (can be overridden in the main config)
-  bl0937_voltage_divider: 775 # Default voltage divider (must be a string)
-  bl0937_current_resistor: 0.00104 ohm # Default current resistor (must be a string)
-  bl0937_current_multiply: 1 # Default current multiplier (must be a string)
-  bl0937_update_interval: 30s # Default interval for sending measurements
+defaults:
+  energy: ${ energy | default({}) }
+  bl0937_cf_pin: ${ energy.get("cf_pin", "GPIO6") }
+  bl0937_cf1_pin: ${ energy.get("cf1_pin", "GPIO8") }
+  bl0937_sel_pin: ${ energy.get("sel_pin", "GPIO11") }
+  bl0937_voltage_divider: ${ energy.get("voltage_divider", 775) }
+  bl0937_current_resistor: ${ energy.get("current_resistor", "0.00104 ohm") }
+  bl0937_current_multiply: ${ energy.get("current_multiply", 1) }
+  bl0937_update_interval: ${ energy.get("update_interval", "30s") }
 
 sensor:
   - platform: hlw8012
@@ -17,21 +18,27 @@ sensor:
     cf_pin: !include
       file: pin.yaml
       vars:
-        number: ${bl0937_cf_pin}
-        inverted: true
-        input: true
+        pin:
+          number: ${bl0937_cf_pin}
+          inverted: true
+          mode:
+            input: true
     cf1_pin: !include
       file: pin.yaml
       vars:
-        number: ${bl0937_cf1_pin}
-        inverted: true
-        input: true
+        pin:
+          number: ${bl0937_cf1_pin}
+          inverted: true
+          mode:
+            input: true
     sel_pin: !include
       file: pin.yaml
       vars:
-        number: ${bl0937_sel_pin}
-        inverted: true
-        output: true
+        pin:
+          number: ${bl0937_sel_pin}
+          inverted: true
+          mode:
+            output: true
     current:
       name: Current
       id: current

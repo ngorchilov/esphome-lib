@@ -1,7 +1,11 @@
-substitutions:
-  wifi_ssid: !secret wifi_ssid
-  wifi_password: !secret wifi_password
-  ap_ssid: ESPHome-${name}
+defaults:
+  networking: ${ networking | default({}) }
+  networking_wifi: ${ networking.get("wifi", {}) }
+  _wifi_default_ssid: !secret wifi_ssid
+  _wifi_default_password: !secret wifi_password
+  wifi_ssid: ${ networking_wifi.get("ssid", _wifi_default_ssid) }
+  wifi_password: ${ networking_wifi.get("password", _wifi_default_password) }
+  ap_ssid: ${ networking_wifi.get("ap_ssid", "ESPHome-" ~ (name | default("base-board"))) }
 
 wifi:
   ssid: ${wifi_ssid}

@@ -107,8 +107,23 @@ It supports:
 
 - full GPIO pin schemas for switches, binary sensors, UART pins, outputs, and similar components
 - `schema: number` for components such as Ethernet that accept pin-number schemas rather than full GPIO mappings
+- a namespaced `pin:` vars object
 - ESP-specific pin keys only when `firmware_family == 'esphome'`
 - LibreTiny-safe mappings when `firmware_family == 'libretiny'`
+
+Preferred shape:
+
+```yaml
+pin: !include
+  file: ../pin.yaml
+  vars:
+    pin:
+      number: GPIO4
+      inverted: false
+      mode:
+        output: true
+      ignore_strapping_warning: false
+```
 
 `packages/modules/pin/esphome.yaml` and `packages/modules/pin/libretiny.yaml` exist as platform
 variants. The preferred long-term design is for `pin.yaml` to wrap those variants, but nested dynamic
@@ -121,15 +136,35 @@ been validated and documented in `.codex/progress.md`.
 `packages/modules/networking.yaml` is included by `base-board.yaml` and chooses the network stack via:
 
 ```yaml
-networking_mode: wifi # wifi | ethernet | none
+vars:
+  networking:
+    mode: wifi # wifi | ethernet | none
 ```
 
 Responsibilities:
 
-- include Wi-Fi support when `networking_mode: wifi`
-- include Ethernet support when `networking_mode: ethernet`
+- include Wi-Fi support when `networking.mode: wifi`
+- include Ethernet support when `networking.mode: ethernet`
 - expose API, OTA, and mDNS defaults
 - use `pin.yaml` for Ethernet pin-number fields
+
+Device-specific networking overrides should travel through the board package include so the base-board
+layer and nested networking package see the same package context:
+
+```yaml
+packages:
+  - !include
+    file: ../packages/boards/espressif/m5stack-core-esp32.yaml
+    vars:
+      networking:
+        mode: ethernet
+        ethernet:
+          type: IP101
+          mdc_pin: GPIO23
+          mdio_pin: GPIO18
+          clk_pin: GPIO0
+          power_pin: GPIO5
+```
 
 The networking module uses conditional package inclusion. Preserve the existing include style unless
 you have validated a different approach with concrete devices.
@@ -155,13 +190,13 @@ Core invariants:
 - External wall-switch inputs toggle CONTROL.
 - The optional light facade targets CONTROL while the power switch remains independent.
 
-`control_mode` values:
+`rc.control.mode` values:
 
 - `local`: CONTROL delegates to POWER.
-- `detached`: CONTROL calls Home Assistant service/action on `control_entity_id`.
+- `detached`: CONTROL calls Home Assistant service/action on `rc.control.entity_id`.
 - `none`: CONTROL scripts remain no-op.
 
-Relay-control is multi-instance by design. Every generated id must include `rc_id` or another
+Relay-control is multi-instance by design. Every generated id must include `rc.id` or another
 caller-provided unique prefix. Do not move instance-specific values into global substitutions unless
 there is no workable alternative.
 
@@ -172,28 +207,37 @@ packages:
   - !include
     file: ../packages/modules/relay-control.yaml
     vars:
-      rc_id: r1
-      rc_name: none
-      relay_pin: GPIO4
-      relay_inverted: false
-      relay_strapping: false
-      control_mode: local
+      rc:
+        id: r1
+        name: none
+        power:
+          pin: GPIO4
+          inverted: false
+          strapping: false
+        control:
+          mode: local
 ```
 
 ## Package Design Standards
 
 ### Defaults, Vars, And Substitutions
 
-- Use `defaults:` plus `vars:` for reusable, multi-instance modules.
-- Use global `substitutions:` for device values, board facts, and single-instance legacy modules.
-- Avoid global substitutions for instance-specific reusable module values.
+- Public reusable module APIs must use one namespaced object under `vars:` such as `rc:`, `pin:`,
+  `networking:`, or `energy:`.
+- Use `defaults:` to normalize namespaced objects into local helper values inside the module.
+- Use guarded lookups such as `rc.get("power", {}).get("pin", "GPIO0")`; do not rely on deep
+  default merging.
+- Use global `substitutions:` for device-local aliases, names, friendly names, board facts, and
+  ESPHome values that are intentionally global.
+- Avoid global substitutions for reusable module inputs.
 - Internal package references may use private-looking names such as `_rc_target_local_pkg`.
 - Keep defaults close to the module that owns them.
 
 ### IDs And Names
 
 - Generated ids in reusable modules must be deterministic and collision-safe.
-- Multi-instance modules must include an instance prefix such as `rc_id` in every generated id.
+- Multi-instance modules must include an instance prefix such as normalized `rc_id` in every
+  generated id.
 - Shared base-board diagnostics may use stable `mcu_*` ids.
 - Single-instance modules may use simple ids only when the module is clearly not multi-instance.
 - Do not change entity names just because they look odd. Some names intentionally influence Home
@@ -202,7 +246,8 @@ packages:
 ### Optional Features
 
 - Optional subcomponents should be opt-in and easy to disable.
-- Prefer clear booleans such as `has_indicator_led`, `has_external_switch_gpio`, or `has_expose_light`.
+- Prefer clear namespaced booleans such as `rc.indicator_led.enabled`,
+  `rc.external_switch.enabled`, or `rc.light.enabled`.
 - Disabled optional packages should contribute no components.
 - Feature flags should not require callers to pass irrelevant pins or entity ids.
 

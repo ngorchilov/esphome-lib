@@ -3,12 +3,15 @@
 # Always toggles CONTROL. momentary: toggle on press. rocker: toggle on any state change.
 
 defaults:
-  rc_id: rc1
+  rc: ${ rc | default({}) }
+  rc_external_switch: ${ rc.get("external_switch", {}) }
 
-  ext_pin: GPIO0
-  ext_inverted: false
-  ext_strapping: false
-  ext_mode: rocker
+  rc_id: ${ rc.get("id", "rc1") }
+
+  ext_pin: ${ rc_external_switch.get("pin", "GPIO0") }
+  ext_inverted: ${ rc_external_switch.get("inverted", false) }
+  ext_strapping: ${ rc_external_switch.get("strapping", false) }
+  ext_mode: ${ rc_external_switch.get("mode", "rocker") }
 
 binary_sensor:
   - platform: gpio
@@ -17,12 +20,14 @@ binary_sensor:
     pin: !include
       file: ../../pin.yaml
       vars:
-        number: ${ext_pin}
-        inverted: ${ext_inverted}
-        input: true
-        pullup: ${not ext_inverted}
-        pulldown: ${ext_inverted}
-        ignore_strapping_warning: ${ext_strapping}
+        pin:
+          number: ${ext_pin}
+          inverted: ${ext_inverted}
+          mode:
+            input: true
+            pullup: ${not ext_inverted}
+            pulldown: ${ext_inverted}
+          ignore_strapping_warning: ${ext_strapping}
 
     # momentary: toggle on press
     # rocker: toggle on any state change

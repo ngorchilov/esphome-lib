@@ -2,12 +2,15 @@
 # Always toggles POWER relay (safety / hardwired behavior).
 
 defaults:
-  rc_id: rc1
+  rc: ${ rc | default({}) }
+  rc_integrated_button: ${ rc.get("integrated_button", {}) }
 
-  button_pin: GPIO0
-  button_inverted: true
-  button_strapping: false
-  button_internal: false
+  rc_id: ${ rc.get("id", "rc1") }
+
+  button_pin: ${ rc_integrated_button.get("pin", "GPIO0") }
+  button_inverted: ${ rc_integrated_button.get("inverted", true) }
+  button_strapping: ${ rc_integrated_button.get("strapping", false) }
+  button_internal: ${ rc_integrated_button.get("internal", false) }
 
 binary_sensor:
   - platform: gpio
@@ -17,11 +20,13 @@ binary_sensor:
     pin: !include
       file: ../../pin.yaml
       vars:
-        number: ${button_pin}
-        inverted: ${button_inverted}
-        input: true
-        pullup: ${button_inverted}
-        pulldown: ${not button_inverted}
-        ignore_strapping_warning: ${button_strapping}
+        pin:
+          number: ${button_pin}
+          inverted: ${button_inverted}
+          mode:
+            input: true
+            pullup: ${button_inverted}
+            pulldown: ${not button_inverted}
+          ignore_strapping_warning: ${button_strapping}
     on_click:
       - script.execute: ${rc_id}_power_toggle

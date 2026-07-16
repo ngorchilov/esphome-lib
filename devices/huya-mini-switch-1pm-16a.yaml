@@ -15,12 +15,14 @@ substitutions:
   rocker_inverted: true
   rocker_timeout: 1ms
 
-  bl0942_rx_pin: GPIO10 # RX pin for BL0942 (ele_rx)
-  bl0942_tx_pin: GPIO11 # TX pin for BL0942 (ele_tx)
-
 packages:
   - !include ../packages/boards/tuya/cb2s.yaml
-  - !include ../packages/modules/energy-monitoring-bl0942.yaml
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0942.yaml
+    vars:
+      energy:
+        rx_pin: GPIO10 # RX pin for BL0942 (ele_rx)
+        tx_pin: GPIO11 # TX pin for BL0942 (ele_tx)
 
 external_components:
   - source: github://ssieb/esphome_components

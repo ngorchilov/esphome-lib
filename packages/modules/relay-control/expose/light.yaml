@@ -2,11 +2,14 @@
 # Targets CONTROL (so detached mode behaves naturally in HA).
 
 defaults:
-  rc_id: rc1
-  rc_name: Relay
+  rc: ${ rc | default({}) }
+  rc_light: ${ rc.get("light", {}) }
 
-  control_restore_mode: RESTORE_DEFAULT_OFF
-  expose_light_internal: false
+  rc_id: ${ rc.get("id", "rc1") }
+  rc_name: ${ rc.get("name", "Relay") }
+
+  control_restore_mode: ${ rc_light.get("restore_mode", "RESTORE_DEFAULT_OFF") }
+  expose_light_internal: ${ rc_light.get("internal", false) }
 
 output:
   - platform: template

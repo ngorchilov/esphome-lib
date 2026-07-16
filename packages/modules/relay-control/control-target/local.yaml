@@ -2,7 +2,8 @@
 # Implements ${rc_id}_control_* by delegating to ${rc_id}_power_*.
 
 defaults:
-  rc_id: rc1
+  rc: ${ rc | default({}) }
+  rc_id: ${ rc.get("id", "rc1") }
 
 script:
   - id: !extend ${rc_id}_control_on

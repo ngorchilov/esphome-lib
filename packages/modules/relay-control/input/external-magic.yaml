@@ -3,9 +3,12 @@
 # - We keep a virtual state in a template binary_sensor.
 
 defaults:
-  rc_id: rc1
-  ext_magic_source_id: external_magic_source
-  magic_state_internal: false
+  rc: ${ rc | default({}) }
+  rc_external_magic: ${ rc.get("external_magic", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  ext_magic_source_id: ${ rc_external_magic.get("source_id", "external_magic_source") }
+  magic_state_internal: ${ rc_external_magic.get("state_internal", false) }
 
 binary_sensor:
   - platform: template

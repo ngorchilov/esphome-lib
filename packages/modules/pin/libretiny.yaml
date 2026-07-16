@@ -1,9 +1,13 @@
-number: ${number}
-inverted: ${inverted}
-allow_other_uses: ${allow_other_uses}
+defaults:
+  pin: ${ pin | default({}) }
+  pin_mode: ${ pin.get("mode", {}) }
+
+number: ${ pin.get("number", "GPIO0") }
+inverted: ${ pin.get("inverted", false) }
+allow_other_uses: ${ pin.get("allow_other_uses", false) }
 mode:
-  input: ${input}
-  output: ${output}
-  pullup: ${pullup}
-  pulldown: ${pulldown}
-  open_drain: ${open_drain}
+  input: ${ pin_mode.get("input", false) }
+  output: ${ pin_mode.get("output", false) }
+  pullup: ${ pin_mode.get("pullup", false) }
+  pulldown: ${ pin_mode.get("pulldown", false) }
+  open_drain: ${ pin_mode.get("open_drain", false) }

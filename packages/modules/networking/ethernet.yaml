@@ -1,41 +1,47 @@
-substitutions:
-  firmware_family: esphome
-  eth_type: LAN8720 # LAN8720 | RTL8201 | DP83848 | IP101 | JL1101 | KSZ8081 | KSZ8081RNA | W5500 | OPENETH | DM9051 | LAN8670
-  eth_mdc_pin: GPIO23
-  eth_mdc_strapping: false
-  eth_mdio_pin: GPIO18
-  eth_mdio_strapping: false
-  eth_clk_pin: GPIO0
-  eth_clk_strapping: true
-  eth_clk_mode: CLK_EXT_IN # CLK_EXT_IN | CLK_OUT
-  eth_power_pin: ''
-  eth_power_strapping: false
-  eth_phy_addr: 1
+defaults:
+  firmware_family: ${ firmware_family | default("esphome") }
+  networking: ${ networking | default({}) }
+  networking_ethernet: ${ networking.get("ethernet", {}) }
+  eth_type: ${ networking_ethernet.get("type", "LAN8720") } # LAN8720 | RTL8201 | DP83848 | IP101 | JL1101 | KSZ8081 | KSZ8081RNA | W5500 | OPENETH | DM9051 | LAN8670
+  eth_mdc_pin: ${ networking_ethernet.get("mdc_pin", "GPIO23") }
+  eth_mdc_strapping: ${ networking_ethernet.get("mdc_strapping", false) }
+  eth_mdio_pin: ${ networking_ethernet.get("mdio_pin", "GPIO18") }
+  eth_mdio_strapping: ${ networking_ethernet.get("mdio_strapping", false) }
+  eth_clk_pin: ${ networking_ethernet.get("clk_pin", "GPIO0") }
+  eth_clk_strapping: ${ networking_ethernet.get("clk_strapping", true) }
+  eth_clk_mode: ${ networking_ethernet.get("clk_mode", "CLK_EXT_IN") } # CLK_EXT_IN | CLK_OUT
+  eth_power_pin: ${ networking_ethernet.get("power_pin", "") }
+  eth_power_strapping: ${ networking_ethernet.get("power_strapping", false) }
+  eth_phy_addr: ${ networking_ethernet.get("phy_addr", 1) }
+  net_eth_power_module: !include ethernet-power.yaml
 
 packages:
-  - ${ networking_mode == 'ethernet' and eth_power_pin and net_eth_power_module or {} }
+  - ${ eth_power_pin and net_eth_power_module or {} }
 
 ethernet:
   type: ${eth_type}
   mdc_pin: !include
     file: ../pin.yaml
     vars:
-      schema: number
-      number: ${eth_mdc_pin}
-      ignore_strapping_warning: ${eth_mdc_strapping}
+      pin:
+        schema: number
+        number: ${eth_mdc_pin}
+        ignore_strapping_warning: ${eth_mdc_strapping}
   mdio_pin: !include
     file: ../pin.yaml
     vars:
-      schema: number
-      number: ${eth_mdio_pin}
-      ignore_strapping_warning: ${eth_mdio_strapping}
+      pin:
+        schema: number
+        number: ${eth_mdio_pin}
+        ignore_strapping_warning: ${eth_mdio_strapping}
   clk:
     pin: !include
       file: ../pin.yaml
       vars:
-        schema: number
-        number: ${eth_clk_pin}
-        ignore_strapping_warning: ${eth_clk_strapping}
+        pin:
+          schema: number
+          number: ${eth_clk_pin}
+          ignore_strapping_warning: ${eth_clk_strapping}
     mode: ${eth_clk_mode}
   phy_addr: ${eth_phy_addr}
 

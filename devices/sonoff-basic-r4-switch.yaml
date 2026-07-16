@@ -23,33 +23,31 @@ packages:
   - !include
     file: ../packages/modules/relay-control.yaml
     vars:
-      rc_id: sbr4
-      rc_name: none
-
-      relay_pin: ${relay_pin}
-      relay_inverted: ${relay_inverted}
-      relay_strapping: ${relay_strapping}
-
-      control_mode: local
-
-      has_indicator_led: true
-      led_pin: ${led_pin}
-      led_inverted: ${led_inverted}
-      led_strapping: ${led_strapping}
-
-      has_integrated_button: true
-      button_pin: ${button_pin}
-      button_inverted: ${button_inverted}
-      button_strapping: ${button_strapping}
-
-      has_external_switch_gpio: true
-      ext_pin: ${rocker_pin}
-      ext_inverted: ${rocker_inverted}
-      ext_strapping: ${rocker_strapping}
-      ext_mode: rocker
-
-      has_expose_light: false
-      has_external_magic: false
+      rc:
+        id: sbr4
+        name: none
+        power:
+          pin: ${relay_pin}
+          inverted: ${relay_inverted}
+          strapping: ${relay_strapping}
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: ${led_pin}
+          inverted: ${led_inverted}
+          strapping: ${led_strapping}
+        integrated_button:
+          enabled: true
+          pin: ${button_pin}
+          inverted: ${button_inverted}
+          strapping: ${button_strapping}
+        external_switch:
+          enabled: true
+          pin: ${rocker_pin}
+          inverted: ${rocker_inverted}
+          strapping: ${rocker_strapping}
+          mode: rocker
 
 esphome:
   project:

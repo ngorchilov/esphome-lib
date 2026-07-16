@@ -2,127 +2,78 @@
 # Public entrypoint. Composes core + selected control target + optional plugins.
 
 defaults:
-  rc_id: rc1
-  rc_name: Relay
+  rc: ${ rc | default({}) }
+  rc_control: ${ rc.get("control", {}) }
+  rc_power: ${ rc.get("power", {}) }
+  rc_indicator_led: ${ rc.get("indicator_led", {}) }
+  rc_integrated_button: ${ rc.get("integrated_button", {}) }
+  rc_external_switch: ${ rc.get("external_switch", {}) }
+  rc_external_magic: ${ rc.get("external_magic", {}) }
+  rc_light: ${ rc.get("light", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  rc_name: ${ rc.get("name", "Relay") }
 
   # Control:
   # - local: external control toggles the local relay
   # - detached: external control toggles a HA entity (relay remains always controllable via Power switch)
-  control_mode: local
+  control_mode: ${ rc_control.get("mode", "local") }
 
   # Detached control target (used only when control_mode: detached)
-  control_entity_id: ''
-  control_service_on: light.turn_on
-  control_service_off: light.turn_off
-  control_service_toggle: light.toggle
+  control_entity_id: ${ rc_control.get("entity_id", "") }
+  control_service_on: ${ rc_control.get("service_on", "light.turn_on") }
+  control_service_off: ${ rc_control.get("service_off", "light.turn_off") }
+  control_service_toggle: ${ rc_control.get("service_toggle", "light.toggle") }
 
   # Optional plugins
-  has_indicator_led: false
-  has_integrated_button: false
-  has_external_switch_gpio: false
-  has_external_magic: false
-  has_expose_light: false
+  has_indicator_led: ${ rc_indicator_led.get("enabled", false) }
+  has_integrated_button: ${ rc_integrated_button.get("enabled", false) }
+  has_external_switch_gpio: ${ rc_external_switch.get("enabled", false) }
+  has_external_magic: ${ rc_external_magic.get("enabled", false) }
+  has_expose_light: ${ rc_light.get("enabled", false) }
 
   # Indicator LED vars (used only when has_indicator_led: true)
-  led_pin: GPIO0
-  led_inverted: false
-  led_strapping: false
-  led_internal: false
+  led_pin: ${ rc_indicator_led.get("pin", "GPIO0") }
+  led_inverted: ${ rc_indicator_led.get("inverted", false) }
+  led_strapping: ${ rc_indicator_led.get("strapping", false) }
+  led_internal: ${ rc_indicator_led.get("internal", false) }
 
   # Integrated button vars (used only when has_integrated_button: true)
-  button_pin: GPIO0
-  button_inverted: false
-  button_strapping: false
-  button_internal: false
+  button_pin: ${ rc_integrated_button.get("pin", "GPIO0") }
+  button_inverted: ${ rc_integrated_button.get("inverted", false) }
+  button_strapping: ${ rc_integrated_button.get("strapping", false) }
+  button_internal: ${ rc_integrated_button.get("internal", false) }
 
   # External GPIO switch vars (used only when has_external_switch_gpio: true)
-  ext_pin: GPIO0
-  ext_inverted: false
-  ext_strapping: false
-  ext_mode: rocker
+  ext_pin: ${ rc_external_switch.get("pin", "GPIO0") }
+  ext_inverted: ${ rc_external_switch.get("inverted", false) }
+  ext_strapping: ${ rc_external_switch.get("strapping", false) }
+  ext_mode: ${ rc_external_switch.get("mode", "rocker") }
 
   # External magic vars (used only when has_external_magic: true)
-  ext_magic_source_id: external_magic_source
-  magic_state_internal: false
+  ext_magic_source_id: ${ rc_external_magic.get("source_id", "external_magic_source") }
+  magic_state_internal: ${ rc_external_magic.get("state_internal", false) }
 
   # Light facade vars (used only when has_expose_light: true)
-  control_restore_mode: RESTORE_DEFAULT_OFF
-  expose_light_internal: false
+  control_restore_mode: ${ rc_light.get("restore_mode", "RESTORE_DEFAULT_OFF") }
+  expose_light_internal: ${ rc_light.get("internal", false) }
 
   # Power relay (always present)
-  relay_pin: GPIO0
-  relay_inverted: false
-  relay_strapping: false
-  relay_restore_mode: RESTORE_DEFAULT_OFF
+  relay_pin: ${ rc_power.get("pin", "GPIO0") }
+  relay_inverted: ${ rc_power.get("inverted", false) }
+  relay_strapping: ${ rc_power.get("strapping", false) }
+  relay_restore_mode: ${ rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF") }
 
-  # Internal package refs (loaded via !include so vars are valid package template vars)
-  _rc_target_local_pkg: !include
-    file: relay-control/control-target/local.yaml
-    vars:
-      rc_id: ${rc_id}
-
-  _rc_target_detached_pkg: !include
-    file: relay-control/control-target/detached.yaml
-    vars:
-      rc_id: ${rc_id}
-      control_entity_id: ${control_entity_id}
-      control_service_on: ${control_service_on}
-      control_service_off: ${control_service_off}
-      control_service_toggle: ${control_service_toggle}
-
-  _rc_indicator_led_pkg: !include
-    file: relay-control/indicator-led.yaml
-    vars:
-      rc_id: ${rc_id}
-      rc_name: ${rc_name}
-      led_pin: ${led_pin}
-      led_inverted: ${led_inverted}
-      led_strapping: ${led_strapping}
-      led_internal: ${led_internal}
-
-  _rc_integrated_button_pkg: !include
-    file: relay-control/input/integrated-button-gpio.yaml
-    vars:
-      rc_id: ${rc_id}
-      button_pin: ${button_pin}
-      button_inverted: ${button_inverted}
-      button_strapping: ${button_strapping}
-      button_internal: ${button_internal}
-
-  _rc_external_switch_gpio_pkg: !include
-    file: relay-control/input/external-gpio.yaml
-    vars:
-      rc_id: ${rc_id}
-      ext_pin: ${ext_pin}
-      ext_inverted: ${ext_inverted}
-      ext_strapping: ${ext_strapping}
-      ext_mode: ${ext_mode}
-
-  _rc_expose_light_pkg: !include
-    file: relay-control/expose/light.yaml
-    vars:
-      rc_id: ${rc_id}
-      rc_name: ${rc_name}
-      control_restore_mode: ${control_restore_mode}
-      expose_light_internal: ${expose_light_internal}
-
-  _rc_external_magic_pkg: !include
-    file: relay-control/input/external-magic.yaml
-    vars:
-      rc_id: ${rc_id}
-      ext_magic_source_id: ${ext_magic_source_id}
-      magic_state_internal: ${magic_state_internal}
+  _rc_target_local_pkg: !include relay-control/control-target/local.yaml
+  _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
+  _rc_indicator_led_pkg: !include relay-control/indicator-led.yaml
+  _rc_integrated_button_pkg: !include relay-control/input/integrated-button-gpio.yaml
+  _rc_external_switch_gpio_pkg: !include relay-control/input/external-gpio.yaml
+  _rc_expose_light_pkg: !include relay-control/expose/light.yaml
+  _rc_external_magic_pkg: !include relay-control/input/external-magic.yaml
 
 packages:
-  - !include
-    file: relay-control/core.yaml
-    vars:
-      rc_id: ${rc_id}
-      rc_name: ${rc_name}
-      relay_pin: ${relay_pin}
-      relay_inverted: ${relay_inverted}
-      relay_strapping: ${relay_strapping}
-      relay_restore_mode: ${relay_restore_mode}
+  - !include relay-control/core.yaml
 
   - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
 

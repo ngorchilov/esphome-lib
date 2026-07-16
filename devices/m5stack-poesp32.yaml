@@ -2,20 +2,23 @@ substitutions:
   name: m5stack-poesp32
   friendly_name: M5Stack PoESP32
 
-  networking_mode: ethernet
-  eth_type: IP101
-  eth_mdc_pin: GPIO23
-  eth_mdc_strapping: false
-  eth_mdio_pin: GPIO18
-  eth_mdio_strapping: false
-  eth_clk_pin: GPIO0
-  eth_clk_strapping: true
-  eth_power_pin: GPIO5
-  eth_power_strapping: true
-  eth_phy_addr: 1
-
 packages:
-  - !include ../packages/boards/espressif/m5stack-core-esp32.yaml
+  - !include
+    file: ../packages/boards/espressif/m5stack-core-esp32.yaml
+    vars:
+      networking:
+        mode: ethernet
+        ethernet:
+          type: IP101
+          mdc_pin: GPIO23
+          mdc_strapping: false
+          mdio_pin: GPIO18
+          mdio_strapping: false
+          clk_pin: GPIO0
+          clk_strapping: true
+          power_pin: GPIO5
+          power_strapping: true
+          phy_addr: 1
 
 esphome:
   project:

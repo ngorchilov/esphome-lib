@@ -4,13 +4,16 @@
 # - Indicator LED (if present) hooks into ${rc_id}_after_power_change (via !extend).
 
 defaults:
-  rc_id: rc1
-  rc_name: Relay
+  rc: ${ rc | default({}) }
+  rc_power: ${ rc.get("power", {}) }
 
-  relay_pin: GPIO0
-  relay_inverted: false
-  relay_strapping: false
-  relay_restore_mode: RESTORE_DEFAULT_OFF
+  rc_id: ${ rc.get("id", "rc1") }
+  rc_name: ${ rc.get("name", "Relay") }
+
+  relay_pin: ${ rc_power.get("pin", "GPIO0") }
+  relay_inverted: ${ rc_power.get("inverted", false) }
+  relay_strapping: ${ rc_power.get("strapping", false) }
+  relay_restore_mode: ${ rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF") }
 
 esphome:
   on_boot:
@@ -25,10 +28,12 @@ switch:
     pin: !include
       file: ../pin.yaml
       vars:
-        number: ${relay_pin}
-        inverted: ${relay_inverted}
-        output: true
-        ignore_strapping_warning: ${relay_strapping}
+        pin:
+          number: ${relay_pin}
+          inverted: ${relay_inverted}
+          mode:
+            output: true
+          ignore_strapping_warning: ${relay_strapping}
     restore_mode: ${relay_restore_mode}
     on_turn_on:
       - script.execute: ${rc_id}_after_power_change

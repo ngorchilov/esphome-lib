@@ -3,11 +3,14 @@
 # Note: requires `api:` enabled.
 
 defaults:
-  rc_id: rc1
-  control_entity_id: '' # e.g. light.kitchen
-  control_service_on: light.turn_on
-  control_service_off: light.turn_off
-  control_service_toggle: light.toggle
+  rc: ${ rc | default({}) }
+  rc_control: ${ rc.get("control", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  control_entity_id: ${ rc_control.get("entity_id", "") } # e.g. light.kitchen
+  control_service_on: ${ rc_control.get("service_on", "light.turn_on") }
+  control_service_off: ${ rc_control.get("service_off", "light.turn_off") }
+  control_service_toggle: ${ rc_control.get("service_toggle", "light.toggle") }
 
 script:
   - id: !extend ${rc_id}_control_on

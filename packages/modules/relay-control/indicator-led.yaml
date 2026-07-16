@@ -2,13 +2,16 @@
 # Always reflects POWER relay state for safety.
 
 defaults:
-  rc_id: rc1
-  rc_name: Relay
+  rc: ${ rc | default({}) }
+  rc_indicator_led: ${ rc.get("indicator_led", {}) }
 
-  led_pin: GPIO0
-  led_inverted: false
-  led_strapping: false
-  led_internal: true
+  rc_id: ${ rc.get("id", "rc1") }
+  rc_name: ${ rc.get("name", "Relay") }
+
+  led_pin: ${ rc_indicator_led.get("pin", "GPIO0") }
+  led_inverted: ${ rc_indicator_led.get("inverted", false) }
+  led_strapping: ${ rc_indicator_led.get("strapping", false) }
+  led_internal: ${ rc_indicator_led.get("internal", true) }
 
 output:
   - platform: gpio
@@ -16,10 +19,12 @@ output:
     pin: !include
       file: ../pin.yaml
       vars:
-        number: ${led_pin}
-        inverted: ${led_inverted}
-        output: true
-        ignore_strapping_warning: ${led_strapping}
+        pin:
+          number: ${led_pin}
+          inverted: ${led_inverted}
+          mode:
+            output: true
+          ignore_strapping_warning: ${led_strapping}
 
 light:
   - platform: binary
