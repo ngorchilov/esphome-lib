@@ -1,0 +1,241 @@
+{
+  "modelId": "000004fkk7",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "Power",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power",
+            "attribute": "1"
+          },
+          "name": "Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "rw",
+          "code": "mode",
+          "description": "0: Auto dehumidification\n1: Continuous dehumidification",
+          "extensions": {
+            "iconName": "icon-dp_mode"
+          },
+          "name": "Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "0",
+              "1"
+            ]
+          }
+        },
+        {
+          "abilityId": 3,
+          "accessMode": "ro",
+          "code": "envhumid",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_wet2"
+          },
+          "name": "Ambient Humidity",
+          "typeSpec": {
+            "type": "value",
+            "max": 95,
+            "min": 25,
+            "scale": 0,
+            "step": 1,
+            "unit": "％"
+          }
+        },
+        {
+          "abilityId": 4,
+          "accessMode": "rw",
+          "code": "humidity",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_wash"
+          },
+          "name": "Target Humidity",
+          "typeSpec": {
+            "type": "value",
+            "max": 80,
+            "min": 30,
+            "scale": 0,
+            "step": 5,
+            "unit": "％"
+          }
+        },
+        {
+          "abilityId": 5,
+          "accessMode": "rw",
+          "code": "anion",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_fresh"
+          },
+          "name": "Negative Ion",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 6,
+          "accessMode": "rw",
+          "code": "windspeed",
+          "description": "0: High fan\n1: Low fan",
+          "extensions": {
+            "iconName": "icon-dp_wind"
+          },
+          "name": "Fan Speed",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "0",
+              "1"
+            ]
+          }
+        },
+        {
+          "abilityId": 7,
+          "accessMode": "rw",
+          "code": "lock",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lock"
+          },
+          "name": "Child Lock",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 8,
+          "accessMode": "rw",
+          "code": "shake",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_shake"
+          },
+          "name": "Swing",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 11,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "0: Room temperature sensor fault E2\n1: Coil sensor E1\n2: Defrost P1\n3: Water full FL\n4: Low temperature alarm LO\n5: High temperature alarm HI",
+          "extensions": {
+            "iconName": "icon-dp_warming",
+            "scope": "fault"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5"
+            ],
+            "maxlen": 6
+          }
+        },
+        {
+          "abilityId": 12,
+          "accessMode": "rw",
+          "code": "countdown",
+          "description": "0-24 hours",
+          "extensions": {
+            "iconName": "icon-dp_time2"
+          },
+          "name": "Countdown",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21",
+              "22",
+              "23",
+              "24"
+            ]
+          }
+        },
+        {
+          "abilityId": 13,
+          "accessMode": "ro",
+          "code": "countdown_left",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time"
+          },
+          "name": "Countdown Remaining Time",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "rw",
+          "code": "dry",
+          "description": "",
+          "name": "Dry",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "rw",
+          "code": "pump",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Pump",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,637 @@
+{
+  "modelId": "g5n4t0",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "ro",
+          "code": "forward_energy_total",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1152"
+          },
+          "name": "Cumulative Forward Active Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 6,
+          "accessMode": "ro",
+          "code": "phase_a",
+          "description": "1. Phase A voltage, current, and power\n2. Big-endian, HEX, total 8 bytes\n3. Units/precision: voltage 2 bytes, 0.1V; current 3 bytes, 0.001A; Phase A active power 3 bytes, 0.0001kW\n4. Message format\nExample: 08 80 00 03 E8 00 27 10 means Phase A 217.6V, Phase A current 1.000A, Phase A power 10.000kW\n5. Communication logic:\n1) When user enters the panel, it actively queries. The panel immediately sends 0x08 to the meter; the meter reports data to the cloud; the panel receives and displays it. Note: supported by latest Wi-Fi.\n2) The meter reports periodically. Recommendation: Wi-Fi mode report every 15s; NB mode report every 1 hour.",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1152"
+          },
+          "name": "Phase X Voltage, Current and Power",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 7,
+          "accessMode": "ro",
+          "code": "phase_b",
+          "description": "1. Phase B voltage, current, and power\n2. Big-endian, HEX, total 8 bytes\n3. Units/precision: voltage 2 bytes, 0.1V; current 3 bytes, 0.001A; Phase B active power 3 bytes, 0.0001kW\n4. Message format\nExample: 08 80 00 03 E8 00 27 10 means Phase B 217.6V, Phase B current 1.000A, Phase B power 10.000kW\n5. Communication logic:\n1) When user enters the panel, it actively queries. The panel immediately sends 0x00 to the meter; the meter reports data to the cloud; the panel receives and displays it.\n2) The meter reports periodically. Recommendation: Wi-Fi mode report every 15s; NB mode report every 1 hour.",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1152"
+          },
+          "name": "Phase Y Voltage, Current and Power",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 8,
+          "accessMode": "ro",
+          "code": "phase_c",
+          "description": "1. Phase C voltage, current, and power\n2. Big-endian, HEX, total 8 bytes\n3. Units/precision: voltage 2 bytes, 0.1V; current 3 bytes, 0.001A; Phase C active power 3 bytes, 0.0001kW\n4. Message format\nExample: 08 80 00 03 E8 00 27 10 means Phase C 217.6V, Phase C current 1.000A, Phase C power 10.000kW\n5. Communication logic:\n1) When user enters the panel, it actively queries. The panel immediately sends 0x08 to the meter; the meter reports data to the cloud; the panel receives and displays it.\n2) The meter reports periodically. Recommendation: Wi-Fi mode report every 15s; NB mode report every 1 hour.",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1152"
+          },
+          "name": "Phase Z Voltage, Current and Power",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 9,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "1. Alarm\n2. Big-endian, HEX, 4 bytes\n3. Message format\nReport alarms as a full 4 bytes, mapping alarms to bits: 1 means alarm, 0 means no alarm. Unused alarm bits are padded with 0; undefined high bits are also padded with 0.\nExample: 0x00 00 00 09 indicates leakage self-test abnormal alarm and short-circuit alarm, with no other alarms.\n4. Communication logic\nAs long as any alarm occurs, report the full 4 bytes to the panel; as long as any alarm clears, report the full 4 bytes to update the panel display.",
+          "extensions": {
+            "iconName": "icon-baojing",
+            "scope": "fault",
+            "attribute": "1664"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "short_circuit_alarm",
+              "surge_alarm",
+              "overload_alarm",
+              "leakagecurr_alarm",
+              "temp_dif_fault",
+              "fire_alarm",
+              "high_power_alarm",
+              "self_test_alarm",
+              "ov_cr",
+              "unbalance_alarm",
+              "ov_vol",
+              "undervoltage_alarm",
+              "miss_phase_alarm",
+              "outage_alarm",
+              "magnetism_alarm",
+              "credit_alarm",
+              "no_balance_alarm"
+            ],
+            "maxlen": 17
+          }
+        },
+        {
+          "abilityId": 12,
+          "accessMode": "rw",
+          "code": "clear_energy",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1024"
+          },
+          "name": "Reset Energy",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 17,
+          "accessMode": "rw",
+          "code": "alarm_set_1",
+          "description": "1. Alarm threshold enable control and settings 1\n2. HEX, big-endian. Total alarm count * 4 bytes = total setting length.\n3. Message format\nEach alarm consists of 4 bytes: byte 1 (alarm exists); byte 2 (breaker control mode when the alarm occurs: 0x01 trip, 0x00 no action, alarm only); bytes 3-4: alarm threshold.\nExample: 0x01 01 00 00 03 01 00 14 means the breaker supports short-circuit alarm; when it occurs, it trips automatically and threshold is padded with 0. Supports overload alarm; when it occurs, it trips and threshold is 20kW. No other alarm functions. Note: Do not report bytes for alarms that do not exist.\n4. Communication logic\nA. After network pairing succeeds, it proactively reports to the cloud in the above format so the panel knows which alarms the breaker currently supports. If setting fails, re-pair and report again.\nB. Also reported once when the breaker powers on.\nC. The panel sends alarm settings according to the protocol.\n5. The app panel supports the first-byte capability list: 01 short-circuit alarm, 02 surge alarm, 03 overload alarm, 04 leakage alarm, 05 high-temperature alarm, 06 arcing alarm, 07 high power alarm, 08 leakage self-test abnormal alarm",
+          "extensions": {
+            "iconName": "icon-dp_warming",
+            "attribute": "1024"
+          },
+          "name": "Alarm Setting 1",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 18,
+          "accessMode": "rw",
+          "code": "alarm_set_2",
+          "description": "1. Alarm threshold enable control and settings 2\n2. HEX, big-endian\n3. Message format\nEach alarm consists of 4 bytes: byte 1 (alarm exists); byte 2 (breaker control mode when the alarm occurs: 0x01 trip, 0x00 no action, alarm only); bytes 3-4: alarm threshold.\nExample: 0x01 01 00 3C 03 01 00 F5 means the breaker supports overcurrent alarm; when it occurs, it trips and threshold is 60A. Supports overvoltage alarm; when it occurs, it trips and threshold is 245V.\n4. Communication logic\nA. After network pairing succeeds, it proactively reports to the cloud in the above format so the panel knows which alarms the breaker currently supports. If setting fails, re-pair and report again.\nB. Also reported once when the breaker powers on.\nC. The panel sends alarm settings according to the protocol.",
+          "extensions": {
+            "iconName": "icon-dp_warming",
+            "attribute": "1152"
+          },
+          "name": "Alarm Setting 2",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 19,
+          "accessMode": "ro",
+          "code": "breaker_id",
+          "description": "1. Device number\n2. Big-endian, string type\n3. Unit/precision\n4. Message format\n5. Communication logic\nA. Report 3 times during pairing to ensure successful reporting. If pairing succeeds, the panel displays the device number.\nB. If pairing succeeds but the panel does not show the device number, remove the device and configure again.\nC. Report once each time the breaker powers on.",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "1152"
+          },
+          "name": "Device ID Display",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "ro",
+          "code": "reverse_energy_total",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1024"
+          },
+          "name": "Cumulative Reverse Active Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 29,
+          "accessMode": "rw",
+          "code": "active_power",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dianliang",
+            "attribute": "1152"
+          },
+          "name": "Total Active Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 200000,
+            "min": -200000,
+            "scale": 3,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 32,
+          "accessMode": "ro",
+          "code": "supply_frequency",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "attribute": "1152"
+          },
+          "name": "Frequency",
+          "typeSpec": {
+            "type": "value",
+            "max": 9999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "Hz"
+          }
+        },
+        {
+          "abilityId": 35,
+          "accessMode": "rw",
+          "code": "online_state",
+          "description": "Can be used for the app interaction refresh mechanism. For example, entering the panel and tapping refresh sends online; after the device detects it, it immediately reports the latest DPs (e.g., current/voltage/power) that should be updated promptly for display.",
+          "extensions": {
+            "iconName": "icon-dp_updown"
+          },
+          "name": "Panel Online",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "online",
+              "offline"
+            ]
+          }
+        },
+        {
+          "abilityId": 50,
+          "accessMode": "rw",
+          "code": "power_factor",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning"
+          },
+          "name": "Total Power Factor",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": -100,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "rw",
+          "code": "device_locating",
+          "description": "After enabling, the green LED flashes for a period of time and then returns to normal.",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Device Locating",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "rw",
+          "code": "data_report_duration",
+          "description": "How often data is reported",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Data Report Interval",
+          "typeSpec": {
+            "type": "value",
+            "max": 3600,
+            "min": 225,
+            "scale": 0,
+            "step": 1,
+            "unit": "seconds"
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "ro",
+          "code": "cur_voltage_x",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "cur_current_x",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000000,
+            "min": -1000000,
+            "scale": 3,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "cur_power_x",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Active Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 200000,
+            "min": -200000,
+            "scale": 3,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "power_factor_x",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Power Factor",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": -100,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "ro",
+          "code": "x_total_import_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Forward Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "x_total_export_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase X Reverse Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "ro",
+          "code": "cur_voltage_y",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "cur_current_y",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000000,
+            "min": -1000000,
+            "scale": 3,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "ro",
+          "code": "cur_power_y",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Active Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 200000,
+            "min": -200000,
+            "scale": 3,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "ro",
+          "code": "power_factor_y",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Power Factor",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": -100,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "ro",
+          "code": "y_total_import_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Forward Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 119,
+          "accessMode": "ro",
+          "code": "y_total_export_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Y Reverse Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "ro",
+          "code": "cur_voltage_z",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "ro",
+          "code": "cur_current_z",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000000,
+            "min": -1000000,
+            "scale": 3,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "ro",
+          "code": "cur_power_z",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Active Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 200000,
+            "min": -200000,
+            "scale": 3,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "ro",
+          "code": "power_factor_z",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Power Factor",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": -100,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 127,
+          "accessMode": "ro",
+          "code": "z_total_import_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Forward Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 128,
+          "accessMode": "ro",
+          "code": "z_total_export_energy",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Phase Z Reverse Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW.h"
+          }
+        },
+        {
+          "abilityId": 130,
+          "accessMode": "ro",
+          "code": "current_unbalance",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Three-Phase Current Unbalance",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        }
+      ]
+    }
+  ]
+}

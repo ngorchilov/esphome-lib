@@ -1,0 +1,36 @@
+substitutions:
+  name: tuya-socket-1pm-usb-cb2s
+  friendly_name: Tuya Socket 1PM+USB (CB2S)
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay
+        name: Relay
+        power:
+          pin: GPIO7
+          inverted: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO23
+          inverted: true
+        integrated_button:
+          enabled: true
+          pin: GPIO6
+          inverted: true
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0937.yaml
+    vars:
+      energy:
+        cf_pin: GPIO24
+        cf1_pin: GPIO26
+        sel_pin: GPIO8
+        voltage_divider: 830
+        current_resistor: 0.00158 ohm
+        current_multiply: 1
+        update_interval: 10s

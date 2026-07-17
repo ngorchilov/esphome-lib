@@ -1,0 +1,453 @@
+substitutions:
+  name: vevor-7-in-1
+  friendly_name: Vevor 7-in-1
+  # EU units are nominally at 868.350 MHz, but SX127x boards often need empirical tuning.
+  # Tune for best valid-packet rate.
+  weather_station_frequency: 868.350Mhz
+
+  receiver_version: 2.00.1
+
+  # Board profile: lilygo or heltec
+  board_profile: lilygo
+
+  esp32_board_heltec: heltec_wifi_lora_32_V2
+  esp32_board_lilygo: ttgo-lora32-v21
+
+  sx127x_rst_pin_heltec: GPIO14
+  sx127x_rst_pin_lilygo: GPIO23
+
+  i2c_sda_heltec: GPIO4
+  i2c_scl_heltec:
+    number: GPIO15
+    ignore_strapping_warning: true
+  i2c_sda_lilygo: GPIO21
+  i2c_scl_lilygo: GPIO22
+
+  board_led_heltec: GPIO25
+  board_led_lilygo: GPIO25
+
+  board_outputs_heltec:
+    output:
+      - platform: gpio
+        id: vext_output
+        pin: GPIO21
+        inverted: true
+      - platform: gpio
+        id: oled_reset
+        pin: GPIO16
+        inverted: true
+  board_outputs_lilygo: {}
+
+packages:
+  - !include ../packages/boards/templates/base-board-esphome-esp32.yaml
+  - ${board_outputs_${board_profile}}
+
+esp32:
+  board: ${esp32_board_${board_profile}}
+  framework:
+    type: esp-idf
+    advanced:
+      sram1_as_iram: true # Bootloader supports SRAM1 as IRAM (+40KB). Set sram1_as_iram: true under esp32 > framework > advanced
+
+esphome:
+  project:
+    name: yepiq.Vevor-7-in-1-Receiver
+    version: ${receiver_version}
+
+logger:
+  level: INFO
+
+i2c:
+  sda: ${i2c_sda_${board_profile}}
+  scl: ${i2c_scl_${board_profile}}
+  scan: true
+
+spi:
+  clk_pin:
+    number: GPIO5
+    ignore_strapping_warning: true
+  mosi_pin: GPIO27
+  miso_pin: GPIO19
+
+sx127x:
+  cs_pin: GPIO18
+  rst_pin: ${sx127x_rst_pin_${board_profile}}
+  dio0_pin: GPIO26 # DIO0 is GPIO26 on both supported boards.
+  auto_cal: true
+  frequency: ${weather_station_frequency}
+  modulation: FSK
+  rx_start: true
+
+  bandwidth: 100_0kHz
+  packet_mode: true
+  payload_length: 34
+  crc_enable: false # VEVOR uses custom checksum, not standard CRC
+  bitrate: 11494 # 1 s / 87 µs ≈ 11,494.2529 bps
+  bitsync: true
+  preamble_size: 5
+  preamble_detect: 3
+  preamble_errors: 8
+  # Preamble: aaaaaaaaaacaca54
+  preamble_polarity: 0xaa
+  sync_value: [0xca, 0xca, 0x54]
+  on_packet:
+    then:
+      # Based on https://github.com/merbanan/rtl_433/blob/master/src/devices/vevor_7in1.c
+      - lambda: |-
+          ESP_LOGD("decoder", "Packet received: %s (len: %d)", format_hex(x).c_str(), x.size());
+
+          static uint32_t last_heard_packet_ms = 0;
+
+          auto counter_value = [](auto *counter) -> uint32_t {
+              return counter->has_state() ? (uint32_t) counter->state : 0;
+          };
+          auto add_counter = [&](auto *counter, uint32_t increment) {
+              counter->publish_state(counter_value(counter) + increment);
+          };
+
+          const uint32_t now = millis();
+          id(vevor_last_packet_seen_ms) = now;
+          if (last_heard_packet_ms != 0) {
+              const uint32_t elapsed_ms = now - last_heard_packet_ms;
+              if (elapsed_ms > 25000UL) {
+                  const uint32_t missed = ((elapsed_ms + 15000UL) / 20000UL) - 1;
+                  add_counter(id(missed_packets), missed);
+                  ESP_LOGD("decoder", "Missed %u packet(s), %.1fs since last heard packet",
+                           missed, elapsed_ms / 1000.0f);
+              }
+          }
+          last_heard_packet_ms = now;
+
+          auto mark_invalid = [&]() {
+              add_counter(id(invalid_packets), 1);
+          };
+
+          if (x.size() < 21) {
+              ESP_LOGW("decoder", "Packet too short: %d bytes, 21 expected", x.size());
+              mark_invalid();
+              return;
+          }
+
+          uint8_t checksum = 0;
+          for (int i = 0; i < 19; i++)
+              checksum += x[i];
+          if ((checksum & 0xFF) != x[19]) {
+              ESP_LOGW("decoder", "Checksum failed! Computed: 0x%02X, Expected: 0x%02X", checksum & 0xFF, x[19]);
+              mark_invalid();
+              return;
+          }
+
+          //int kind        = ((x[1] & 0xf0) >> 4);
+
+          if (x[0] != 0xAA || x[1] != 0) {
+              ESP_LOGW("decoder", "Unexpected packet type: 0x%02X 0x%02X", x[0], x[1]);
+              mark_invalid();
+              return;
+          }
+
+          add_counter(id(valid_packets), 1);
+          id(vevor_last_valid_seen_ms) = now;
+
+          id(channel).publish_state((x[1] & 0x0f));
+
+          int id          = (x[2] << 8) | x[3];
+          id(battery).publish_state((x[4] & 0x80) >> 7 ? "Low" : "Normal");
+
+          float temp_c      = (((x[5] << 8) | x[6]) - 500) * 0.1f;
+          id(temperature).publish_state(temp_c);
+
+          id(humidity).publish_state(x[7]);
+
+          int wind_raw      = ((x[8] << 8) | x[9]) - 257; // need to remove 0x0101.
+          id(wind_speed).publish_state(wind_raw / 8.333f); // wind_raw / 30.0f for m/s
+
+          id(wind_gust).publish_state(x[10] / 1.25f); // gust_raw / 4.5f for m/s
+
+          id(wind_dir).publish_state((((x[11] & 0x0f) << 8) | x[12]) - 257); // need to remove 0x101.
+
+          int rain_raw      = ((x[13] << 8) | x[14]) - 257; // need to remove 0x101.
+          id(rain).publish_state(rain_raw * 0.233f); // calculation is 0.43f but display is 0.5f
+
+          id(uv_index).publish_state((x[15] & 0x1f) - 1);
+
+          const uint16_t light_raw = (uint16_t(x[16]) << 8) | x[17];
+          auto decode_light = [](uint16_t raw) -> int {
+              int decoded = int(raw) - 257; // need to remove 0x0101.
+              if ((decoded & 0x8000) != 0) {
+                  decoded = (decoded & 0x7fff) * 10;
+              }
+              return decoded;
+          };
+          const int light_lux = decode_light(light_raw);
+          bool publish_light = true;
+
+          auto reject_light = [&](const char *reason) {
+              publish_light = false;
+              char buf[96];
+              snprintf(buf, sizeof(buf), "%s raw=0x%04X decoded=%d lx",
+                       reason, (unsigned) light_raw, light_lux);
+              id(last_rejected_light).publish_state(buf);
+              ESP_LOGW("decoder", "Ignoring light reading: %s", buf);
+          };
+
+          if (light_raw < 0x0101) {
+              reject_light("underflow");
+          } else if ((light_raw & 0x8000) && ((light_raw & 0x7fff) == 0x7fff)) {
+              reject_light("sentinel");
+          } else if (light_lux == 327670) {
+              reject_light("decoded-sentinel");
+          }
+
+          if (publish_light) {
+              static int light_samples[3] = {0, 0, 0};
+              static uint8_t light_sample_count = 0;
+              static uint8_t light_sample_index = 0;
+
+              light_samples[light_sample_index] = light_lux;
+              light_sample_index = (light_sample_index + 1) % 3;
+              if (light_sample_count < 3) {
+                  light_sample_count++;
+              }
+
+              int filtered_lux = light_lux;
+              if (light_sample_count == 3) {
+                  int a = light_samples[0];
+                  int b = light_samples[1];
+                  int c = light_samples[2];
+                  if ((a <= b && b <= c) || (c <= b && b <= a)) {
+                      filtered_lux = b;
+                  } else if ((b <= a && a <= c) || (c <= a && a <= b)) {
+                      filtered_lux = a;
+                  } else {
+                      filtered_lux = c;
+                  }
+              }
+
+              id(lux).publish_state(filtered_lux);
+
+              // Approximate solar irradiance from illuminance.
+              // Rough daylight conversion: 1 W/m² ≈ 126.7 lux (varies a lot with spectrum/conditions).
+              float irr_wm2 = filtered_lux / 126.7f;
+              if (irr_wm2 < 0) irr_wm2 = 0;
+              id(irradiance).publish_state(irr_wm2);
+          }
+
+          // Compute dew point using Magnus formula
+          const float a = 17.62;
+          const float b = 243.12;
+          float gamma = (a * temp_c) / (b + temp_c) + log(x[7] / 100.0f);
+
+          // Publish dew point
+          id(dew_point).publish_state((b * gamma) / (a - gamma));
+
+globals:
+  - id: oled_update_count
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: vevor_last_packet_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: vevor_last_valid_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+font:
+  - file: 'gfonts://Roboto Mono'
+    id: oled_font
+    size: 11
+    glyphs: ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+
+display:
+  - platform: ssd1306_i2c
+    model: SSD1306_128X64
+    update_interval: 1s
+    lambda: |-
+      id(oled_update_count) += 1;
+
+      auto counter_value = [](auto *counter) -> uint32_t {
+          return counter->has_state() ? (uint32_t) counter->state : 0;
+      };
+      auto format_age = [](uint32_t seen_ms, char *buf, size_t len) {
+          if (seen_ms == 0) {
+              snprintf(buf, len, "--");
+              return;
+          }
+
+          const uint32_t age_s = (millis() - seen_ms) / 1000;
+          if (age_s < 1000) {
+              snprintf(buf, len, "%lus", (unsigned long) age_s);
+          } else if (age_s < 3600) {
+              snprintf(buf, len, "%lum", (unsigned long) (age_s / 60));
+          } else if (age_s < 86400) {
+              snprintf(buf, len, "%luh", (unsigned long) (age_s / 3600));
+          } else {
+              snprintf(buf, len, "%lud", (unsigned long) (age_s / 86400));
+          }
+      };
+
+      const uint32_t valid = counter_value(id(valid_packets));
+      const uint32_t bad = counter_value(id(invalid_packets)) + counter_value(id(missed_packets));
+      char packet_age[8];
+      format_age(id(vevor_last_packet_seen_ms), packet_age, sizeof(packet_age));
+      char valid_age[8];
+      format_age(id(vevor_last_valid_seen_ms), valid_age, sizeof(valid_age));
+
+      it.print(0, 0, id(oled_font), "${friendly_name}");
+
+      if (!id(temperature).has_state() || !id(humidity).has_state()) {
+          it.print(0, 13, id(oled_font), "Waiting data");
+          it.printf(0, 26, id(oled_font), "RF: %s ago", packet_age);
+          it.printf(0, 39, id(oled_font), "OK:%lu Bad:%lu", (unsigned long) valid, (unsigned long) bad);
+          it.printf(0, 52, id(oled_font), "Alive:%lu", (unsigned long) (id(oled_update_count) % 1000));
+          return;
+      }
+
+      it.printf(0, 13, id(oled_font), "T:%.1fC H:%.0f%%", id(temperature).state, id(humidity).state);
+      it.printf(0, 26, id(oled_font), "W:%.1f G:%.1f", id(wind_speed).state, id(wind_gust).state);
+      it.printf(0, 39, id(oled_font), "D:%.0f R:%.0f UV:%.0f", id(wind_dir).state, id(rain).state, id(uv_index).state);
+      it.printf(0, 52, id(oled_font), "OK:%lu Bad:%lu %s", (unsigned long) valid, (unsigned long) bad, valid_age);
+
+sensor:
+  - platform: template
+    name: Channel
+    id: channel
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: never
+
+  - platform: template
+    name: '# of Missed Packets'
+    id: missed_packets
+    accuracy_decimals: 0
+    icon: mdi:counter
+    entity_category: diagnostic
+    state_class: total_increasing
+    update_interval: never
+
+  - platform: template
+    name: '# of Valid Packets'
+    id: valid_packets
+    accuracy_decimals: 0
+    icon: mdi:counter
+    entity_category: diagnostic
+    state_class: total_increasing
+    update_interval: never
+
+  - platform: template
+    name: '# of Invalid Packets'
+    id: invalid_packets
+    accuracy_decimals: 0
+    icon: mdi:counter
+    entity_category: diagnostic
+    state_class: total_increasing
+    update_interval: never
+
+  - platform: template
+    name: Temperature
+    id: temperature
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Dew Point
+    id: dew_point
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Humidity
+    id: humidity
+    unit_of_measurement: '%'
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Wind Average
+    id: wind_speed
+    unit_of_measurement: km/h
+    accuracy_decimals: 2
+    device_class: wind_speed
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Wind Max
+    id: wind_gust
+    unit_of_measurement: km/h
+    accuracy_decimals: 2
+    device_class: wind_speed
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Wind Direction
+    id: wind_dir
+    unit_of_measurement: °
+    accuracy_decimals: 0
+    device_class: wind_direction
+    state_class: measurement_angle
+    update_interval: never
+
+  - platform: template
+    name: Rain
+    id: rain
+    unit_of_measurement: mm
+    accuracy_decimals: 0
+    device_class: precipitation
+    state_class: total_increasing
+    update_interval: never
+
+  - platform: template
+    name: UV Index
+    id: uv_index
+    accuracy_decimals: 0
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Illuminance
+    id: lux
+    unit_of_measurement: lx
+    accuracy_decimals: 0
+    device_class: illuminance
+    state_class: measurement
+    update_interval: never
+
+  - platform: template
+    name: Irradiance
+    id: irradiance
+    unit_of_measurement: W/m²
+    accuracy_decimals: 1
+    device_class: irradiance
+    state_class: measurement
+    update_interval: never
+
+text_sensor:
+  - platform: template
+    name: Last Rejected Light Reading
+    id: last_rejected_light
+    icon: mdi:alert-circle-outline
+    entity_category: diagnostic
+    update_interval: never
+
+  - platform: template
+    name: Battery
+    id: battery
+    icon: mdi:battery
+    update_interval: never
+
+output:
+  - platform: gpio
+    id: status_led
+    pin: ${board_led_${board_profile}}

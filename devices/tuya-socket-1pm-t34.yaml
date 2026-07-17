@@ -1,0 +1,38 @@
+substitutions:
+  name: tuya-socket-1pm-t34
+  friendly_name: Tuya Socket 1PM (T34)
+
+# FIXME: the board has 2 leds - led and netled. netled1_pin=23 & netled1_lv=1. this led does not seem to work
+
+packages:
+  - !include ../packages/boards/tuya/t34.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay
+        name: Relay
+        power:
+          pin: GPIO7
+          inverted: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO8
+          inverted: false
+        integrated_button:
+          enabled: true
+          pin: GPIO9
+          inverted: true
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0937.yaml
+    vars:
+      energy:
+        cf_pin: GPIO22
+        cf1_pin: GPIO24
+        sel_pin: GPIO20
+        voltage_divider: 755
+        current_resistor: 0.00104 ohm
+        current_multiply: 1
+        update_interval: 30s

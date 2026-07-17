@@ -1,0 +1,438 @@
+substitutions:
+  name: tuya-6-zone-valve-controller
+  friendly_name: Tuya 6-Zone Valve Controller
+  sleep: 50ms
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+logger:
+  baud_rate: 0
+  level: DEBUG
+
+# ----------------- Software state for frame-write -----------------
+globals:
+  # Desired on/off for each valve (optimistic UI)
+  - id: v1
+    type: bool
+    initial_value: 'false'
+  - id: v2
+    type: bool
+    initial_value: 'false'
+  - id: v3
+    type: bool
+    initial_value: 'false'
+  - id: v4
+    type: bool
+    initial_value: 'false'
+  - id: v5
+    type: bool
+    initial_value: 'false'
+  - id: v6
+    type: bool
+    initial_value: 'false'
+  # Option to flip bit order if needed (false = V1..V6 forward)
+  - id: reverse_order
+    type: bool
+    initial_value: 'false'
+
+# -------------------------------------- Switches ------------------------------------------
+# Keep your known GPIOs exactly as-is, then add six template switches for valves.
+switch:
+  - platform: gpio
+    name: '1. Status LED'
+    id: status_led
+    pin:
+      number: P28
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    icon: mdi:led-on
+
+  - platform: gpio
+    name: '2. Buzzer'
+    id: buzzer
+    pin: P14
+    restore_mode: RESTORE_DEFAULT_OFF
+    icon: mdi:bell-alert
+
+  - platform: gpio
+    id: pin_p9
+    name: 'P9 (Mode: ON⁄OFF ⁄ DATA)'
+    pin: P9
+
+  - platform: gpio
+    id: pin_p15
+    name: 'P15 (Selector Step ⁄ CLOCK)'
+    pin: P15
+
+  - platform: gpio
+    id: pin_p17
+    name: 'P17 (Commit ⁄ LATCH)'
+    pin: P17
+
+  # ---- Per-valve UI toggles (optimistic) ----
+  - platform: template
+    id: valve1
+    name: 'Valve 1'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v1) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v1) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v1);
+
+  - platform: template
+    id: valve2
+    name: 'Valve 2'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v2) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v2) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v2);
+
+  - platform: template
+    id: valve3
+    name: 'Valve 3'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v3) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v3) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v3);
+
+  - platform: template
+    id: valve4
+    name: 'Valve 4'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v4) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v4) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v4);
+
+  - platform: template
+    id: valve5
+    name: 'Valve 5'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v5) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v5) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v5);
+
+  - platform: template
+    id: valve6
+    name: 'Valve 6'
+    optimistic: true
+    turn_on_action:
+      - lambda: |-
+          id(v6) = true;
+      - script.execute: apply_all_states
+    turn_off_action:
+      - lambda: |-
+          id(v6) = false;
+      - script.execute: apply_all_states
+    lambda: |-
+      return id(v6);
+
+# -------------------------------------- Scripts -------------------------------------------
+script:
+  # ===== Your proven primitives (50ms) =====
+  # DATA P9: ON=LOW, OFF=HIGH
+  - id: set_action_on
+    mode: single
+    then:
+      - lambda: |-
+          id(pin_p9).turn_off();   // LOW = ON bit
+      - delay: ${sleep}
+
+  - id: set_action_off
+    mode: single
+    then:
+      - lambda: |-
+          id(pin_p9).turn_on();    // HIGH = OFF bit
+      - delay: ${sleep}
+
+  # CLOCK P15: one LOW pulse
+  - id: step_once
+    mode: single
+    then:
+      - lambda: |-
+          id(pin_p15).turn_off();
+      - delay: ${sleep}
+      - lambda: |-
+          id(pin_p15).turn_on();
+      - delay: ${sleep}
+
+  # LATCH P17: commit (LOW pulse)
+  - id: commit_now
+    mode: single
+    then:
+      - lambda: |-
+          id(pin_p17).turn_off();
+      - delay: ${sleep}
+      - lambda: |-
+          id(pin_p17).turn_on();
+      - delay: ${sleep}
+
+  # ===== Your original "next" helpers (kept for convenience/testing) =====
+  - id: next_valve_on
+    mode: single
+    then:
+      - script.execute: set_action_on
+      - script.execute: step_once
+      - script.execute: commit_now
+      - lambda: |-
+          ESP_LOGI("valves", "NEXT: ON (1 pulse + latch)");
+
+  - id: next_valve_off
+    mode: single
+    then:
+      - script.execute: set_action_off
+      - script.execute: step_once
+      - script.execute: commit_now
+      - lambda: |-
+          ESP_LOGI("valves", "NEXT: OFF (1 pulse + latch)");
+
+  # ===== Frame-write: send all 6 bits, then latch =====
+  # Forward order: V1..V6
+  - id: apply_all_states_fwd
+    mode: single
+    then:
+      # V1
+      - if:
+          condition:
+            lambda: |-
+              return id(v1);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # V2
+      - if:
+          condition:
+            lambda: |-
+              return id(v2);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # V3
+      - if:
+          condition:
+            lambda: |-
+              return id(v3);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # V4
+      - if:
+          condition:
+            lambda: |-
+              return id(v4);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # V5
+      - if:
+          condition:
+            lambda: |-
+              return id(v5);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # V6
+      - if:
+          condition:
+            lambda: |-
+              return id(v6);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # Latch everything
+      - script.execute: commit_now
+      - lambda: |-
+          int mask =
+            (id(v1) ? 1 : 0) |
+            (id(v2) ? 2 : 0) |
+            (id(v3) ? 4 : 0) |
+            (id(v4) ? 8 : 0) |
+            (id(v5) ? 16 : 0) |
+            (id(v6) ? 32 : 0);
+          ESP_LOGI("valves", "FRAME (fwd) applied, mask=0x%02X", mask);
+
+  # Reverse order: V6..V1 (in case the board shifts in the other direction)
+  - id: apply_all_states_rev
+    mode: single
+    then:
+      # V6
+      - if:
+          condition:
+            lambda: |-
+              return id(v6);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+      # V5
+      - if:
+          condition:
+            lambda: |-
+              return id(v5);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+      # V4
+      - if:
+          condition:
+            lambda: |-
+              return id(v4);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+      # V3
+      - if:
+          condition:
+            lambda: |-
+              return id(v3);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+      # V2
+      - if:
+          condition:
+            lambda: |-
+              return id(v2);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+      # V1
+      - if:
+          condition:
+            lambda: |-
+              return id(v1);
+          then:
+            - script.execute: set_action_on
+          else:
+            - script.execute: set_action_off
+      - script.execute: step_once
+
+      # Latch everything
+      - script.execute: commit_now
+      - lambda: |-
+          int mask =
+            (id(v1) ? 1 : 0) |
+            (id(v2) ? 2 : 0) |
+            (id(v3) ? 4 : 0) |
+            (id(v4) ? 8 : 0) |
+            (id(v5) ? 16 : 0) |
+            (id(v6) ? 32 : 0);
+          ESP_LOGI("valves", "FRAME (rev) applied, mask=0x%02X", mask);
+
+  # Wrapper that chooses fwd vs rev
+  - id: apply_all_states
+    mode: single
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return id(reverse_order);
+          then:
+            - script.execute: apply_all_states_rev
+          else:
+            - script.execute: apply_all_states_fwd
+
+# -------------------------------------- Buttons & Inputs ----------------------------------
+button:
+  # your original quick-ops (still available for poking)
+  - platform: template
+    name: 'Turn Next Valve ON'
+    on_press:
+      - script.execute: next_valve_on
+
+  - platform: template
+    name: 'Turn Next Valve OFF'
+    on_press:
+      - script.execute: next_valve_off
+
+  # Apply a bitmask (0..63) in one frame
+  - platform: template
+    name: 'Apply Mask'
+    on_press:
+      - lambda: |-
+          int m = (int) id(valve_mask).state;
+          id(v1) = (m & 0x01) != 0;
+          id(v2) = (m & 0x02) != 0;
+          id(v3) = (m & 0x04) != 0;
+          id(v4) = (m & 0x08) != 0;
+          id(v5) = (m & 0x10) != 0;
+          id(v6) = (m & 0x20) != 0;
+      - script.execute: apply_all_states
+
+  # Toggle bit order if mapping is reversed
+  - platform: template
+    name: 'Toggle Bit Order (Fwd⁄Rev)'
+    on_press:
+      - lambda: |-
+          id(reverse_order) = !id(reverse_order);
+          ESP_LOGI("valves", "reverse_order = %s", id(reverse_order) ? "true" : "false");
+
+number:
+  - platform: template
+    id: valve_mask
+    name: 'Valve Mask (0..63)'
+    optimistic: true
+    min_value: 0
+    max_value: 63
+    step: 1
+    initial_value: 0

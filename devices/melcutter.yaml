@@ -1,0 +1,233 @@
+substitutions:
+  name: melcutter
+  friendly_name: MELcutter
+
+  # Default Home Assistant entity_id used as the external temperature source.
+  # Can be an empty string.
+  default_remote_temperature_entity: ''
+
+esphome:
+  # Required for Home Assistant Action Responses
+  min_version: 2025.10.0
+
+packages:
+  - !include ../packages/boards/espressif/esp07.yaml
+
+external_components:
+  - source: github://echavet/MitsubishiCN105ESPHome
+
+logger:
+  level: INFO
+
+uart:
+  id: HP_UART
+  baud_rate: 2400
+  tx_pin: 1
+  rx_pin: 3
+
+# Climate entity configuration
+climate:
+  - platform: cn105
+    id: hp
+    name: Heat Pump
+    visual:
+      min_temperature: 16
+      max_temperature: 31
+      temperature_step:
+        target_temperature: 1
+        current_temperature: 0.5
+    # Fahrenheit compatibility mode - uses Mitsubishi's "custom" unit conversions, set to
+    # "true" for better support of Fahrenheit units in HomeAssistant
+    fahrenheit_compatibility: 'false'
+    # Timeout and communication settings
+    remote_temperature_timeout: 30min
+    update_interval: 2s
+    debounce_delay: 100ms
+    # Various optional sensors, not all sensors are supported by all heatpumps
+    compressor_frequency_sensor:
+      name: Compressor Frequency
+      entity_category: DIAGNOSTIC
+      disabled_by_default: true
+    outside_air_temperature_sensor:
+      name: Outside Air Temp
+      disabled_by_default: false
+    vertical_vane_select:
+      name: Vertical Vane
+      disabled_by_default: false
+      icon: mdi:pan-vertical
+    horizontal_vane_select:
+      name: Horizontal Vane
+      icon: mdi:pan-horizontal
+      disabled_by_default: false
+    isee_sensor:
+      name: ISEE Sensor
+      disabled_by_default: true
+    stage_sensor:
+      name: Stage
+      # use_as_operating_fallback: false     # set to true if your unit doesn't provide activity indicator
+      entity_category: DIAGNOSTIC
+      disabled_by_default: true
+    sub_mode_sensor:
+      name: Sub Mode
+      entity_category: DIAGNOSTIC
+      disabled_by_default: true
+    auto_sub_mode_sensor:
+      name: Auto Sub Mode
+      entity_category: DIAGNOSTIC
+      disabled_by_default: true
+    input_power_sensor:
+      name: Input Power
+      disabled_by_default: false
+    kwh_sensor:
+      name: Energy
+      disabled_by_default: false
+    runtime_hours_sensor:
+      name: Runtime Hours
+      entity_category: DIAGNOSTIC
+      disabled_by_default: true
+    night_mode_switch:
+      name: Night Mode
+      disabled_by_default: false
+    air_purifier_switch:
+      name: Air Purifier
+      disabled_by_default: true
+    circulator_switch:
+      name: Circulator
+      disabled_by_default: true
+    airflow_control_select:
+      name: Airflow Control
+      entity_category: CONFIG
+      disabled_by_default: false
+
+text:
+  # External Temp Sensor Entity ID
+  - platform: template
+    # HA entity_id to use as the external temperature source (used by HA automation)
+    name: Remote Temperature Entity
+    id: remote_temperature_entity
+    # Used only on first boot / when no restored value is present.
+    initial_value: ${default_remote_temperature_entity}
+    mode: text
+    optimistic: true
+    restore_value: true
+    entity_category: CONFIG
+
+sensor:
+  # External Temp Sensor
+  - platform: template
+    id: remote_temperature
+    name: Remote Temperature
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    update_interval: never
+    filters:
+      # Uncomment the lambda line to convert F to C on incoming temperature
+      #  - lambda: return (x - 32) * (5.0/9.0);
+      - clamp: # Limits values to range accepted by Mitsubishi units
+          min_value: 1
+          max_value: 40
+          ignore_out_of_range: true
+      - throttle: 30s
+    on_value:
+      then:
+        - lambda: |-
+            ESP_LOGI("remote_temp", "Remote temperature: %.2f °C", x);
+            id(hp).set_remote_temperature(x);
+
+  # UART Diagnostic Sensors
+  #
+  # The following ESPHome sensors will not be needed by most users, but can be helpful in diagnosting problems with UART connectivity.
+  # Only implement if you are currently troubleshooting or developing new functionality.
+
+  - platform: template
+    name: dg_uart_connected
+    entity_category: DIAGNOSTIC
+    disabled_by_default: true
+    lambda: |-
+      return (bool) id(hp).isUARTReady_();
+    update_interval: 30s
+  - platform: template
+    name: dg_complete_cycles
+    entity_category: DIAGNOSTIC
+    accuracy_decimals: 0
+    disabled_by_default: true
+    lambda: |-
+      return (unsigned long) id(hp).nbCompleteCycles_;
+    update_interval: 60s
+  - platform: template
+    name: dg_total_cycles
+    accuracy_decimals: 0
+    entity_category: DIAGNOSTIC
+    disabled_by_default: true
+    lambda: |-
+      return (unsigned long) id(hp).nbCycles_;
+    update_interval: 60s
+  - platform: template
+    name: dg_nb_hp_connections
+    accuracy_decimals: 0
+    entity_category: DIAGNOSTIC
+    disabled_by_default: true
+    lambda: |-
+      return (unsigned int) id(hp).nbHeatpumpConnections_;
+    update_interval: 60s
+  - platform: template
+    name: dg_complete_cycles_percent
+    unit_of_measurement: '%'
+    accuracy_decimals: 1
+    entity_category: DIAGNOSTIC
+    disabled_by_default: true
+    lambda: |-
+      unsigned long nbCompleteCycles = id(hp).nbCompleteCycles_;
+      unsigned long nbCycles = id(hp).nbCycles_;
+      if (nbCycles == 0) {
+        return 0.0;
+      }
+      return (float) nbCompleteCycles / nbCycles * 100.0;
+    update_interval: 60s
+
+interval:
+  # External Temp Sensor Query
+  - interval: 30s
+    then:
+      - if:
+          condition:
+            lambda: |-
+              const std::string &s = id(remote_temperature_entity).state;
+              return !s.empty();
+          then:
+            - logger.log:
+                level: DEBUG
+                format: "Querying remote temperature sensor from HA: '%s'"
+                args: ['id(remote_temperature_entity).state.c_str()']
+            - homeassistant.action:
+                action: script.get_sensor_value
+                data:
+                  entity_id: !lambda 'return id(remote_temperature_entity).state;'
+                capture_response: true
+                response_template: "{{ response['value'] }}"
+                on_success:
+                  - lambda: |-
+                      float temp = response["response"].as<float>();
+                      if (isnan(temp)) {
+                        ESP_LOGW("remote_temp", "HA reply is not numeric, skipping update");
+                        return;
+                      }
+                      // // Skip publish if unchanged vs current template sensor state
+                      // float cur = id(remote_temperature).state;
+                      // if (!isnan(cur) && fabsf(cur - temp) < 0.01f) {
+                      //   ESP_LOGD("remote_temp", "Remote temperature unchanged (%.2f °C), skipping publish", temp);
+                      //   return;
+                      // }
+                      // Publish to the template sensor so filters/logging are centralized
+                      id(remote_temperature).publish_state(temp);
+                on_error:
+                  - logger.log:
+                      level: WARN
+                      format: 'Failed to get remote temperature: %s'
+                      args: ['error.c_str()']
+          else:
+            - logger.log:
+                level: VERBOSE
+                format: 'Remote temperature sensor entity ID is empty, skipping query'

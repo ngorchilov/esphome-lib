@@ -1,0 +1,155 @@
+substitutions:
+  name: wmbus
+  friendly_name: wMBus Receiver
+
+  # Board profile: lilygo or heltec
+  board_profile: heltec
+
+  esp32_board_heltec: heltec_wifi_lora_32_V2
+  esp32_board_lilygo: ttgo-lora32-v21
+
+  wmbus_reset_pin_heltec: GPIO14
+  wmbus_reset_pin_lilygo: GPIO23
+  wmbus_irq_pin_heltec: GPIO35
+  wmbus_irq_pin_lilygo: GPIO33
+
+  i2c_sda_heltec: GPIO4
+  i2c_scl_heltec:
+    number: GPIO15
+    ignore_strapping_warning: true
+  i2c_sda_lilygo: GPIO21
+  i2c_scl_lilygo: GPIO22
+
+  board_led_heltec: GPIO25
+  board_led_lilygo: GPIO25
+
+  board_outputs_heltec:
+    output:
+      - platform: gpio
+        id: vext_output
+        pin: GPIO21
+        inverted: true
+      - platform: gpio
+        id: oled_reset
+        pin: GPIO16
+        inverted: true
+  board_outputs_lilygo: {}
+
+packages:
+  - !include ../packages/boards/templates/base-board-esphome-esp32.yaml
+  - ${board_outputs_${board_profile}}
+
+external_components:
+  - source: github://SzczepanLeon/esphome-components@main
+    components: [wmbus_common, wmbus_meter, wmbus_radio]
+    refresh: 0d
+
+esp32:
+  board: ${esp32_board_${board_profile}}
+  framework:
+    type: esp-idf
+    advanced:
+      sram1_as_iram: true # Bootloader supports SRAM1 as IRAM (+40KB). Set sram1_as_iram: true under esp32 > framework > advanced
+
+logger:
+  level: INFO
+
+i2c:
+  sda: ${i2c_sda_${board_profile}}
+  scl: ${i2c_scl_${board_profile}}
+  scan: true
+
+output:
+  - platform: gpio
+    id: status_led
+    pin: ${board_led_${board_profile}}
+
+spi:
+  clk_pin:
+    number: GPIO5
+    ignore_strapping_warning: true
+  mosi_pin: GPIO27
+  miso_pin: GPIO19
+
+wmbus_radio:
+  radio_type: SX1276
+  cs_pin: GPIO18
+  reset_pin: ${wmbus_reset_pin_${board_profile}}
+  irq_pin: ${wmbus_irq_pin_${board_profile}}
+  on_frame:
+    - then:
+        - lambda: |-
+            id(wmbus_frame_count) += 1;
+            id(wmbus_last_rssi) = frame->rssi();
+            id(wmbus_last_len) = static_cast<uint16_t>(frame->data().size());
+            id(wmbus_last_seen_ms) = millis();
+        - logger.log:
+            format: 'RSSI: %ddBm T: %s (%d)'
+            args: [frame->rssi(), frame->as_hex().c_str(), frame->data().size()]
+        - repeat:
+            count: 3
+            then:
+              - output.turn_on: status_led
+              - delay: 100ms
+              - output.turn_off: status_led
+              - delay: 100ms
+
+globals:
+  - id: oled_update_count
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: wmbus_frame_count
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+  - id: wmbus_last_rssi
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: wmbus_last_len
+    type: uint16_t
+    restore_value: no
+    initial_value: '0'
+  - id: wmbus_last_seen_ms
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+font:
+  - file: 'gfonts://Roboto Mono'
+    id: oled_font
+    size: 11
+    glyphs: ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+
+display:
+  - platform: ssd1306_i2c
+    model: SSD1306_128X64
+    update_interval: 1s
+    lambda: |-
+      id(oled_update_count) += 1;
+      it.print(0, 0, id(oled_font), "wMBus Receiver");
+      it.printf(0, 13, id(oled_font), "Frames: %lu", (unsigned long) id(wmbus_frame_count));
+
+      if (id(wmbus_last_seen_ms) == 0) {
+        it.print(0, 26, id(oled_font), "Last: waiting");
+        it.print(0, 39, id(oled_font), "RSSI: -- dBm");
+        it.print(0, 52, id(oled_font), "Alive: yes");
+      } else {
+        const uint32_t age_s = (millis() - id(wmbus_last_seen_ms)) / 1000;
+        if (age_s < 1000) {
+          it.printf(0, 26, id(oled_font), "Last: %lus ago", (unsigned long) age_s);
+        } else if (age_s < 3600) {
+          it.printf(0, 26, id(oled_font), "Last: %lum ago", (unsigned long) (age_s / 60));
+        } else if (age_s < 86400) {
+          it.printf(0, 26, id(oled_font), "Last: %luh ago", (unsigned long) (age_s / 3600));
+        } else {
+          it.printf(0, 26, id(oled_font), "Last: %lud ago", (unsigned long) (age_s / 86400));
+        }
+        it.printf(0, 39, id(oled_font), "RSSI: %d dBm", id(wmbus_last_rssi));
+        it.printf(0, 52, id(oled_font), "Len:%uB", id(wmbus_last_len));
+      }
+
+# wmbus_common:
+#   drivers:
+#     - qwater

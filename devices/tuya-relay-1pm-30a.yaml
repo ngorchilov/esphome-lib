@@ -1,0 +1,27 @@
+substitutions:
+  name: tuya-relay-1pm-30a
+  friendly_name: Tuya Relay 1PM 30A
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay
+        name: Relay
+        power:
+          pin: GPIO6
+          inverted: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO7
+          inverted: false
+        integrated_button:
+          enabled: true
+          pin: GPIO8
+          inverted: true
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0942.yaml

@@ -1,0 +1,8 @@
+substitutions:
+  name: kickstart-esp12ef
+  friendly_name: Kickstart ESP-12E/F
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/espressif/esp12ef.yaml
+

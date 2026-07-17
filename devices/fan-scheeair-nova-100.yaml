@@ -1,0 +1,155 @@
+substitutions:
+  name: fan-scheeair-nova-100
+  friendly_name: Fan SCHEEAIR Nova 100
+
+packages:
+  - !include ../packages/boards/tuya/bw15.yaml # TODO: make it work with the WBR3
+
+logger:
+  level: DEBUG
+
+uart:
+  tx_pin: TX0
+  rx_pin: RX0
+  baud_rate: 9600
+
+tuya:
+  id: tuyamcu
+  time_id: ha_time
+  # =======================
+  # Event-driven decoding (no polling)
+  # =======================
+  on_datapoint_update:
+    # DP102 (fan state, enum): 0=stop, 1=high 2=low
+    - sensor_datapoint: 102
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char* txt = (x == 0) ? "stop" : (x == 1) ? "high" :
+                              (x == 2) ? "low" : "unknown";
+            id(wind_state).publish_state(txt);
+
+    # DP106 (PIR state, enum): 0=pir, 1=none
+    - sensor_datapoint: 106
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            id(motion_state).publish_state(x == 0 ? "pir" : "none");
+
+# --- INTERNAL Tuya controls we will drive from the template fan ---
+switch:
+  - platform: tuya
+    switch_datapoint: 1
+    id: dp1_power # DP1 power (bool)
+    internal: true
+    restore_mode: RESTORE_DEFAULT_ON
+
+  - platform: tuya
+    switch_datapoint: 10
+    name: Humidity Detection
+    internal: true # Hide from HA UI as we don't want Tuya MCU to appy its humidity logic and interfere with our automations
+    entity_category: CONFIG
+    restore_mode: ALWAYS_OFF
+
+  - platform: tuya
+    switch_datapoint: 107
+    internal: true # Hide from HA UI as we don't want Tuya MCU to appy its PIR logic and interfere with our automations
+    name: PIR Detection
+    entity_category: CONFIG
+    restore_mode: ALWAYS_OFF
+
+select:
+  - platform: tuya
+    id: dp103_preset # DP103 preset enum (0=high, 1=low, 2=stop)
+    internal: true
+    enum_datapoint: 103
+    options:
+      0: high
+      1: low
+      2: stop
+
+# =======================
+# Control: template fan
+# uses dp1_power + dp103_preset (internal) under the hood
+# =======================
+fan:
+  - platform: template
+    name: ${friendly_name}
+    id: nova_fan
+    icon: mdi:fan
+    has_oscillating: false
+    has_direction: false
+    speed_count: 2
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      then:
+        - switch.turn_on: dp1_power
+    on_turn_off:
+      then:
+        - switch.turn_off: dp1_power
+    on_speed_set:
+      then:
+        - select.set:
+            id: dp103_preset # internal select bound to DP103 (0=high,1=low,2=stop)
+            option: !lambda 'return (x <= 1) ? "low" : "high";'
+
+# =======================
+# Read-only sensors
+# =======================
+sensor:
+  - platform: tuya
+    name: Temperature
+    id: temperature
+    sensor_datapoint: 21
+    unit_of_measurement: '°C'
+    accuracy_decimals: 0
+    device_class: temperature
+    state_class: measurement
+    on_value:
+      then:
+        - component.update: dew_point
+
+  - platform: tuya
+    name: Humidity
+    id: humidity
+    sensor_datapoint: 101
+    unit_of_measurement: '%'
+    accuracy_decimals: 0
+    device_class: humidity
+    state_class: measurement
+    on_value:
+      then:
+        - component.update: dew_point
+
+  - platform: template
+    name: Dew Point
+    id: dew_point
+    unit_of_measurement: '°C'
+    device_class: temperature
+    state_class: measurement
+    update_interval: never
+    lambda: |-
+      const float a = 17.62;
+      const float b = 243.12;
+      float T = id(temperature).state;
+      float RH = id(humidity).state;
+      if (RH <= 0.0) return NAN;
+      float gamma = (a * T) / (b + T) + log(RH / 100.0);
+      return roundf((b * gamma) / (a - gamma) * 100) / 100.0;
+    icon: mdi:water-thermometer
+
+# =======================
+# Pretty enum readouts as text_sensors
+# =======================
+text_sensor:
+  - platform: template
+    name: Wind State
+    id: wind_state
+    icon: mdi:wind-power
+    update_interval: never
+
+  - platform: template
+    name: Motion State
+    id: motion_state
+    icon: mdi:motion-sensor
+    update_interval: never

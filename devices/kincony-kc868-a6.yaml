@@ -1,0 +1,266 @@
+substitutions:
+  name: kincony-kc868-a6
+  friendly_name: KinCony KC868-A6
+
+packages:
+  - !include ../packages/boards/espressif/esp32dev.yaml
+
+uart:
+  - id: rs485
+    tx_pin: GPIO27
+    rx_pin: GPIO14
+    baud_rate: 9600
+  - id: rs232
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+    baud_rate: 9600
+
+spi: # cs_pin: GPIO5
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO19
+
+i2c:
+  sda: GPIO4
+  scl:
+    number: GPIO15
+    ignore_strapping_warning: true
+
+one_wire:
+  - platform: gpio
+    pin: GPIO32
+    id: ow_bus1
+  - platform: gpio
+    pin: GPIO33
+    id: ow_bus2
+
+pcf8574:
+  - id: inputs
+    address: 0x22
+  - id: outputs
+    address: 0x24
+
+time:
+  - id: !extend ha_time
+    on_time_sync:
+      then:
+        - ds1307.write_time:
+            id: rtc_time
+  - platform: ds1307
+    id: rtc_time
+
+switch:
+  - platform: gpio
+    name: Relay 1
+    id: r1
+    pin:
+      pcf8574: outputs
+      number: 0
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    name: Relay 2
+    id: r2
+    pin:
+      pcf8574: outputs
+      number: 1
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    name: Relay 3
+    id: r3
+    pin:
+      pcf8574: outputs
+      number: 2
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    name: Relay 4
+    id: r4
+    pin:
+      pcf8574: outputs
+      number: 3
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    name: Relay 5
+    id: r5
+    pin:
+      pcf8574: outputs
+      number: 4
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: gpio
+    name: Relay 6
+    id: r6
+    pin:
+      pcf8574: outputs
+      number: 5
+      mode: OUTPUT
+      inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+
+output:
+  - platform: esp32_dac
+    id: ao1_dac
+    pin: GPIO25
+  - platform: esp32_dac
+    id: ao2_dac
+    pin: GPIO26
+
+number:
+  - platform: template
+    name: Analog Output 1
+    id: ao1
+    unit_of_measurement: V
+    min_value: 0
+    max_value: 10
+    step: 0.1
+    mode: box
+    optimistic: true
+    restore_value: true
+    on_value:
+      - output.set_level:
+          id: ao1_dac
+          level: !lambda 'return x / 10.0;'
+  - platform: template
+    name: Analog Output 2
+    id: ao2
+    unit_of_measurement: V
+    min_value: 0
+    max_value: 10
+    step: 0.1
+    mode: box
+    optimistic: true
+    restore_value: true
+    on_value:
+      - output.set_level:
+          id: ao2_dac
+          level: !lambda 'return x / 10.0;'
+
+sensor:
+  - platform: adc
+    name: Analog Input 1
+    id: ai1
+    pin: GPIO36
+    attenuation: 12db
+    update_interval: 1s
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+    filters:
+      - median:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.142 -> 0.0
+          - 3.3 -> 5.0
+  - platform: adc
+    name: Analog Input 2
+    id: ai2
+    pin: GPIO39
+    attenuation: 12db
+    update_interval: 1s
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+    filters:
+      - median:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.142 -> 0.0
+          - 3.3 -> 5.0
+  - platform: adc
+    name: Analog Input 3
+    id: ai3
+    pin: GPIO34
+    attenuation: 12db
+    update_interval: 1s
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+    filters:
+      - median:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.142 -> 0.0
+          - 3.3 -> 5.0
+  - platform: adc
+    name: Analog Input 4
+    id: ai4
+    pin: GPIO35
+    attenuation: 12db
+    update_interval: 1s
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+    filters:
+      - median:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.142 -> 0.0
+          - 3.3 -> 5.0
+
+binary_sensor:
+  - platform: gpio
+    name: Digital Input 1
+    id: di1
+    pin:
+      pcf8574: inputs
+      number: 0
+      mode: INPUT
+      inverted: true
+    use_interrupt: false
+  - platform: gpio
+    name: Digital Input 2
+    id: di2
+    pin:
+      pcf8574: inputs
+      number: 1
+      mode: INPUT
+      inverted: true
+    use_interrupt: false
+  - platform: gpio
+    name: Digital Input 3
+    id: di3
+    pin:
+      pcf8574: inputs
+      number: 2
+      mode: INPUT
+      inverted: true
+    use_interrupt: false
+  - platform: gpio
+    name: Digital Input 4
+    id: di4
+    pin:
+      pcf8574: inputs
+      number: 3
+      mode: INPUT
+      inverted: true
+    use_interrupt: false
+  - platform: gpio
+    name: Digital Input 5
+    id: di5
+    pin:
+      pcf8574: inputs
+      number: 4
+      mode: INPUT
+      inverted: true
+    use_interrupt: false
+  - platform: gpio
+    name: Digital Input 6
+    id: di6
+    pin:
+      pcf8574: inputs
+      number: 5
+      mode: INPUT
+      inverted: true
+    use_interrupt: false

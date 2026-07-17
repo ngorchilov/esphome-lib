@@ -3,16 +3,19 @@ substitutions:
   friendly_name: Base Board
 
   log_level: INFO
+  has_internal_temperature: true
+  internal_temperature_module: !include ../../modules/internal-temperature.yaml
 
 packages:
   - !include ../../modules/networking.yaml
+  - ${ has_internal_temperature and internal_temperature_module or {} }
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
 
-  # 2025.12.0: Conditional Package Inclusion (https://esphome.io/changelog/2025.12.0/#conditional-package-inclusion)
-  min_version: 2025.12.0
+  # Requires conditional packages and reliable !include vars substitution in lambdas.
+  min_version: 2026.5.0
 
 logger:
   level: ${log_level}
@@ -30,18 +33,6 @@ sensor:
     time_id: ha_time
     device_class: uptime
     entity_category: diagnostic
-
-  - platform: internal_temperature
-    name: MCU Temperature
-    id: mcu_temperature
-    device_class: temperature
-    unit_of_measurement: °C
-    accuracy_decimals: 0
-    state_class: measurement
-    entity_category: diagnostic
-    disabled_by_default: true
-    filters:
-      - delta: 1
 
 binary_sensor:
   - platform: status

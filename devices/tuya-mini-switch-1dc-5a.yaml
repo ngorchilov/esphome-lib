@@ -1,0 +1,30 @@
+substitutions:
+  name: tuya-mini-switch-1dc-5a
+  friendly_name: Tuya Mini Switch 1DC 5A
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay
+        name: Relay
+        power:
+          pin: GPIO20
+          inverted: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO6
+          inverted: true
+        integrated_button:
+          enabled: true
+          pin: GPIO8
+          inverted: true
+        external_switch:
+          enabled: true
+          pin: GPIO14
+          inverted: true
+          mode: rocker

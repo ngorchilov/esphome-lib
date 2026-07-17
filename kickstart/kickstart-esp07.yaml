@@ -1,0 +1,7 @@
+substitutions:
+  name: kickstart-esp07
+  friendly_name: Kickstart ESP-07
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/espressif/esp07.yaml

@@ -1,0 +1,327 @@
+# Feyree Single-Phase EV charger
+
+substitutions:
+  name: evse-feyree-single-phase
+  friendly_name: Feyree Single-Phase EVSE
+  # UART
+  uart_tx_pin: GPIO17
+  uart_rx_pin: GPIO16
+  uart_baud_rate: 9600
+  # Scaling factors
+  last_charge_energy_scale: 0.1
+  single_charge_energy_scale: 0.01
+  balance_energy_scale: 0.001
+  voltage_scale: 0.1
+  current_scale: 0.1
+  power_scale: 0.1
+  temperature_scale: 0.1
+
+packages:
+  # The original WBR3 was replaced with a NodeMCU-32S connected to its 3V3, GND, TX, and RX pads.
+  - !include ../packages/boards/espressif/nodemcu-32s.yaml
+
+logger:
+  level: INFO
+
+uart:
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
+  baud_rate: ${uart_baud_rate}
+
+# ---------------------
+# Text Sensors (read-only)
+# ---------------------
+text_sensor:
+  - platform: tuya
+    sensor_datapoint: 23
+    name: System Version
+    id: system_version
+    icon: mdi:chip
+  - platform: tuya
+    sensor_datapoint: 120
+    name: Last Charge Duration
+    id: last_charge_duration
+    icon: mdi:clock
+  - platform: tuya
+    sensor_datapoint: 121
+    name: Charging Time Display
+    id: charging_time_display
+    icon: mdi:timer
+  - platform: tuya
+    sensor_datapoint: 122
+    name: Delayed Time Display
+    id: delayed_time_display
+    icon: mdi:timer
+  - platform: tuya
+    sensor_datapoint: 3
+    name: Charger State
+    icon: mdi:ev-station
+    filters:
+      lambda: |-
+        switch (atoi(x.c_str())) {
+          case 0: return std::string("Standby");
+          case 1: return std::string("Cable connected");
+          case 2: return std::string("Standby fault");
+          case 3: return std::string("Ready");
+          case 4: return std::string("Charging");
+          case 5: return std::string("Charging paused");
+          case 6: return std::string("Charging ended");
+          case 7: return std::string("Charging fault");
+          default: return std::string("Unidentified");
+        }
+  - platform: template
+    name: Fault Status
+    id: fault_status
+    icon: mdi:alert
+  - platform: tuya
+    sensor_datapoint: 101
+    name: Device State
+    icon: mdi:information
+    filters:
+      lambda: |-
+        switch (atoi(x.c_str())) {
+          case 0: return std::string("Disconnected");
+          case 1: return std::string("Connected");
+          case 2: return std::string("Charging");
+          case 3: return std::string("Waiting for authorization");
+          case 4: return std::string("Charged");
+          case 5: return std::string("Delaying charge");
+          case 6: return std::string("Error");
+          default: return std::string("Unidentified");
+        }
+  - platform: tuya
+    sensor_datapoint: 108
+    name: Phase Flag
+    icon: mdi:information
+    filters:
+      lambda: |-
+        switch (atoi(x.c_str())) {
+          case 0: return std::string("Single Phase");
+          case 1: return std::string("Three Phase");
+          case 2: return std::string("No Phase");
+          case 3: return std::string("Phase Error");
+          default: return std::string("Unidentified");
+        }
+  - platform: template
+    name: set_current DP
+    id: set_current_dp
+    icon: mdi:cog
+
+# ---------------------
+# Sensors (read-only datapoints)
+# ---------------------
+sensor:
+  - platform: tuya
+    name: Fault Code
+    sensor_datapoint: 10
+    #internal: true
+    accuracy_decimals: 0
+    icon: mdi:alert
+  - platform: tuya
+    name: Remaining Energy
+    sensor_datapoint: 15
+    unit_of_measurement: kWh
+    icon: mdi:battery
+    filters:
+      - multiply: ${balance_energy_scale}
+  - platform: tuya
+    name: Single Charge Energy
+    sensor_datapoint: 25
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: mdi:lightning-bolt
+    filters:
+      - multiply: ${single_charge_energy_scale}
+  - platform: tuya
+    name: Voltage
+    sensor_datapoint: 102
+    unit_of_measurement: V
+    device_class: voltage
+    accuracy_decimals: 1
+    icon: mdi:sine-wave
+    filters:
+      - multiply: ${voltage_scale}
+  - platform: tuya
+    name: Output Current
+    sensor_datapoint: 105
+    unit_of_measurement: A
+    device_class: current
+    accuracy_decimals: 1
+    icon: mdi:current-ac
+    filters:
+      - multiply: ${current_scale}
+  - platform: tuya
+    name: Output Power
+    sensor_datapoint: 109
+    unit_of_measurement: kW
+    device_class: power
+    accuracy_decimals: 2
+    icon: mdi:flash
+    filters:
+      - multiply: ${power_scale}
+  - platform: tuya
+    name: Device Temperature
+    sensor_datapoint: 110
+    unit_of_measurement: °C
+    device_class: temperature
+    accuracy_decimals: 1
+    icon: mdi:thermometer
+    filters:
+      - multiply: ${temperature_scale}
+  - platform: tuya
+    name: Last Charge Energy
+    sensor_datapoint: 112
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    icon: mdi:lightning-bolt
+    filters:
+      - multiply: ${last_charge_energy_scale}
+  - platform: tuya
+    sensor_datapoint: 113
+    name: Current DP Selector
+    id: current_dp_selector
+    internal: true
+
+# ---------------------
+# Number Components (writable datapoints)
+# ---------------------
+number:
+  - platform: tuya
+    name: Set Current
+    number_datapoint: 115
+    min_value: 8
+    max_value: 32
+    step: 1
+    unit_of_measurement: A
+    device_class: current
+    mode: box
+    entity_category: config
+    icon: mdi:current-ac
+    datapoint_hidden:
+      datapoint_type: int
+      restore_value: true
+  - platform: tuya
+    name: Set Delayed Charging
+    number_datapoint: 118
+    min_value: 0
+    max_value: 15
+    step: 1
+    unit_of_measurement: H
+    mode: box
+    entity_category: config
+    icon: mdi:timer-outline
+    datapoint_hidden:
+      datapoint_type: int
+      restore_value: true
+  - platform: tuya
+    name: Set Charging Duration
+    number_datapoint: 119
+    min_value: 0
+    max_value: 15
+    step: 1
+    unit_of_measurement: H
+    mode: box
+    entity_category: config
+    icon: mdi:timer-outline
+    datapoint_hidden:
+      datapoint_type: int
+      restore_value: true
+
+# ---------------------
+# Switches
+# ---------------------
+switch:
+  - platform: tuya
+    name: Clear Energy
+    switch_datapoint: 16
+    icon: mdi:solar-power
+  - platform: tuya
+    name: Charger Switch
+    switch_datapoint: 18
+    icon: mdi:power
+  - platform: tuya
+    name: Swipe Card
+    switch_datapoint: 123
+    icon: mdi:credit-card
+
+# ---------------------
+# Select Components (Active Controls)
+# ---------------------
+select:
+  - platform: tuya
+    name: Charge Mode
+    enum_datapoint: 14
+    optimistic: true
+    options:
+      0: charge_now
+      1: charge_pct
+      2: charge_energy
+      3: charge_schedule
+  - platform: tuya
+    name: Online State
+    enum_datapoint: 27
+    optimistic: true
+    options:
+      0: online
+      1: offline
+  - platform: tuya
+    name: Charging Operation
+    enum_datapoint: 124
+    optimistic: true
+    options:
+      0: OpenCharging # Start charging
+      1: CloseCharging # Stop charging
+      2: WaitOperation # Waiting for command
+
+# ---------------------
+# TuyaMCU Component (handles datapoint updates)
+# ---------------------
+tuya:
+  id: tuya_mcu
+  time_id: ha_time
+  on_datapoint_update:
+    - sensor_datapoint: 10 # create a human-friendly version of Fault Code as Fault Status
+      datapoint_type: bitmask
+      then:
+        - lambda: |-
+            std::string faults = "";
+            if (x & 0x0001) { faults += "err_leak|"; }
+            if (x & 0x0002) { faults += "err_cp|"; }
+            if (x & 0x0004) { faults += "err_temp|"; }
+            if (x & 0x0008) { faults += "warn_a_uvp|"; }
+            if (x & 0x0010) { faults += "warn_b_uvp|"; }
+            if (x & 0x0020) { faults += "warn_c_uvp|"; }
+            if (x & 0x0040) { faults += "err_a_ovp|"; }
+            if (x & 0x0080) { faults += "err_b_ovp|"; }
+            if (x & 0x0100) { faults += "err_c_ovp|"; }
+            if (x & 0x0200) { faults += "err_ocp|"; }
+            if (x & 0x0400) { faults += "err_10|"; }
+            if (x & 0x0800) { faults += "err_11|"; }
+            if (x & 0x1000) { faults += "err_esb|"; }
+            if (x & 0x2000) { faults += "warn_pe_sck|"; }
+            if (x & 0x4000) { faults += "err_leak_sck|"; }
+            if (x & 0x8000) { faults += "err_pe|"; }
+            if (!faults.empty())
+              faults = faults.substr(0, faults.size() - 1);
+            else
+              faults = "none";
+            id(fault_status).publish_state(faults);
+    - sensor_datapoint: 113 # Reports which current-limit datapoint is active.
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            std::string tmp;
+            switch (x) {
+              case 0: tmp = "DP 114"; break; // Max16A: Set current via DP 114, max: 16, min: 8, scale: 0, step: 1, unit: A
+              case 1: tmp = "DP 115"; break; // Max32A: Set current via DP 115, max: 32, min: 8, scale: 0, step: 1, unit: A
+              case 2: tmp = "DP 116"; break; // Max40A: Set current via DP 116, max: 40, min: 8, scale: 0, step: 1, unit: A
+              case 3: tmp = "DP 117"; break; // Max50A: Set current via DP 117, max: 50, min: 8, scale: 0, step: 1, unit: A
+              case 4: tmp = "DP 125"; break; // Max60A: Set current via DP 125, max: 80?!?, min: 6?!?, scale: 0, step: 1, unit: A
+              case 5: tmp = "DP 126"; break; // Max80A: Set current via DP 126, max: 80, min: 24?!?, scale: 0, step: 1, unit: A
+              default: tmp = "Unidentified";
+            }
+            id(set_current_dp).publish_state(tmp);

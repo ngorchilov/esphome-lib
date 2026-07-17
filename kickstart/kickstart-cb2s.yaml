@@ -1,0 +1,7 @@
+substitutions:
+  name: kickstart-cb2s
+  friendly_name: Kickstart CB2S
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml

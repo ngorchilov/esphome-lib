@@ -1,0 +1,145 @@
+substitutions:
+  name: tuya-strip-4pm-cbu
+  friendly_name: Tuya Strip 4PM (CBU)
+
+  led_pin: GPIO20
+  led_inverted: 'false'
+
+  button_pin: GPIO22
+  button_pullup: 'true'
+  button_inverted: 'true'
+
+  relay1_pin: GPIO6
+  relay1_inverted: 'false'
+  relay1_id: socket_1
+  relay1_name: Socket 1
+
+  relay2_pin: GPIO7
+  relay2_inverted: 'false'
+  relay2_id: socket_2
+  relay2_name: Socket 2
+
+  relay3_pin: GPIO8
+  relay3_inverted: 'false'
+  relay3_id: socket_3
+  relay3_name: Socket 3
+
+  relay4_pin: GPIO9
+  relay4_inverted: 'false'
+  relay4_id: socket_4
+  relay4_name: Socket 4
+
+  relay5_pin: GPIO26
+  relay5_inverted: 'false'
+  relay5_id: relay_usb
+  relay5_name: Relay USB
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0942.yaml
+esphome:
+  on_boot:
+    - if:
+        condition:
+          binary_sensor.is_on: power_status
+        then:
+          - light.turn_on: status_led
+        else:
+          - light.turn_off: status_led
+
+output:
+  - platform: gpio
+    id: led_output
+    pin: ${led_pin}
+    inverted: ${led_inverted}
+
+light:
+  - platform: binary
+    id: status_led
+    output: led_output
+
+binary_sensor:
+  - platform: template
+    id: power_status
+    name: Power Status
+    lambda: |-
+      return id(${relay1_id}).state || id(${relay2_id}).state ||
+             id(${relay3_id}).state || id(${relay4_id}).state ||
+             id(${relay5_id}).state;
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - light.turn_on: status_led
+            else:
+              - light.turn_off: status_led
+
+  - platform: gpio
+    name: Button
+    pin:
+      number: ${button_pin}
+      mode:
+        input: true
+        pullup: ${button_pullup}
+      inverted: ${button_inverted}
+    on_press:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - switch.turn_off: ${relay1_id}
+              - switch.turn_off: ${relay2_id}
+              - switch.turn_off: ${relay3_id}
+              - switch.turn_off: ${relay4_id}
+              - switch.turn_off: ${relay5_id}
+            else:
+              - switch.turn_on: ${relay1_id}
+              - switch.turn_on: ${relay2_id}
+              - switch.turn_on: ${relay3_id}
+              - switch.turn_on: ${relay4_id}
+              - switch.turn_on: ${relay5_id}
+
+switch:
+  - platform: gpio
+    name: ${relay1_name}
+    id: ${relay1_id}
+    pin:
+      number: ${relay1_pin}
+      inverted: ${relay1_inverted}
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: ${relay2_name}
+    id: ${relay2_id}
+    pin:
+      number: ${relay2_pin}
+      inverted: ${relay2_inverted}
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: ${relay3_name}
+    id: ${relay3_id}
+    pin:
+      number: ${relay3_pin}
+      inverted: ${relay3_inverted}
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: ${relay4_name}
+    id: ${relay4_id}
+    pin:
+      number: ${relay4_pin}
+      inverted: ${relay4_inverted}
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: ${relay5_name}
+    id: ${relay5_id}
+    pin:
+      number: ${relay5_pin}
+      inverted: ${relay5_inverted}
+    restore_mode: RESTORE_DEFAULT_OFF

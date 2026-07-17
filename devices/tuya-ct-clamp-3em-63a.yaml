@@ -1,0 +1,510 @@
+substitutions:
+  name: tuya-ct-clamp-3em-63a
+  friendly_name: Tuya CT Clamp 3EM 63A
+
+  voltage_scale: 0.1 # 0.1 V/count
+  current_scale: 0.001 # 0.001 A/count
+  power_scale: 0.001 # 0.001 kW/count
+  power_factor_scale: 0.01 # 0.01 ratio/count
+  energy_scale: 0.01 # 0.01 kWh/count
+  frequency_scale: 0.01 # 0.01 Hz/count
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml
+logger:
+  level: DEBUG
+
+uart:
+  tx_pin: TX1
+  rx_pin: RX1
+  baud_rate: 9600
+
+tuya:
+  id: tuya_component
+  on_datapoint_update:
+    # - sensor_datapoint: 6
+    #   datapoint_type: raw
+    #   then:
+    #     - lambda: |-
+    #         auto format_hex = [](const std::vector<uint8_t> &data) -> std::string {
+    #           static const char *hex = "0123456789ABCDEF";
+    #           std::string out;
+    #           for (size_t i = 0; i < data.size(); i++) {
+    #             if (i)
+    #               out += ':';
+    #             out += hex[(data[i] >> 4) & 0x0F];
+    #             out += hex[data[i] & 0x0F];
+    #           }
+    #           return out;
+    #         };
+    #         if (x.size() >= 8) {
+    #           const uint16_t v_raw = (uint16_t(x[0]) << 8) | uint16_t(x[1]);
+    #           const uint32_t c_raw = (uint32_t(x[2]) << 16) | (uint32_t(x[3]) << 8) | uint32_t(x[4]);
+    #           const uint32_t p_raw = (uint32_t(x[5]) << 16) | (uint32_t(x[6]) << 8) | uint32_t(x[7]);
+    #           ESP_LOGD("raw_phase", "DP6 phase A raw=%s voltage=%.1fV current=%.3fA power=%.4fkW", format_hex(x).c_str(), v_raw / 10.0f, c_raw / 1000.0f, p_raw / 10000.0f);
+    #         } else {
+    #           ESP_LOGD("raw_phase", "DP6 phase A raw=%s", format_hex(x).c_str());
+    #         }
+    # - sensor_datapoint: 7
+    #   datapoint_type: raw
+    #   then:
+    #     - lambda: |-
+    #         auto format_hex = [](const std::vector<uint8_t> &data) -> std::string {
+    #           static const char *hex = "0123456789ABCDEF";
+    #           std::string out;
+    #           for (size_t i = 0; i < data.size(); i++) {
+    #             if (i)
+    #               out += ':';
+    #             out += hex[(data[i] >> 4) & 0x0F];
+    #             out += hex[data[i] & 0x0F];
+    #           }
+    #           return out;
+    #         };
+    #         if (x.size() >= 8) {
+    #           const uint16_t v_raw = (uint16_t(x[0]) << 8) | uint16_t(x[1]);
+    #           const uint32_t c_raw = (uint32_t(x[2]) << 16) | (uint32_t(x[3]) << 8) | uint32_t(x[4]);
+    #           const uint32_t p_raw = (uint32_t(x[5]) << 16) | (uint32_t(x[6]) << 8) | uint32_t(x[7]);
+    #           ESP_LOGD("raw_phase", "DP7 phase B raw=%s voltage=%.1fV current=%.3fA power=%.4fkW", format_hex(x).c_str(), v_raw / 10.0f, c_raw / 1000.0f, p_raw / 10000.0f);
+    #         } else {
+    #           ESP_LOGD("raw_phase", "DP7 phase B raw=%s", format_hex(x).c_str());
+    #         }
+    # - sensor_datapoint: 8
+    #   datapoint_type: raw
+    #   then:
+    #     - lambda: |-
+    #         auto format_hex = [](const std::vector<uint8_t> &data) -> std::string {
+    #           static const char *hex = "0123456789ABCDEF";
+    #           std::string out;
+    #           for (size_t i = 0; i < data.size(); i++) {
+    #             if (i)
+    #               out += ':';
+    #             out += hex[(data[i] >> 4) & 0x0F];
+    #             out += hex[data[i] & 0x0F];
+    #           }
+    #           return out;
+    #         };
+    #         if (x.size() >= 8) {
+    #           const uint16_t v_raw = (uint16_t(x[0]) << 8) | uint16_t(x[1]);
+    #           const uint32_t c_raw = (uint32_t(x[2]) << 16) | (uint32_t(x[3]) << 8) | uint32_t(x[4]);
+    #           const uint32_t p_raw = (uint32_t(x[5]) << 16) | (uint32_t(x[6]) << 8) | uint32_t(x[7]);
+    #           ESP_LOGD("raw_phase", "DP8 phase C raw=%s voltage=%.1fV current=%.3fA power=%.4fkW", format_hex(x).c_str(), v_raw / 10.0f, c_raw / 1000.0f, p_raw / 10000.0f);
+    #         } else {
+    #           ESP_LOGD("raw_phase", "DP8 phase C raw=%s", format_hex(x).c_str());
+    #         }
+    - sensor_datapoint: 9
+      datapoint_type: bitmask
+      then:
+        - lambda: |-
+            id(alarm_short_circuit).publish_state((x & 0x0001) != 0);
+            id(alarm_surge).publish_state((x & 0x0002) != 0);
+            id(alarm_overload).publish_state((x & 0x0004) != 0);
+            id(alarm_leakage).publish_state((x & 0x0008) != 0);
+            id(alarm_high_temperature).publish_state((x & 0x0010) != 0);
+            id(alarm_arcing).publish_state((x & 0x0020) != 0);
+            id(alarm_high_power).publish_state((x & 0x0040) != 0);
+            id(alarm_leakage_self_test_fault).publish_state((x & 0x0080) != 0);
+            id(alarm_overcurrent).publish_state((x & 0x0100) != 0);
+            id(alarm_current_unbalance).publish_state((x & 0x0200) != 0);
+            id(alarm_overvoltage).publish_state((x & 0x0400) != 0);
+            id(alarm_undervoltage).publish_state((x & 0x0800) != 0);
+            id(alarm_missing_phase).publish_state((x & 0x1000) != 0);
+            id(alarm_power_outage).publish_state((x & 0x2000) != 0);
+            id(alarm_magnetic_tamper).publish_state((x & 0x4000) != 0);
+            id(alarm_credit).publish_state((x & 0x8000) != 0);
+            id(alarm_low_balance).publish_state((x & 0x10000) != 0);
+    # - sensor_datapoint: 17
+    #   datapoint_type: raw
+    #   then:
+    #     - lambda: |-
+    #         auto format_hex = [](const std::vector<uint8_t> &data) -> std::string {
+    #           static const char *hex = "0123456789ABCDEF";
+    #           std::string out;
+    #           for (size_t i = 0; i < data.size(); i++) {
+    #             if (i)
+    #               out += ':';
+    #             out += hex[(data[i] >> 4) & 0x0F];
+    #             out += hex[data[i] & 0x0F];
+    #           }
+    #           return out;
+    #         };
+    #         ESP_LOGD("raw_alarm", "DP17 alarm_set_1 raw=%s", format_hex(x).c_str());
+    # - sensor_datapoint: 18
+    #   datapoint_type: raw
+    #   then:
+    #     - lambda: |-
+    #         auto format_hex = [](const std::vector<uint8_t> &data) -> std::string {
+    #           static const char *hex = "0123456789ABCDEF";
+    #           std::string out;
+    #           for (size_t i = 0; i < data.size(); i++) {
+    #             if (i)
+    #               out += ':';
+    #             out += hex[(data[i] >> 4) & 0x0F];
+    #             out += hex[data[i] & 0x0F];
+    #           }
+    #           return out;
+    #         };
+    #         ESP_LOGD("raw_alarm", "DP18 alarm_set_2 raw=%s", format_hex(x).c_str());
+
+sensor:
+  - platform: tuya
+    name: Total Consumed Energy
+    sensor_datapoint: 1
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Total Produced Energy
+    sensor_datapoint: 23
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Total Power
+    sensor_datapoint: 29
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_scale}
+
+  - platform: tuya
+    name: Line Frequency
+    sensor_datapoint: 32
+    unit_of_measurement: Hz
+    device_class: frequency
+    state_class: measurement
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${frequency_scale}
+
+  - platform: tuya
+    name: Total Power Factor
+    sensor_datapoint: 50
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_factor_scale}
+
+  - platform: tuya
+    name: Phase A Voltage
+    sensor_datapoint: 103
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${voltage_scale}
+
+  - platform: tuya
+    name: Phase A Current
+    sensor_datapoint: 104
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+    filters:
+      - multiply: ${current_scale}
+
+  - platform: tuya
+    name: Phase A Power
+    sensor_datapoint: 105
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_scale}
+
+  - platform: tuya
+    name: Phase A Power Factor
+    sensor_datapoint: 108
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_factor_scale}
+
+  - platform: tuya
+    name: Phase A Consumed Energy
+    sensor_datapoint: 109
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase A Produced Energy
+    sensor_datapoint: 110
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase B Voltage
+    sensor_datapoint: 112
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${voltage_scale}
+
+  - platform: tuya
+    name: Phase B Current
+    sensor_datapoint: 113
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+    filters:
+      - multiply: ${current_scale}
+
+  - platform: tuya
+    name: Phase B Power
+    sensor_datapoint: 114
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_scale}
+
+  - platform: tuya
+    name: Phase B Power Factor
+    sensor_datapoint: 117
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_factor_scale}
+
+  - platform: tuya
+    name: Phase B Consumed Energy
+    sensor_datapoint: 118
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase B Produced Energy
+    sensor_datapoint: 119
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase C Voltage
+    sensor_datapoint: 121
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+    filters:
+      - multiply: ${voltage_scale}
+
+  - platform: tuya
+    name: Phase C Current
+    sensor_datapoint: 122
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+    filters:
+      - multiply: ${current_scale}
+
+  - platform: tuya
+    name: Phase C Power
+    sensor_datapoint: 123
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_scale}
+
+  - platform: tuya
+    name: Phase C Power Factor
+    sensor_datapoint: 126
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 0
+    # filters:
+    #   - multiply: ${power_factor_scale}
+
+  - platform: tuya
+    name: Phase C Consumed Energy
+    sensor_datapoint: 127
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase C Produced Energy
+    sensor_datapoint: 128
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+
+  - platform: tuya
+    name: Phase Current Unbalance
+    sensor_datapoint: 130
+    unit_of_measurement: '%'
+    state_class: measurement
+    icon: mdi:scale-unbalanced
+    accuracy_decimals: 0
+
+binary_sensor:
+  - platform: template
+    name: Alarm Short Circuit
+    id: alarm_short_circuit
+    device_class: problem
+
+  - platform: template
+    name: Alarm Surge
+    id: alarm_surge
+    device_class: problem
+
+  - platform: template
+    name: Alarm Overload
+    id: alarm_overload
+    device_class: problem
+
+  - platform: template
+    name: Alarm Leakage
+    id: alarm_leakage
+    device_class: problem
+
+  - platform: template
+    name: Alarm High Temperature
+    id: alarm_high_temperature
+    device_class: problem
+
+  - platform: template
+    name: Alarm Arcing
+    id: alarm_arcing
+    device_class: problem
+
+  - platform: template
+    name: Alarm High Power
+    id: alarm_high_power
+    device_class: problem
+
+  - platform: template
+    name: Alarm Leakage Self-Test Fault
+    id: alarm_leakage_self_test_fault
+    device_class: problem
+
+  - platform: template
+    name: Alarm Overcurrent
+    id: alarm_overcurrent
+    device_class: problem
+
+  - platform: template
+    name: Alarm Current Unbalance
+    id: alarm_current_unbalance
+    device_class: problem
+
+  - platform: template
+    name: Alarm Overvoltage
+    id: alarm_overvoltage
+    device_class: problem
+
+  - platform: template
+    name: Alarm Undervoltage
+    id: alarm_undervoltage
+    device_class: problem
+
+  - platform: template
+    name: Alarm Missing Phase
+    id: alarm_missing_phase
+    device_class: problem
+
+  - platform: template
+    name: Alarm Power Outage
+    id: alarm_power_outage
+    device_class: problem
+
+  - platform: template
+    name: Alarm Magnetic Tamper
+    id: alarm_magnetic_tamper
+    device_class: problem
+
+  - platform: template
+    name: Alarm Credit
+    id: alarm_credit
+    device_class: problem
+
+  - platform: template
+    name: Alarm Low Balance
+    id: alarm_low_balance
+    device_class: problem
+
+switch:
+  # TODO: Test as button after confirming LED blinking stops independently of switch state.
+  - platform: tuya
+    name: Identify Device
+    switch_datapoint: 101
+
+text_sensor:
+  - platform: tuya
+    name: Device ID
+    sensor_datapoint: 19
+
+number:
+  - platform: tuya
+    name: Update Interval
+    number_datapoint: 102
+    min_value: 30 # Actual tested device minimum; Tuya model says 225s.
+    max_value: 3600
+    step: 1
+    unit_of_measurement: s
+
+button:
+  # Tuya defines DP12 as a bool; this device reports it as on, so force-send true as an action.
+  - platform: template
+    name: Reset Energy
+    icon: mdi:counter
+    on_press:
+      - lambda: |-
+          id(tuya_component).force_set_boolean_datapoint_value(12, true);
+
+  # Tuya defines DP35 as online/offline enum; this device refreshes all DPs when the value changes.
+  - platform: template
+    name: Refresh Data
+    icon: mdi:refresh
+    on_press:
+      - lambda: |-
+          static bool next_refresh_value = false;
+          id(tuya_component).set_enum_datapoint_value(35, next_refresh_value);
+          next_refresh_value = !next_refresh_value; // toggle

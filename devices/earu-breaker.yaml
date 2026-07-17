@@ -1,0 +1,527 @@
+# EARU EAYCBM-T-1P Wi-Fi Circuit Breaker
+# https://www.aliexpress.com/item/1005006987487758.html
+#
+# Original firmware functions:
+#
+# 1. On/off Switch
+# 2. Time Relay Switch
+# 3. Voltmeter
+# 4. Ammeter
+# 5. Power Meter
+# 6. Over current protection 1A-63A (adjustable)
+# 7. Over voltage protection 220-265V (adjustable) (default: 265V)
+# 8. Under voltage protection 76V-240V (adjustable) (default: 90V)
+# 9. Power protection 1-26KW (adjustable)
+# 10. Temperature protection 40-150°C (adjustable)
+# 11. Leakage Protection 50mA(Non adjustable) 【Only 2P has this function】
+# 12. Current Limit
+# 13. Power off memory
+
+substitutions:
+  # Name
+  name: earu-breaker
+  friendly_name: EARU breaker
+
+  # UART for BL0942 Energy Meter
+  bl0942_rx_pin: P10
+  bl0942_tx_pin: P11
+  bl0942_baud_rate: 4800
+
+  # Relay control pins (Latching Relay)
+  relay_latch_pin: GPIO26
+  relay_unlatch_pin: GPIO24
+  relay_pulse_duration: 60ms
+
+  # Physical Button
+  button_pin: GPIO17
+
+  # LEDs
+  led_pin: GPIO9
+  netled_pin: GPIO15
+
+  # Temperature
+  temp_adc_pin: GPIO23
+  temp_adc_scale: 100
+
+  # Measurement Update Interval
+  external_update_interval: 10s
+  internal_update_interval: 0.01s
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+
+esphome:
+  on_boot:
+    - priority: 250
+      then:
+        - if:
+            condition:
+              - lambda: return id(relay_state);
+            then:
+              - switch.turn_on: relay
+            else:
+              - switch.turn_off: relay
+        - lambda: |-
+            id(fault).publish_state(id(fault_message));
+            id(fault_high_temperature).publish_state(id(fault_state_max_temperature));
+            id(fault_high_current).publish_state(id(fault_state_max_current));
+            id(fault_high_voltage).publish_state(id(fault_state_max_voltage));
+            id(fault_low_voltage).publish_state(id(fault_state_min_voltage));
+
+# Global Internal Variables
+globals:
+  # Internal Switch States
+  - id: relay_state
+    type: bool
+    initial_value: 'false'
+    restore_value: true
+  - id: relay_state_before_maintenance
+    type: bool
+    initial_value: 'false'
+    restore_value: true
+  - id: maintenance_state
+    type: bool
+    initial_value: 'false'
+    restore_value: true
+  - id: fault_message
+    type: std::string
+    restore_value: true
+    initial_value: '"None"'
+  - id: fault_state_max_temperature
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: fault_state_max_current
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: fault_state_max_voltage
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+  - id: fault_state_min_voltage
+    type: bool
+    restore_value: true
+    initial_value: 'false'
+
+  # Raw Sensor Readings
+  - id: raw_temperature
+    type: float
+    initial_value: '0'
+    restore_value: false
+  - id: raw_voltage
+    type: float
+    initial_value: '0'
+    restore_value: false
+  - id: raw_current
+    type: float
+    initial_value: '0'
+    restore_value: false
+  - id: raw_power
+    type: float
+    initial_value: '0'
+    restore_value: false
+  - id: raw_energy
+    type: float
+    initial_value: '0'
+    restore_value: false
+  - id: raw_frequency
+    type: float
+    initial_value: '0'
+    restore_value: false
+
+# Set Circuit Breaker Thresholds
+number:
+  # Set Tripping Temperature
+  - platform: template
+    name: Max Temperature
+    id: max_temperature
+    initial_value: 100
+    min_value: 40
+    max_value: 150
+    step: 1
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: °C
+    device_class: temperature
+    entity_category: config
+    mode: box
+    icon: mdi:thermometer
+
+  # Set Tripping Current
+  - platform: template
+    name: Max Current
+    id: max_current
+    initial_value: 63
+    min_value: 1
+    max_value: 63
+    step: 1
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: A
+    device_class: current
+    entity_category: config
+    mode: box
+    icon: mdi:current-ac
+
+  # Set Tripping Overvoltage
+  - platform: template
+    name: Max Voltage
+    id: max_voltage
+    initial_value: 265
+    min_value: 90
+    max_value: 265
+    step: 1
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: V
+    device_class: voltage
+    entity_category: config
+    mode: box
+    icon: mdi:sine-wave
+
+  # Set Tripping Undervoltage
+  - platform: template
+    name: Min Voltage
+    id: min_voltage
+    initial_value: 180
+    min_value: 90
+    max_value: 264
+    step: 1
+    optimistic: true
+    restore_value: true
+    unit_of_measurement: V
+    device_class: voltage
+    entity_category: config
+    mode: box
+    icon: mdi:sine-wave
+
+text_sensor:
+  - platform: template
+    name: Fault
+    id: fault
+    update_interval: never
+    on_value:
+      - lambda: id(fault_message)=x;
+    icon: mdi:alert
+
+binary_sensor:
+  # Fault States
+  - platform: template
+    name: Fault High Temperature
+    id: fault_high_temperature
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:thermometer-alert
+
+  - platform: template
+    name: Fault High Current
+    id: fault_high_current
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:current-ac
+
+  - platform: template
+    name: Fault High Voltage
+    id: fault_high_voltage
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:sine-wave
+
+  - platform: template
+    name: Fault Low Voltage
+    id: fault_low_voltage
+    device_class: problem
+    entity_category: diagnostic
+    icon: mdi:sine-wave
+
+  # Physical Button
+  - platform: gpio
+    pin:
+      number: ${button_pin}
+      mode: INPUT_PULLUP
+      inverted: true
+    name: Button
+    on_multi_click:
+      - timing: # quadruple click
+          - ON for at most 0.6s # 1
+          - OFF for at most 0.6s
+          - ON for at most 0.6s # 2
+          - OFF for at most 0.6s
+          - ON for at most 0.6s # 3
+          - OFF for at most 0.6s
+          - ON for at most 0.6s # 4
+          - OFF for at least 0.1s
+        then:
+          - switch.toggle: maintenance
+      - timing: # long press > 5s
+          - ON for at least 5s
+        then:
+          - button.press: mcu_restart
+      - timing: # short press
+          - ON for at most 5s
+          - OFF for at least 0.8s
+        then:
+          - switch.toggle: relay
+
+output:
+  # Power LED pin
+  - platform: gpio
+    pin: ${led_pin}
+    id: power_led_output
+    inverted: true
+
+# Control of Power LED
+light:
+  - platform: binary
+    name: Power Led
+    id: power_led
+    output: power_led_output
+    internal: true
+
+# Status LED
+status_led:
+  pin:
+    number: ${netled_pin}
+    inverted: true
+
+switch:
+  # H-Bridge Latching Relay (internal)
+  - platform: hbridge
+    id: hbridge_relay
+    on_pin: ${relay_latch_pin}
+    off_pin: ${relay_unlatch_pin}
+    pulse_length: ${relay_pulse_duration}
+    inverted: true
+    internal: true
+    restore_mode: DISABLED
+
+  # Maintenance Mode Switch
+  - platform: template
+    name: Maintenace mode
+    id: maintenance
+    entity_category: config
+    restore_mode: DISABLED
+    lambda: return id(maintenance_state);
+    turn_on_action:
+      - if:
+          condition:
+            lambda: return !id(maintenance_state);
+          then:
+            - globals.set:
+                id: relay_state_before_maintenance
+                value: !lambda return id(relay_state);
+      - globals.set:
+          id: maintenance_state
+          value: 'true'
+      - switch.turn_off: hbridge_relay
+      - globals.set:
+          id: relay_state
+          value: 'false'
+      - light.turn_off: power_led
+      - if:
+          condition:
+            lambda: return !(id(fault_state_max_temperature) || id(fault_state_max_voltage) || id(fault_state_min_voltage) || id(fault_state_max_current));
+          then:
+            - logger.log:
+                level: WARN
+                format: 'Maintenance mode enabled'
+    turn_off_action:
+      - if:
+          condition:
+            lambda: return !(id(fault_state_max_temperature) || id(fault_state_max_voltage) || id(fault_state_min_voltage) || id(fault_state_max_current));
+          then:
+            - globals.set:
+                id: maintenance_state
+                value: 'false'
+            - if:
+                condition:
+                  lambda: return id(relay_state_before_maintenance);
+                then:
+                  - switch.turn_on: hbridge_relay
+                  - globals.set:
+                      id: relay_state
+                      value: 'true'
+                  - light.turn_on: power_led
+                else:
+                  - globals.set:
+                      id: relay_state
+                      value: 'false'
+                  - light.turn_off: power_led
+            - lambda: id(fault).publish_state("None");
+            - logger.log:
+                level: WARN
+                format: 'Maintenance mode disabled'
+          else:
+            - logger.log:
+                level: WARN
+                format: 'Fault conditions are still met. Maintenance mode disable denied'
+
+  # Relay Switch
+  - platform: template
+    name: Relay
+    id: relay
+    restore_mode: DISABLED
+    lambda: return id(relay_state);
+    turn_on_action:
+      - if:
+          condition:
+            lambda: return !id(maintenance_state) && !(id(fault_state_max_temperature) || id(fault_state_max_voltage) || id(fault_state_min_voltage) || id(fault_state_max_current));
+          then:
+            - switch.turn_on: hbridge_relay
+            - globals.set:
+                id: relay_state
+                value: 'true'
+            - light.turn_on: power_led
+          else:
+            - logger.log:
+                level: WARN
+                format: 'Tripping conditions are met. Relay turn on denied'
+    turn_off_action:
+      - switch.turn_off: hbridge_relay
+      - globals.set:
+          id: relay_state
+          value: 'false'
+      - light.turn_off: power_led
+
+# UART config required for BL0942
+uart:
+  tx_pin: ${bl0942_tx_pin}
+  rx_pin: ${bl0942_rx_pin}
+  baud_rate: ${bl0942_baud_rate}
+
+sensor:
+  # realtime temperature sensor
+  - platform: adc
+    pin: ${temp_adc_pin}
+    name: Temperature
+    id: temperature
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    filters:
+      - multiply: ${temp_adc_scale}
+      - throttle_average: ${external_update_interval}
+    on_raw_value:
+      - lambda: |-
+          id(raw_temperature) = x * ${temp_adc_scale};
+          id(fault_state_max_temperature) = id(raw_temperature) > id(max_temperature).state;
+          id(fault_high_temperature).publish_state(id(fault_state_max_temperature));
+      - if:
+          condition:
+            lambda: return id(fault_state_max_temperature) && !id(maintenance_state);
+          then: # Trip on overtemperature
+            - switch.turn_on: maintenance
+            - lambda: |-
+                char message[40];
+                snprintf(message, sizeof(message), "High temperature: %.1f°C", id(raw_temperature));
+                id(fault).publish_state(message);
+            - logger.log:
+                level: ERROR
+                format: 'TRIPPING! Temperature %.1f > %.1f'
+                args: ['id(raw_temperature)', 'id(max_temperature).state']
+
+  # realtime energy meter sensors (BL0942)
+  - platform: bl0942
+    voltage:
+      name: Voltage
+      id: voltage
+      device_class: voltage
+      state_class: measurement
+      unit_of_measurement: V
+      on_raw_value:
+        - lambda: |-
+            id(raw_voltage)=x;
+            id(fault_state_max_voltage) = x > id(max_voltage).state;
+            id(fault_state_min_voltage) = x && x < id(min_voltage).state;
+            id(fault_high_voltage).publish_state(id(fault_state_max_voltage));
+            id(fault_low_voltage).publish_state(id(fault_state_min_voltage));
+        - if:
+            condition:
+              lambda: return !id(maintenance_state);
+            then:
+              - if:
+                  condition:
+                    lambda: return id(fault_state_max_voltage);
+                  then: # Trip on overvoltage
+                    - switch.turn_on: maintenance
+                    - lambda: |-
+                        char message[32];
+                        snprintf(message, sizeof(message), "High voltage: %.1fV", id(raw_voltage));
+                        id(fault).publish_state(message);
+                    - logger.log:
+                        level: ERROR
+                        format: 'TRIPPING! Voltage %.1f > %.1f'
+                        args: ['id(raw_voltage)', 'id(max_voltage).state']
+              - if:
+                  condition:
+                    lambda: return id(fault_state_min_voltage);
+                  then: # Trip on undervoltage
+                    - switch.turn_on: maintenance
+                    - lambda: |-
+                        char message[32];
+                        snprintf(message, sizeof(message), "Low voltage: %.1fV", id(raw_voltage));
+                        id(fault).publish_state(message);
+                    - logger.log:
+                        level: ERROR
+                        format: 'TRIPPING! Voltage %.1f < %.1f'
+                        args: ['id(raw_voltage)', 'id(min_voltage).state']
+      filters:
+        - throttle_average: ${external_update_interval}
+    current:
+      name: Current
+      id: current
+      device_class: current
+      state_class: measurement
+      unit_of_measurement: A
+      on_raw_value:
+        - lambda: |-
+            id(raw_current)=x;
+            id(fault_state_max_current) = x > id(max_current).state;
+            id(fault_high_current).publish_state(id(fault_state_max_current));
+        - if:
+            condition:
+              lambda: return id(fault_state_max_current) && !id(maintenance_state);
+            then: # trip on overcurrent
+              - switch.turn_on: maintenance
+              - lambda: |-
+                  char message[32];
+                  snprintf(message, sizeof(message), "High current: %.1fA", id(raw_current));
+                  id(fault).publish_state(message);
+              - logger.log:
+                  level: ERROR
+                  format: 'TRIPPING! Current %.1f > %.1f'
+                  args: ['id(raw_current)', 'id(max_current).state']
+      filters:
+        - throttle_average: ${external_update_interval}
+    power:
+      name: Power
+      id: power
+      device_class: power
+      state_class: measurement
+      unit_of_measurement: W
+      on_raw_value:
+        - lambda: id(raw_power)=x;
+      filters:
+        - throttle_average: ${external_update_interval}
+    energy:
+      name: Energy
+      id: energy
+      device_class: energy
+      state_class: total_increasing
+      unit_of_measurement: Wh
+      on_raw_value:
+        - lambda: id(raw_energy)=x;
+      filters:
+        - throttle_average: ${external_update_interval}
+    frequency:
+      name: Frequency
+      id: frequency
+      device_class: frequency
+      state_class: measurement
+      unit_of_measurement: Hz
+      on_raw_value:
+        - lambda: id(raw_frequency)=x;
+      filters:
+        - throttle_average: ${external_update_interval}
+    update_interval: ${internal_update_interval}

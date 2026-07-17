@@ -1,0 +1,734 @@
+{
+  "modelId": "e1kcphig",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "",
+      "properties": [
+        {
+          "abilityId": 3,
+          "accessMode": "ro",
+          "code": "work_state",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-zhuangtai"
+          },
+          "name": "Work Status",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "charger_free",
+              "charger_insert",
+              "charger_free_fault",
+              "charger_wait",
+              "charger_charging",
+              "charger_pause",
+              "charger_end",
+              "charger_fault"
+            ]
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "10 and 11 are over-temperature errors",
+          "extensions": {
+            "iconName": "icon-baojing",
+            "scope": "fault"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "err_leak",
+              "err_cp",
+              "err_temp",
+              "warn_a_uvp",
+              "warn_b_uvp",
+              "warn_c_uvp",
+              "err_a_ovp",
+              "err_b_ovp",
+              "err_c_ovp",
+              "err_ocp",
+              "err_10",
+              "err_11",
+              "err_esb",
+              "warn_pe_sck",
+              "err_leak_sck",
+              "err_pe"
+            ],
+            "maxlen": 16
+          }
+        },
+        {
+          "abilityId": 11,
+          "accessMode": "rw",
+          "code": "alarm_set_1",
+          "description": "1.1 Name: Alarm Setting 1\n1.2 Meaning: Used to inform the panel which alarms exist, and configure each alarm item, e.g. whether to act and the action threshold value.\n2 Format: HEX, big-endian. Total alarm count * 4 bytes = total setting length.\n3 Message format:\nEach alarm consists of 4 bytes: byte 1 (alarm exists); byte 2 (whether the device alarms and performs protection action when this alarm occurs); bytes 3-4: alarm threshold setting.",
+          "extensions": {
+            "iconName": "icon-dp_warming"
+          },
+          "name": "Alarm Setting 1",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 12,
+          "accessMode": "rw",
+          "code": "alarm_set_2",
+          "description": "1.1 Name: Alarm Setting 2\n1.2 Meaning: Used to inform the panel which alarms exist, and configure each alarm item, e.g. whether to act and the action threshold value.\n2 Format: HEX, big-endian. Total alarm count * 4 bytes = total setting length.\n3 Message format:\nEach alarm consists of 4 bytes: byte 1 (alarm exists); byte 2 (whether the device alarms and performs protection action when this alarm occurs); bytes 3-4: alarm threshold setting.",
+          "extensions": {
+            "iconName": "icon-dp_warming"
+          },
+          "name": "Alarm Setting 2",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 14,
+          "accessMode": "rw",
+          "code": "work_mode",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "trigger": "direct"
+          },
+          "name": "Work Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "charge_now",
+              "charge_pct",
+              "charge_energy",
+              "charge_schedule"
+            ]
+          }
+        },
+        {
+          "abilityId": 15,
+          "accessMode": "ro",
+          "code": "balance_energy",
+          "description": "A",
+          "extensions": {
+            "iconName": "icon-dp_lightning",
+            "scope": ""
+          },
+          "name": "Remaining Available Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 16,
+          "accessMode": "rw",
+          "code": "clear_energy",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning"
+          },
+          "name": "Reset Energy",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 18,
+          "accessMode": "rw",
+          "code": "switch",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power2",
+            "trigger": "direct"
+          },
+          "name": "Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "ro",
+          "code": "system_version",
+          "description": "1.1 Name: Charger software/hardware version number\n1.2 Meaning: Current version numbers for hardware, firmware, etc.\n2 Format:\n  Data type: string\n  Property: max length 128 bytes\n4 Message format\n  Example: \"HW V1.0,SW V1.0.3\"",
+          "extensions": {
+            "iconName": "icon-dp_mode"
+          },
+          "name": "System Version",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 25,
+          "accessMode": "ro",
+          "code": "charge_energy_once",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-Ele",
+            "scope": "",
+            "attribute": "2048",
+            "trigger": "direct"
+          },
+          "name": "Charging Energy Record",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999,
+            "min": 1,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 27,
+          "accessMode": "rw",
+          "code": "online_state",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_updown"
+          },
+          "name": "Online Status",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "online",
+              "offline"
+            ]
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "DeviceState",
+          "description": "",
+          "name": "Device Status",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "no_connet",
+              "connect",
+              "charing",
+              "wait_rfid",
+              "finish",
+              "wait_charing",
+              "error",
+              "stopusing"
+            ]
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "A_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "ro",
+          "code": "B_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "C_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "A_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "B_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "ro",
+          "code": "C_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "PhaseFlag",
+          "description": "",
+          "name": "Single/Three-Phase Flag",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "Single_phase",
+              "Three_phase",
+              "No_phase",
+              "Phase_err"
+            ]
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "ro",
+          "code": "DeviceKw",
+          "description": "",
+          "name": "Device Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "DeviceTemp",
+          "description": "ID-111 is device temperature 2 (spare)",
+          "name": "Device Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 1050,
+            "min": -300,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "rw",
+          "code": "month",
+          "description": "",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "Log Month",
+          "typeSpec": {
+            "type": "value",
+            "max": 12,
+            "min": 1,
+            "scale": 0,
+            "step": 1,
+            "unit": "mth"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "ro",
+          "code": "DeviceKwh",
+          "description": "Cumulative power for a single charging session; reset after unplugging.",
+          "name": "Cumulative Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 10000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "kWh"
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "DeviceMaxSetA",
+          "description": "",
+          "name": "Max Current Setting",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "Max16A",
+              "Max32A",
+              "Max40A",
+              "Max50A",
+              "Max60A",
+              "Max80A"
+            ]
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "rw",
+          "code": "Set16A",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 16,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "rw",
+          "code": "Set32A",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 32,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "rw",
+          "code": "Set40A",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 40,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "rw",
+          "code": "Set50A",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Set Current 50A",
+          "typeSpec": {
+            "type": "value",
+            "max": 50,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "rw",
+          "code": "SetDelayTime",
+          "description": "",
+          "name": "Scheduled Charging",
+          "typeSpec": {
+            "type": "value",
+            "max": 15,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "H"
+          }
+        },
+        {
+          "abilityId": 119,
+          "accessMode": "rw",
+          "code": "SetDefineTime",
+          "description": "",
+          "name": "Timed Charging",
+          "typeSpec": {
+            "type": "value",
+            "max": 15,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "H"
+          }
+        },
+        {
+          "abilityId": 120,
+          "accessMode": "ro",
+          "code": "Ctime",
+          "description": "Example: XX:XX:XX",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Time",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "rw",
+          "code": "logupdown",
+          "description": "",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "Log Operation",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "up",
+              "no",
+              "down"
+            ]
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "ro",
+          "code": "service",
+          "description": "",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "Contact Info",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "rw",
+          "code": "RFID",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Card Swipe",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 124,
+          "accessMode": "rw",
+          "code": "ChargingOperation",
+          "description": "",
+          "name": "Charging Operation",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "OpenCharging",
+              "CloseCharging",
+              "WaitOperation"
+            ]
+          }
+        },
+        {
+          "abilityId": 125,
+          "accessMode": "ro",
+          "code": "hw_version",
+          "description": "HV 1.0.01",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0",
+            "trigger": "direct"
+          },
+          "name": "Hardware Version",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "ro",
+          "code": "sw_version",
+          "description": "SV 1.0.01",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "Software Version",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 127,
+          "accessMode": "ro",
+          "code": "log_content1",
+          "description": "Format XX:XX:XX, example 12:23:59",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "Start Time",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 128,
+          "accessMode": "ro",
+          "code": "log_content2",
+          "description": "Card swipe format: ID:XXXXXXXX, example ID:E3A567CD\nAPP format: ID:APP\nPlug-and-charge format: ID:PLUG",
+          "extensions": {
+            "iconName": "",
+            "scope": "",
+            "attribute": "0"
+          },
+          "name": "User ID",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 129,
+          "accessMode": "ro",
+          "code": "log_content3",
+          "description": "Format XX:XX:XX, example 12:23:59",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Charging Time",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 130,
+          "accessMode": "ro",
+          "code": "log_content4",
+          "description": "Format XXX.XkWh, example 123.4kWh",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Charging Energy",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 131,
+          "accessMode": "ro",
+          "code": "log_content5",
+          "description": "Format UXXMXXL, example U07M23L",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Log Sequence Number",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 132,
+          "accessMode": "ro",
+          "code": "log_content6",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Log Spare",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}

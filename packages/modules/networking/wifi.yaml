@@ -1,20 +1,20 @@
 defaults:
+  wifi_ap_enabled: ${ wifi_ap_enabled | default(false) }
   networking: ${ networking | default({}) }
   networking_wifi: ${ networking.get("wifi", {}) }
   _wifi_default_ssid: !secret wifi_ssid
   _wifi_default_password: !secret wifi_password
   wifi_ssid: ${ networking_wifi.get("ssid", _wifi_default_ssid) }
   wifi_password: ${ networking_wifi.get("password", _wifi_default_password) }
-  ap_ssid: ${ networking_wifi.get("ap_ssid", "ESPHome-" ~ (name | default("base-board"))) }
+
+  _wifi_ap_module: !include wifi-ap.yaml
+
+packages:
+  - ${ wifi_ap_enabled and _wifi_ap_module or {} }
 
 wifi:
   ssid: ${wifi_ssid}
   password: ${wifi_password}
-
-  ap:
-    ssid: ${ap_ssid}
-
-captive_portal:
 
 sensor:
   - platform: wifi_signal

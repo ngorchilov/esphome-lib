@@ -1,0 +1,36 @@
+substitutions:
+  name: tuya-mini-switch-1pm-20a
+  friendly_name: Tuya Mini Switch 1PM 20A
+
+packages:
+  - !include ../packages/boards/tuya/cb2s.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay
+        name: Relay
+        power:
+          pin: GPIO6
+          inverted: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO7
+          inverted: false
+        integrated_button:
+          enabled: true
+          pin: GPIO8
+          inverted: true
+        external_switch:
+          enabled: true
+          pin: GPIO23
+          inverted: true
+          mode: rocker
+  - !include
+    file: ../packages/modules/energy-monitoring-bl0942.yaml
+    vars:
+      energy:
+        rx_pin: GPIO10
+        tx_pin: GPIO11

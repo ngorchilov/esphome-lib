@@ -1,0 +1,7 @@
+substitutions:
+  name: kickstart-m5stack-core-esp32
+  friendly_name: Kickstart M5Stack Core ESP32
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/espressif/m5stack-core-esp32.yaml

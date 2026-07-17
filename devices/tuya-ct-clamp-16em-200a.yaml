@@ -1,0 +1,1039 @@
+substitutions:
+  name: tuya-ct-clamp-16em-200a
+  friendly_name: Tuya CT Clamp 16EM 200A
+  voltage_scale: '0.1' # 0.1 V/count
+  current_scale: '0.001' # 0.001 A/count
+  power_scale: '1' # 1 W/count (was 0.001 kW/count)
+  freq_scale: '1' # 1 Hz/count
+  energy_scale: '0.01' # 0.01 kWh/count (DP 115–132)
+
+  # Display-name substitutions
+  phA_name: Phase A
+  phB_name: Phase B
+  phC_name: Phase C
+  c01_name: C01
+  c02_name: C02
+  c03_name: C03
+  c04_name: C04
+  c05_name: C05
+  c06_name: C06
+  c07_name: C07
+  c08_name: C08
+  c09_name: C09
+  c10_name: C10
+  c11_name: C11
+  c12_name: C12
+  c13_name: C13
+  c14_name: C14
+  c15_name: C15
+  c16_name: C16
+
+  # Visibility toggles (use 'true' or 'false')
+  phA_internal: 'false'
+  phB_internal: 'false'
+  phC_internal: 'false'
+  c01_internal: 'false'
+  c02_internal: 'false'
+  c03_internal: 'false'
+  c04_internal: 'false'
+  c05_internal: 'false'
+  c06_internal: 'false'
+  c07_internal: 'false'
+  c08_internal: 'false'
+  c09_internal: 'false'
+  c10_internal: 'false'
+  c11_internal: 'false'
+  c12_internal: 'false'
+  c13_internal: 'false'
+  c14_internal: 'false'
+  c15_internal: 'false'
+  c16_internal: 'false'
+  sol_internal: 'false'
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+# Daily reboot to keep the TuyaMCU communication sane - avoid CRC errors caused by memory leaks or who knows what
+time:
+  - id: !extend ha_time
+    on_time:
+      - seconds: 0
+        minutes: 30
+        hours: 3
+        then:
+          - logger.log: 'Scheduled daily reboot triggered'
+          - button.press: mcu_restart
+
+logger:
+  baud_rate: 0
+  level: INFO
+
+uart:
+  rx_pin: P10
+  tx_pin: P11
+  baud_rate: 115200
+  rx_buffer_size: 1024
+
+tuya:
+  id: my_meter
+  time_id: ha_time
+  on_datapoint_update:
+    # Phase A raw -> publish
+    - sensor_datapoint: 101
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            id(phase_a_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
+            id(phase_a_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
+            id(phase_a_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+
+    # Phase B raw -> publish
+    - sensor_datapoint: 102
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            id(phase_b_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
+            id(phase_b_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
+            id(phase_b_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+
+    # Phase C raw -> publish
+    - sensor_datapoint: 103
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            id(phase_c_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
+            id(phase_c_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
+            id(phase_c_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+
+    # Total raw -> publish
+    - sensor_datapoint: 104
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            id(total_current).publish_state(((uint32_t)x[0] | ((uint32_t)x[1] << 8) | ((uint32_t)x[2] << 16)) * ${current_scale});
+            id(total_power).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${power_scale});
+            id(grid_frequency).publish_state(x[8] * ${freq_scale});
+
+    # Sub-circuit Power
+    - sensor_datapoint: 105
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            for (int i = 0; i < 16; i++) {
+              float val = (
+                ((uint32_t)x[i*5+2])
+                | ((uint32_t)x[i*5+3] << 8)
+                | ((uint32_t)x[i*5+4] << 16)
+              ) * ${power_scale};
+              switch (i) {
+                case 0:  id(circuit_1_power).publish_state(val); break;
+                case 1:  id(circuit_2_power).publish_state(val); break;
+                case 2:  id(circuit_3_power).publish_state(val); break;
+                case 3:  id(circuit_4_power).publish_state(val); break;
+                case 4:  id(circuit_5_power).publish_state(val); break;
+                case 5:  id(circuit_6_power).publish_state(val); break;
+                case 6:  id(circuit_7_power).publish_state(val); break;
+                case 7:  id(circuit_8_power).publish_state(val); break;
+                case 8:  id(circuit_9_power).publish_state(val); break;
+                case 9:  id(circuit_10_power).publish_state(val); break;
+                case 10: id(circuit_11_power).publish_state(val); break;
+                case 11: id(circuit_12_power).publish_state(val); break;
+                case 12: id(circuit_13_power).publish_state(val); break;
+                case 13: id(circuit_14_power).publish_state(val); break;
+                case 14: id(circuit_15_power).publish_state(val); break;
+                case 15: id(circuit_16_power).publish_state(val); break;
+              }
+            }
+
+    # Sub-circuit Current
+    - sensor_datapoint: 106
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            for (int i = 0; i < 16; i++) {
+              float val = (
+                ((uint32_t)x[i*5+2])
+                | ((uint32_t)x[i*5+3] << 8)
+                | ((uint32_t)x[i*5+4] << 16)
+              ) * ${current_scale};
+              switch (i) {
+                case 0:  id(circuit_1_current).publish_state(val); break;
+                case 1:  id(circuit_2_current).publish_state(val); break;
+                case 2:  id(circuit_3_current).publish_state(val); break;
+                case 3:  id(circuit_4_current).publish_state(val); break;
+                case 4:  id(circuit_5_current).publish_state(val); break;
+                case 5:  id(circuit_6_current).publish_state(val); break;
+                case 6:  id(circuit_7_current).publish_state(val); break;
+                case 7:  id(circuit_8_current).publish_state(val); break;
+                case 8:  id(circuit_9_current).publish_state(val); break;
+                case 9:  id(circuit_10_current).publish_state(val); break;
+                case 10: id(circuit_11_current).publish_state(val); break;
+                case 11: id(circuit_12_current).publish_state(val); break;
+                case 12: id(circuit_13_current).publish_state(val); break;
+                case 13: id(circuit_14_current).publish_state(val); break;
+                case 14: id(circuit_15_current).publish_state(val); break;
+                case 15: id(circuit_16_current).publish_state(val); break;
+              }
+            }
+
+    # Meter Type (text_sensor)
+    - sensor_datapoint: 108
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            switch (x) { // 0=unknow,1=3_phase,2=1_phase,3=1_phase_3_wire,4=other
+              case 1: id(meter_type).publish_state("3 phase"); break;
+              case 2: id(meter_type).publish_state("1 phase"); break;
+              case 3: id(meter_type).publish_state("1 phase / 3 wire"); break;
+              case 4: id(meter_type).publish_state("Other"); break;
+              default: id(meter_type).publish_state("Unknown"); break;
+            }
+
+    # CT Insertion Detection
+    - sensor_datapoint: 113
+      datapoint_type: raw
+      then:
+        - lambda: 'ESP_LOGI("tuya", "CT Insertion Detection Raw (DP 113): %s", format_hex_pretty(x).c_str());'
+
+text_sensor:
+  - platform: template
+    name: Measurement Type
+    id: meter_type
+    internal: false
+    icon: mdi:meter-electric
+
+button:
+  - platform: template
+    name: Map All Circuits to Phase A
+    internal: true
+    icon: mdi:link
+    on_press:
+      - lambda: |-
+          static const uint8_t raw_data[128] = {
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0
+          };
+          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
+          id(my_meter).set_raw_datapoint_value(107, payload);
+
+  - platform: template
+    name: Disable Solar on All Circuits
+    internal: true
+    icon: mdi:solar-power
+    on_press:
+      - lambda: |-
+          static const uint8_t raw_data[128] = {0};
+          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
+          id(my_meter).set_raw_datapoint_value(109, payload);
+
+  - platform: template
+    name: Clear All Energy Counters
+    internal: true
+    icon: mdi:delete
+    on_press:
+      - lambda: |-
+          static const uint8_t raw_data[128] = {
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
+            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0
+          };
+          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
+          id(my_meter).set_raw_datapoint_value(110, payload);
+
+sensor:
+  # Phase A
+  - platform: template
+    name: ${phA_name} Voltage
+    id: phase_a_voltage
+    internal: ${phA_internal}
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+
+  - platform: template
+    name: ${phA_name} Current
+    id: phase_a_current
+    internal: ${phA_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${phA_name} Power
+    id: phase_a_power
+    internal: ${phA_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: template
+    name: ${phA_name} Apparent Power
+    id: phase_a_va
+    internal: ${phA_internal}
+    unit_of_measurement: VA
+    device_class: apparent_power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:sigma
+    lambda: return id(phase_a_voltage).state * id(phase_a_current).state;
+
+  - platform: template
+    name: ${phA_name} Power Factor
+    id: phase_a_pf
+    internal: ${phA_internal}
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      const float V = id(phase_a_voltage).state;
+      const float I = id(phase_a_current).state;
+      const float P = id(phase_a_power).state; // W
+      if (V <= 0 || I <= 0) return NAN;
+      float pf = P / (V * I);
+      if (pf < 0) pf = 0;
+      if (pf > 1) pf = 1;
+      return pf * 100.0f;
+    filters:
+      - round: 1
+
+  # Phase B
+  - platform: template
+    name: ${phB_name} Voltage
+    id: phase_b_voltage
+    internal: ${phB_internal}
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+
+  - platform: template
+    name: ${phB_name} Current
+    id: phase_b_current
+    internal: ${phB_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${phB_name} Power
+    id: phase_b_power
+    internal: ${phB_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: template
+    name: ${phB_name} Apparent Power
+    id: phase_b_va
+    internal: ${phB_internal}
+    unit_of_measurement: VA
+    device_class: apparent_power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:sigma
+    lambda: return id(phase_b_voltage).state * id(phase_b_current).state;
+
+  - platform: template
+    name: ${phB_name} Power Factor
+    id: phase_b_pf
+    internal: ${phB_internal}
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      const float V = id(phase_b_voltage).state;
+      const float I = id(phase_b_current).state;
+      const float P = id(phase_b_power).state; // W
+      if (V <= 0 || I <= 0) return NAN;
+      float pf = P / (V * I);
+      if (pf < 0) pf = 0;
+      if (pf > 1) pf = 1;
+      return pf * 100.0f;
+    filters:
+      - round: 1
+
+  # Phase C
+  - platform: template
+    name: ${phC_name} Voltage
+    id: phase_c_voltage
+    internal: ${phC_internal}
+    unit_of_measurement: V
+    device_class: voltage
+    state_class: measurement
+    accuracy_decimals: 1
+
+  - platform: template
+    name: ${phC_name} Current
+    id: phase_c_current
+    internal: ${phC_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${phC_name} Power
+    id: phase_c_power
+    internal: ${phC_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: template
+    name: ${phC_name} Apparent Power
+    id: phase_c_va
+    internal: ${phC_internal}
+    unit_of_measurement: VA
+    device_class: apparent_power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:sigma
+    lambda: return id(phase_c_voltage).state * id(phase_c_current).state;
+
+  - platform: template
+    name: ${phC_name} Power Factor
+    id: phase_c_pf
+    internal: ${phC_internal}
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      const float V = id(phase_c_voltage).state;
+      const float I = id(phase_c_current).state;
+      const float P = id(phase_c_power).state; // W
+      if (V <= 0 || I <= 0) return NAN;
+      float pf = P / (V * I);
+      if (pf < 0) pf = 0;
+      if (pf > 1) pf = 1;
+      return pf * 100.0f;
+    filters:
+      - round: 1
+
+  # Totals
+  - platform: template
+    name: Total Current
+    id: total_current
+    internal: 'false'
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: Total Power
+    id: total_power
+    internal: 'false'
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: template
+    name: Grid Frequency
+    id: grid_frequency
+    internal: 'false'
+    unit_of_measurement: Hz
+    device_class: frequency
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:cosine-wave
+
+  - platform: template
+    name: Total Apparent Power
+    id: total_va
+    internal: 'false'
+    unit_of_measurement: VA
+    device_class: apparent_power
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:sigma
+    lambda: return id(phase_a_va).state + id(phase_b_va).state + id(phase_c_va).state;
+
+  - platform: template
+    name: Total Power Factor
+    id: total_pf
+    internal: 'false'
+    unit_of_measurement: '%'
+    device_class: power_factor
+    state_class: measurement
+    accuracy_decimals: 1
+    lambda: |-
+      const float S = id(total_va).state;
+      const float P = id(total_power).state; // W
+      if (S <= 0) return NAN;
+      float pf = P / S;
+      if (pf < 0) pf = 0;
+      if (pf > 1) pf = 1;
+      return pf * 100.0f;
+    filters:
+      - round: 1
+
+  # Circuits 1–16 (DP 115–130 energy; DP 105/106 for power/current)
+  - platform: tuya
+    name: ${c01_name} Energy
+    internal: ${c01_internal}
+    sensor_datapoint: 115
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c01_name} Current
+    id: circuit_1_current
+    internal: ${c01_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c01_name} Power
+    id: circuit_1_power
+    internal: ${c01_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c02_name} Energy
+    internal: ${c02_internal}
+    sensor_datapoint: 116
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c02_name} Current
+    id: circuit_2_current
+    internal: ${c02_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c02_name} Power
+    id: circuit_2_power
+    internal: ${c02_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c03_name} Energy
+    internal: ${c03_internal}
+    sensor_datapoint: 117
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c03_name} Current
+    id: circuit_3_current
+    internal: ${c03_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c03_name} Power
+    id: circuit_3_power
+    internal: ${c03_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c04_name} Energy
+    internal: ${c04_internal}
+    sensor_datapoint: 118
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c04_name} Current
+    id: circuit_4_current
+    internal: ${c04_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c04_name} Power
+    id: circuit_4_power
+    internal: ${c04_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c05_name} Energy
+    internal: ${c05_internal}
+    sensor_datapoint: 119
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c05_name} Current
+    id: circuit_5_current
+    internal: ${c05_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c05_name} Power
+    id: circuit_5_power
+    internal: ${c05_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c06_name} Energy
+    internal: ${c06_internal}
+    sensor_datapoint: 120
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c06_name} Current
+    id: circuit_6_current
+    internal: ${c06_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c06_name} Power
+    id: circuit_6_power
+    internal: ${c06_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c07_name} Energy
+    internal: ${c07_internal}
+    sensor_datapoint: 121
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c07_name} Current
+    id: circuit_7_current
+    internal: ${c07_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c07_name} Power
+    id: circuit_7_power
+    internal: ${c07_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c08_name} Energy
+    internal: ${c08_internal}
+    sensor_datapoint: 122
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c08_name} Current
+    id: circuit_8_current
+    internal: ${c08_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c08_name} Power
+    id: circuit_8_power
+    internal: ${c08_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c09_name} Energy
+    internal: ${c09_internal}
+    sensor_datapoint: 123
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c09_name} Current
+    id: circuit_9_current
+    internal: ${c09_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c09_name} Power
+    id: circuit_9_power
+    internal: ${c09_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c10_name} Energy
+    internal: ${c10_internal}
+    sensor_datapoint: 124
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c10_name} Current
+    id: circuit_10_current
+    internal: ${c10_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c10_name} Power
+    id: circuit_10_power
+    internal: ${c10_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c11_name} Energy
+    internal: ${c11_internal}
+    sensor_datapoint: 125
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c11_name} Current
+    id: circuit_11_current
+    internal: ${c11_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c11_name} Power
+    id: circuit_11_power
+    internal: ${c11_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c12_name} Energy
+    internal: ${c12_internal}
+    sensor_datapoint: 126
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c12_name} Current
+    id: circuit_12_current
+    internal: ${c12_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c12_name} Power
+    id: circuit_12_power
+    internal: ${c12_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c13_name} Energy
+    internal: ${c13_internal}
+    sensor_datapoint: 127
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c13_name} Current
+    id: circuit_13_current
+    internal: ${c13_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c13_name} Power
+    id: circuit_13_power
+    internal: ${c13_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c14_name} Energy
+    internal: ${c14_internal}
+    sensor_datapoint: 128
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c14_name} Current
+    id: circuit_14_current
+    internal: ${c14_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c14_name} Power
+    id: circuit_14_power
+    internal: ${c14_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c15_name} Energy
+    internal: ${c15_internal}
+    sensor_datapoint: 129
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c15_name} Current
+    id: circuit_15_current
+    internal: ${c15_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c15_name} Power
+    id: circuit_15_power
+    internal: ${c15_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: ${c16_name} Energy
+    internal: ${c16_internal}
+    sensor_datapoint: 130
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${c16_name} Current
+    id: circuit_16_current
+    internal: ${c16_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${c16_name} Power
+    id: circuit_16_power
+    internal: ${c16_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+  # Totals from Tuya (DP 131, 132)
+  - platform: tuya
+    name: Total Consumed Energy
+    internal: 'false'
+    sensor_datapoint: 131
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: tuya
+    name: Total Generated Energy
+    internal: ${sol_internal}
+    sensor_datapoint: 132
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+number:
+  # Dummy registration of DP 112 so we can write_enum without warnings
+  - platform: tuya
+    name: dp112_hidden # (name not shown in UI; number remains hidden by datapoint_hidden)
+    id: dp112_hidden
+    internal: true
+    number_datapoint: 112
+    min_value: 0
+    max_value: 2
+    step: 1
+    datapoint_hidden:
+      datapoint_type: enum
+      restore_value: yes
+
+  # Dummy registration of DP 114 so we can write_enum without warnings
+  - platform: tuya
+    name: dp114_hidden
+    id: dp114_hidden
+    internal: true
+    number_datapoint: 114
+    min_value: 0
+    max_value: 1
+    step: 1
+    datapoint_hidden:
+      datapoint_type: enum
+      restore_value: yes
+
+select:
+  - platform: tuya
+    name: Solar Main Switch
+    internal: ${sol_internal}
+    enum_datapoint: 112
+    options:
+      0: unknow
+      1: disable
+      2: enable
+
+  - platform: tuya
+    name: Refresh
+    internal: true
+    enum_datapoint: 114
+    options:
+      0: solar_en
+      1: ct_insert

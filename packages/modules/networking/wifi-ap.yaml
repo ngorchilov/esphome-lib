@@ -1,0 +1,10 @@
+defaults:
+  networking: ${ networking | default({}) }
+  networking_wifi: ${ networking.get("wifi", {}) }
+  wifi_ap_ssid: ${ networking_wifi.get("ap_ssid", ("ESPHome-" ~ (name | default("base-board")))[:32]) }
+
+wifi:
+  ap:
+    ssid: ${wifi_ap_ssid}
+
+captive_portal:

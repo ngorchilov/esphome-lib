@@ -1,0 +1,369 @@
+# Pro Breeze Dehumidifier control via ESP-07 serial module (5V), replacing the original Tuya JWBR2S-5V module.
+
+substitutions:
+  name: pro-breeze-dehumidifier
+  friendly_name: Pro Breeze Dehumidifier
+
+packages:
+  - !include ../packages/boards/espressif/esp07.yaml
+
+logger:
+  level: INFO
+
+esphome:
+  project:
+    name: yepiq.Pro_Breeze_Dehumidifier
+    version: 0.9.0
+  on_boot:
+    # Run late, after UART/Tuya is up, then force the MCU to our last saved value.
+    priority: -10
+    then:
+      - if:
+          condition:
+            lambda: |-
+              return id(pb_target_humidity_saved) >= 30 && id(pb_target_humidity_saved) <= 80;
+          then:
+            - number.set:
+                id: pb_target_humidity
+                value: !lambda 'return (float) id(pb_target_humidity_saved);'
+
+globals:
+  - id: pb_target_humidity_saved
+    type: int
+    restore_value: yes
+    initial_value: '50'
+
+uart:
+  id: pb_uart
+  baud_rate: 9600
+  tx_pin: 1
+  rx_pin: 3
+
+tuya:
+  id: pb_tuya
+  uart_id: pb_uart
+  on_datapoint_update:
+    - sensor_datapoint: 1
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            ESP_LOGD("pb", "DP1 (Power State) on_datapoint_update: %s", x ? "ON" : "OFF");
+            auto call = id(pb_fan).make_call();
+            call.set_state(x);
+            if (x) {
+              // Unit boots in LOW after power-on; reflect that in HA.
+              call.set_speed(1);
+            }
+            call.perform();
+
+    - sensor_datapoint: 6
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            ESP_LOGD("pb", "DP6 (Fan Speed) on_datapoint_update: %d", x);
+            // DP6: 0=High, 1=Low
+            const int speed = (x == 1) ? 1 : 2;  // 1=LOW, 2=HIGH
+
+            auto call = id(pb_fan).make_call();
+            call.set_speed(speed);
+            call.perform();
+
+    - sensor_datapoint: 8
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            ESP_LOGD("pb", "DP8 (Swing) on_datapoint_update: %s", x ? "ON" : "OFF");
+            auto call = id(pb_fan).make_call();
+            call.set_oscillating(x);
+            call.perform();
+
+    - sensor_datapoint: 11
+      datapoint_type: bitmask
+      then:
+        - lambda: |-
+            const uint32_t m = x;
+
+            // keep an internal copy, useful for debugging
+            id(pb_fault_mask).publish_state(m);
+
+            id(pb_fault_e2_room_temp).publish_state((m & (1u << 0)) != 0);
+            id(pb_fault_e1_coil).publish_state((m & (1u << 1)) != 0);
+            id(pb_fault_p1_defrost).publish_state((m & (1u << 2)) != 0);
+            id(pb_fault_fl_water_full).publish_state((m & (1u << 3)) != 0);
+            id(pb_fault_lo_low_temp).publish_state((m & (1u << 4)) != 0);
+            id(pb_fault_hi_high_temp).publish_state((m & (1u << 5)) != 0);
+
+            std::string s;
+            auto add = [&](const char *t) {
+              if (!s.empty()) s += ", ";
+              s += t;
+            };
+            if (m & (1u << 0)) add("E2: Room temp sensor");
+            if (m & (1u << 1)) add("E1: Coil sensor");
+            if (m & (1u << 2)) add("P1: Defrost");
+            if (m & (1u << 3)) add("FL: Water full");
+            if (m & (1u << 4)) add("LO: Low temp");
+            if (m & (1u << 5)) add("HI: High temp");
+            if (s.empty()) s = "None";
+
+            id(pb_faults_text).publish_state(s);
+
+# --- Pro Breeze 30L Compressor Dehumidifier (Tuya MCU) ---
+
+fan:
+  - platform: template
+    id: pb_fan
+    name: None
+    speed_count: 2
+    has_oscillating: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_state:
+      - lambda: |-
+          // Apply desired fan state/speed/oscillation using the values provided by the Fan call (x).
+          //
+          // Note: x->speed is expected to be 1..speed_count, but HA can send 0/unspecified
+          // when toggling ON from the collapsed fan UI.
+          const bool want_on = x->state;
+          const bool want_osc = x->oscillating;
+          const int want_speed = (int) x->speed;  // 1..2 expected; 0 means "not provided"
+
+          ESP_LOGD("pb", "fan.on_state: state=%s speed=%d osc=%s", want_on ? "ON" : "OFF", want_speed, want_osc ? "ON" : "OFF");
+
+          // OFF: only cut power (DP1) if it's currently on.
+          if (!want_on) {
+            if (id(pb_power_dp).state) {
+              id(pb_power_dp).turn_off();
+            }
+            return;
+          }
+
+          // ON: power first (DP1) - only write if changed.
+          if (!id(pb_power_dp).state) {
+            id(pb_power_dp).turn_on();
+          }
+
+          // Oscillation (DP8) - only write if changed.
+          if (id(pb_swing_dp).state != want_osc) {
+            if (want_osc) {
+              id(pb_swing_dp).turn_on();
+            } else {
+              id(pb_swing_dp).turn_off();
+            }
+          }
+
+          // Speed (DP6 enum: 0=High, 1=Low). Only act if speed is explicitly provided.
+          // IMPORTANT: this unit appears to boot in LOW after DP1 OFF->ON even if the speed attribute is still HIGH.
+          // On an OFF->ON transition, force a DP6 write even if the last known DP6 matches.
+          if (want_speed == 1 || want_speed == 2) {
+            const int dp6 = (want_speed == 1) ? 1 : 0;
+            const int cur_dp6 = (int) lroundf(id(pb_fan_speed_dp).state);
+
+            const bool force = false;
+
+            if (cur_dp6 != dp6) {
+              ESP_LOGD("pb", "fan.on_state: applying speed=%d -> DP6=%d (cur=%d)", want_speed, dp6, cur_dp6);
+              auto c = id(pb_fan_speed_dp).make_call();
+              c.set_value((float) dp6);
+              c.perform();
+            } else {
+              ESP_LOGD("pb", "fan.on_state: speed already applied (DP6=%d)", cur_dp6);
+            }
+          } else {
+            ESP_LOGD("pb", "fan.on_state: speed not provided (x->speed=%d) -> leaving DP6 unchanged", want_speed);
+          }
+
+switch:
+  - platform: tuya
+    tuya_id: pb_tuya
+    id: pb_power_dp
+    name: Power
+    switch_datapoint: 1
+    icon: mdi:power
+    internal: true
+
+  - platform: tuya
+    tuya_id: pb_tuya
+    id: pb_swing_dp
+    name: Swing
+    switch_datapoint: 8
+    internal: true
+
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Child Lock
+    switch_datapoint: 7
+    icon: mdi:lock
+    entity_category: config
+
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Internal Drying
+    switch_datapoint: 101
+    icon: mdi:tshirt-crew
+
+  # Not supported on Pro Breeze 30L Compressor Dehumidifier (ipmyy4nigpqcnd8q)
+  # - platform: tuya
+  #   tuya_id: pb_tuya
+  #   name: Anion
+  #   switch_datapoint: 5
+  #   icon: mdi:air-purifier
+
+  # Not supported on Pro Breeze 30L Compressor Dehumidifier (ipmyy4nigpqcnd8q)
+  # - platform: tuya
+  #   tuya_id: pb_tuya
+  #   name: Pump
+  #   switch_datapoint: 102
+  #   icon: mdi:pump
+
+select:
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Mode
+    enum_datapoint: 2
+    icon: mdi:autorenew
+    entity_category: config
+    options:
+      0: Auto
+      1: Continuous
+
+  # 0..24 hours (Tuya enum)
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Countdown
+    enum_datapoint: 12
+    icon: mdi:timer
+    entity_category: config
+    options:
+      0: 'Off'
+      1: '1h'
+      2: '2h'
+      3: '3h'
+      4: '4h'
+      5: '5h'
+      6: '6h'
+      7: '7h'
+      8: '8h'
+      9: '9h'
+      10: '10h'
+      11: '11h'
+      12: '12h'
+      13: '13h'
+      14: '14h'
+      15: '15h'
+      16: '16h'
+      17: '17h'
+      18: '18h'
+      19: '19h'
+      20: '20h'
+      21: '21h'
+      22: '22h'
+      23: '23h'
+      24: '24h'
+
+number:
+  - platform: tuya
+    tuya_id: pb_tuya
+    id: pb_target_humidity
+    name: Target Humidity
+    number_datapoint: 4
+    unit_of_measurement: '%'
+    device_class: humidity
+    min_value: 30
+    max_value: 80
+    step: 1
+    mode: box
+    icon: mdi:water-percent
+    on_value:
+      then:
+        - lambda: |-
+            if (isnan(x)) return;
+            int v = (int) lroundf(x / 5.0f) * 5;
+            if (v < 30) v = 30;
+            if (v > 80) v = 80;
+            id(pb_target_humidity_saved) = v;
+
+  - platform: tuya
+    tuya_id: pb_tuya
+    id: pb_fan_speed_dp
+    name: Fan Speed
+    number_datapoint: 6
+    min_value: 0
+    max_value: 1
+    step: 1
+    internal: true
+
+sensor:
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Ambient Humidity
+    sensor_datapoint: 3
+    unit_of_measurement: '%'
+    device_class: humidity
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:water-percent
+
+  - platform: tuya
+    tuya_id: pb_tuya
+    name: Countdown Remaining
+    sensor_datapoint: 13
+    unit_of_measurement: min
+    device_class: duration
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:timer-outline
+
+  - platform: template
+    id: pb_fault_mask
+    name: Fault Mask
+    accuracy_decimals: 0
+    internal: true
+
+binary_sensor:
+  - platform: template
+    id: pb_fault_e2_room_temp
+    name: 'Fault: Room Temp Sensor (E2)'
+    icon: mdi:alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    id: pb_fault_e1_coil
+    name: 'Fault: Coil Sensor (E1)'
+    icon: mdi:alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    id: pb_fault_p1_defrost
+    name: 'Fault: Defrost (P1)'
+    icon: mdi:snowflake-alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    id: pb_fault_fl_water_full
+    name: 'Fault: Water Full (FL)'
+    icon: mdi:cup-water
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    id: pb_fault_lo_low_temp
+    name: 'Fault: Low Temperature (LO)'
+    icon: mdi:thermometer-alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    id: pb_fault_hi_high_temp
+    name: 'Fault: High Temperature (HI)'
+    icon: mdi:thermometer-alert
+    device_class: problem
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: template
+    id: pb_faults_text
+    name: Faults
+    icon: mdi:alert-circle-outline

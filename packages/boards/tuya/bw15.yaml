@@ -1,9 +1,9 @@
 substitutions:
-  name: base-board-wbr3
-  friendly_name: Base Board WBR3
+  name: base-board-bw15
+  friendly_name: Base Board BW15
 
 packages:
   - !include ../templates/base-board-libretiny-realtek.yaml
 
 rtl87xx:
-  board: wbr3
+  board: bw15

@@ -1,0 +1,562 @@
+{
+  "modelId": "f2mpus",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 3,
+          "accessMode": "ro",
+          "code": "work_state",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-zhuangtai"
+          },
+          "name": "Work State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "charger_free",
+              "charger_insert",
+              "charger_free_fault",
+              "charger_wait",
+              "charger_charging",
+              "charger_pause",
+              "charger_end",
+              "charger_fault"
+            ]
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "10 and 11 indicate overtemperature errors",
+          "extensions": {
+            "iconName": "icon-baojing",
+            "scope": "fault"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "err_leak",
+              "err_cp",
+              "err_temp",
+              "warn_a_uvp",
+              "warn_b_uvp",
+              "warn_c_uvp",
+              "err_a_ovp",
+              "err_b_ovp",
+              "err_c_ovp",
+              "err_ocp",
+              "err_10",
+              "err_11",
+              "err_esb",
+              "warn_pe_sck",
+              "err_leak_sck",
+              "err_pe"
+            ],
+            "maxlen": 16
+          }
+        },
+        {
+          "abilityId": 15,
+          "accessMode": "ro",
+          "code": "balance_energy",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning"
+          },
+          "name": "Remaining Available Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 3,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 16,
+          "accessMode": "rw",
+          "code": "clear_energy",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lightning"
+          },
+          "name": "Clear Energy",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 18,
+          "accessMode": "rw",
+          "code": "switch",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power2",
+            "trigger": "direct"
+          },
+          "name": "Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "ro",
+          "code": "system_version",
+          "description": "1.1 Name: Charging Pile Hardware/Software Version\n1.2 Meaning: Current version of hardware, firmware, etc.\n2 Format\n  Data type: string\n  Functional attribute: Maximum length 128 bytes\n4 Message Format\n   Example: \"HW V1.0,SW V1.0.3\"",
+          "extensions": {
+            "iconName": "icon-dp_mode"
+          },
+          "name": "System Version",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 25,
+          "accessMode": "ro",
+          "code": "charge_energy_once",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-Ele",
+            "attribute": "2048",
+            "trigger": "direct"
+          },
+          "name": "Single-Charge Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 999999,
+            "min": 1,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 27,
+          "accessMode": "rw",
+          "code": "online_state",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_updown"
+          },
+          "name": "Online State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "online",
+              "offline"
+            ]
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "DeviceState",
+          "description": "",
+          "name": "Device State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "no_connet",
+              "connect",
+              "charing",
+              "wait_rfid",
+              "finish",
+              "wait_charing",
+              "error"
+            ]
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "A_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "ro",
+          "code": "B_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "C_Voltage",
+          "description": "",
+          "name": "Input Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 5000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "A_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "B_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "ro",
+          "code": "C_Current",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Output Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "PhaseFlag",
+          "description": "",
+          "name": "Single/Three Phase Flag",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "Single_phase",
+              "Three_phase",
+              "No_phase",
+              "Phase_err"
+            ]
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "ro",
+          "code": "DeviceKw",
+          "description": "",
+          "name": "Device Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "kW"
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "DeviceTemp",
+          "description": "ID-111 is reserved for Device Temperature 2",
+          "name": "Device Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 1050,
+            "min": -300,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "ro",
+          "code": "DeviceTemp2",
+          "description": "Device Temperature 2 (reserved)",
+          "name": "Device Temperature 2",
+          "typeSpec": {
+            "type": "value",
+            "max": 1050,
+            "min": -300,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "ro",
+          "code": "DeviceKwh",
+          "description": "Cumulative energy for a single charge session; resets after unplugging",
+          "name": "Cumulative Energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 10000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "kWh"
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "DeviceMaxSetA",
+          "description": "",
+          "name": "Maximum Current Setting",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "Max16A",
+              "Max32A",
+              "Max40A",
+              "Max50A",
+              "Max60A",
+              "Max80A"
+            ]
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "rw",
+          "code": "Set16A",
+          "description": "",
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 16,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "rw",
+          "code": "Set32A",
+          "description": "",
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 32,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "rw",
+          "code": "Set40A",
+          "description": "",
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 40,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "rw",
+          "code": "Set50A",
+          "description": "",
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 50,
+            "min": 8,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "rw",
+          "code": "SetDelayTime",
+          "description": "",
+          "name": "Scheduled Charging",
+          "typeSpec": {
+            "type": "value",
+            "max": 15,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "H"
+          }
+        },
+        {
+          "abilityId": 119,
+          "accessMode": "rw",
+          "code": "SetDefineTime",
+          "description": "",
+          "name": "Timed Charging",
+          "typeSpec": {
+            "type": "value",
+            "max": 15,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "H"
+          }
+        },
+        {
+          "abilityId": 120,
+          "accessMode": "ro",
+          "code": "Ctime",
+          "description": "",
+          "name": "Time",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "ro",
+          "code": "DelayDis",
+          "description": "",
+          "name": "Scheduled Display",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "ro",
+          "code": "definedis",
+          "description": "",
+          "name": "Timed Display",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "rw",
+          "code": "RFID",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Swipe Card",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 124,
+          "accessMode": "rw",
+          "code": "ChargingOperation",
+          "description": "",
+          "name": "Charging Operation",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "OpenCharging",
+              "CloseCharging",
+              "WaitOperation"
+            ]
+          }
+        },
+        {
+          "abilityId": 125,
+          "accessMode": "ro",
+          "code": "set60a",
+          "description": "",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Set Current Display",
+          "typeSpec": {
+            "type": "value",
+            "max": 80,
+            "min": 6,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "rw",
+          "code": "set80a",
+          "description": "",
+          "name": "Set Current",
+          "typeSpec": {
+            "type": "value",
+            "max": 80,
+            "min": 24,
+            "scale": 0,
+            "step": 1,
+            "unit": "A"
+          }
+        }
+      ]
+    }
+  ]
+}

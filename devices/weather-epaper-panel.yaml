@@ -1,0 +1,621 @@
+substitutions:
+  name: weather-epaper-panel
+  friendly_name: Weather ePaper Panel (Xiao 7.5")
+
+  weather_entity: weather.openweathermap
+  forecast_update_min: 30
+  view_swap_s: 30
+  full_update_every: 30
+
+packages:
+  - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml
+
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - wait_until:
+          condition:
+            api.connected:
+              state_subscription_only: true
+      - delay: 5s
+      - script.execute: update_daily_forecast
+      - script.execute: update_hourly_forecast
+      - lambda: |-
+          id(forecast_timer_ms) = millis();
+          id(swap_timer_ms) = millis();
+      - script.execute: forecast_timer
+      - script.execute: swap_timer
+
+logger:
+  level: DEBUG
+
+font:
+  - file: gfonts://Inter@400
+    id: font_small
+    size: 20
+  - file: gfonts://Inter@400
+    id: font_xsmall
+    size: 16
+  - file: gfonts://Inter@400
+    id: font_regular
+    size: 28
+  - file: gfonts://Inter@400
+    id: font_medium
+    size: 24
+  - file: gfonts://Inter@700
+    id: font_title
+    size: 38
+  - file: gfonts://Inter@700
+    id: font_large
+    size: 56
+  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+    id: mdi_weather_large
+    size: 82
+    glyphs:
+      - "\U000F029A" # gauge
+      - "\U000F058E" # water-percent
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0591" # weather-fog
+      - "\U000F0592" # weather-hail
+      - "\U000F0593" # weather-lightning
+      - "\U000F0594" # weather-night
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0597" # weather-rainy
+      - "\U000F0598" # weather-snowy
+      - "\U000F0599" # weather-sunny
+      - "\U000F059D" # weather-windy
+      - "\U000F059E" # weather-windy-variant
+      - "\U000F067E" # weather-lightning-rainy
+      - "\U000F067F" # weather-snowy-rainy
+  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+    id: mdi_weather_small
+    size: 36
+    glyphs:
+      - "\U000F029A" # gauge
+      - "\U000F058E" # water-percent
+      - "\U000F0590" # weather-cloudy
+      - "\U000F0591" # weather-fog
+      - "\U000F0592" # weather-hail
+      - "\U000F0593" # weather-lightning
+      - "\U000F0594" # weather-night
+      - "\U000F0595" # weather-partly-cloudy
+      - "\U000F0596" # weather-pouring
+      - "\U000F0597" # weather-rainy
+      - "\U000F0598" # weather-snowy
+      - "\U000F0599" # weather-sunny
+      - "\U000F059D" # weather-windy
+      - "\U000F059E" # weather-windy-variant
+      - "\U000F067E" # weather-lightning-rainy
+      - "\U000F067F" # weather-snowy-rainy
+  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+    id: mdi_detail
+    size: 28
+    glyphs:
+      - "\U000F029A" # gauge
+      - "\U000F058E" # water-percent
+      - "\U000F059D" # weather-windy
+  - file: gfonts://Inter@700
+    id: font_wind_arrow
+    size: 22
+    glyphs:
+      - '↑'
+      - '↗'
+      - '→'
+      - '↘'
+      - '↓'
+      - '↙'
+      - '←'
+      - '↖'
+
+globals:
+  - id: forecast_day
+    type: std::array<std::string, 6>
+    restore_value: false
+    initial_value: '{"--", "--", "--", "--", "--", "--"}'
+  - id: forecast_condition
+    type: std::array<std::string, 6>
+    restore_value: false
+    initial_value: '{"", "", "", "", "", ""}'
+  - id: forecast_high
+    type: std::array<float, 6>
+    restore_value: false
+    initial_value: '{NAN, NAN, NAN, NAN, NAN, NAN}'
+  - id: forecast_low
+    type: std::array<float, 6>
+    restore_value: false
+    initial_value: '{NAN, NAN, NAN, NAN, NAN, NAN}'
+  - id: forecast_rain
+    type: std::array<float, 6>
+    restore_value: false
+    initial_value: '{NAN, NAN, NAN, NAN, NAN, NAN}'
+
+  - id: hourly_time
+    type: std::array<std::string, 6>
+    restore_value: false
+    initial_value: '{"--", "--", "--", "--", "--", "--"}'
+  - id: hourly_condition
+    type: std::array<std::string, 6>
+    restore_value: false
+    initial_value: '{"", "", "", "", "", ""}'
+  - id: hourly_temperature
+    type: std::array<float, 6>
+    restore_value: false
+    initial_value: '{NAN, NAN, NAN, NAN, NAN, NAN}'
+  - id: hourly_rain
+    type: std::array<float, 6>
+    restore_value: false
+    initial_value: '{NAN, NAN, NAN, NAN, NAN, NAN}'
+
+  - id: forecast_timer_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+  - id: swap_timer_ms
+    type: uint32_t
+    restore_value: false
+    initial_value: '0'
+
+text_sensor:
+  - platform: homeassistant
+    id: weather_condition
+    entity_id: ${weather_entity}
+    internal: true
+  - platform: homeassistant
+    id: weather_friendly_name
+    entity_id: ${weather_entity}
+    attribute: friendly_name
+    internal: true
+
+sensor:
+  - platform: homeassistant
+    id: weather_temperature
+    name: Temperature
+    entity_id: ${weather_entity}
+    attribute: temperature
+    accuracy_decimals: 1
+  - platform: homeassistant
+    id: weather_pressure
+    name: Pressure
+    entity_id: ${weather_entity}
+    attribute: pressure
+    accuracy_decimals: 0
+  - platform: homeassistant
+    id: weather_humidity
+    name: Humidity
+    entity_id: ${weather_entity}
+    attribute: humidity
+    accuracy_decimals: 0
+  - platform: homeassistant
+    id: weather_wind_speed
+    name: Wind Speed
+    entity_id: ${weather_entity}
+    attribute: wind_speed
+    accuracy_decimals: 0
+  - platform: homeassistant
+    id: weather_wind_bearing
+    name: Wind Bearing
+    entity_id: ${weather_entity}
+    attribute: wind_bearing
+    accuracy_decimals: 0
+
+number:
+  - platform: template
+    id: forecast_update_min
+    name: Forecast Update
+    entity_category: config
+    icon: mdi:weather-partly-clock
+    unit_of_measurement: min
+    mode: box
+    min_value: 5
+    max_value: 360
+    step: 5
+    initial_value: ${forecast_update_min}
+    optimistic: true
+    restore_value: true
+    on_value:
+      then:
+        - script.execute: forecast_timer
+
+  - platform: template
+    id: view_swap_s
+    name: View Swap
+    entity_category: config
+    icon: mdi:swap-horizontal
+    unit_of_measurement: s
+    mode: box
+    min_value: 10
+    max_value: 600
+    step: 5
+    initial_value: ${view_swap_s}
+    optimistic: true
+    restore_value: true
+    on_value:
+      then:
+        - script.execute: swap_timer
+
+spi:
+  clk_pin:
+    number: GPIO8
+    ignore_strapping_warning: true
+  mosi_pin: GPIO10
+
+display:
+  - platform: waveshare_epaper
+    id: epaper_display
+    model: 7.50inv2p
+    full_update_every: ${full_update_every}
+    cs_pin: GPIO3
+    dc_pin: GPIO5
+    reset_pin:
+      number: GPIO2
+      ignore_strapping_warning: true
+    busy_pin:
+      number: GPIO4
+      inverted: true
+    update_interval: never
+    pages:
+      - id: daily_page
+        lambda: |-
+          id(draw_base).execute(&it);
+          for (int i = 0; i < 6; i++) {
+            id(draw_forecast).execute(&it, 25 + i * 125, id(forecast_day)[i], id(forecast_condition)[i], id(forecast_high)[i], id(forecast_low)[i], false);
+          }
+
+      - id: hourly_page
+        lambda: |-
+          id(draw_base).execute(&it);
+          for (int i = 0; i < 6; i++) {
+            id(draw_forecast).execute(&it, 25 + i * 125, id(hourly_time)[i], id(hourly_condition)[i], id(hourly_temperature)[i], id(hourly_rain)[i], true);
+          }
+
+script:
+  - id: draw_base
+    parameters:
+      screen: 'display::Display*'
+    then:
+      - lambda: |-
+          auto valid = [](float v) -> bool {
+            return !std::isnan(v);
+          };
+
+          auto format_float = [&](float value, const char *suffix, int decimals = 1) -> std::string {
+            if (!valid(value)) return "--";
+            char buffer[24];
+            snprintf(buffer, sizeof(buffer), "%.*f%s", decimals, value, suffix);
+            return std::string(buffer);
+          };
+
+          auto condition_label = [](std::string condition) -> std::string {
+            if (condition == "clear-night") return "Clear night";
+            if (condition == "cloudy") return "Cloudy";
+            if (condition == "fog") return "Fog";
+            if (condition == "hail") return "Hail";
+            if (condition == "lightning") return "Lightning";
+            if (condition == "lightning-rainy") return "Thunderstorm";
+            if (condition == "partlycloudy") return "Partly cloudy";
+            if (condition == "pouring") return "Pouring";
+            if (condition == "rainy") return "Rainy";
+            if (condition == "snowy") return "Snowy";
+            if (condition == "snowy-rainy") return "Sleet";
+            if (condition == "sunny") return "Sunny";
+            if (condition == "windy") return "Windy";
+            if (condition == "windy-variant") return "Windy";
+            return condition.empty() ? "--" : condition;
+          };
+
+          auto wind_direction = [](float bearing) -> std::string {
+            if (std::isnan(bearing)) return "";
+            const char *dirs[] = {"↑", "↗", "→", "↘", "↓", "↙", "←", "↖"};
+            int index = (int) round(bearing / 45.0f) % 8;
+            return std::string(dirs[index]);
+          };
+
+          auto condition_icon = [](std::string condition) -> const char * {
+            if (condition == "clear-night") return "\U000F0594";
+            if (condition == "cloudy") return "\U000F0590";
+            if (condition == "fog") return "\U000F0591";
+            if (condition == "hail") return "\U000F0592";
+            if (condition == "lightning") return "\U000F0593";
+            if (condition == "lightning-rainy") return "\U000F067E";
+            if (condition == "partlycloudy") return "\U000F0595";
+            if (condition == "pouring") return "\U000F0596";
+            if (condition == "rainy") return "\U000F0597";
+            if (condition == "snowy") return "\U000F0598";
+            if (condition == "snowy-rainy") return "\U000F067F";
+            if (condition == "sunny") return "\U000F0599";
+            if (condition == "windy") return "\U000F059D";
+            if (condition == "windy-variant") return "\U000F059E";
+            return "\U000F0590";
+          };
+
+          auto draw_row = [&](int y, const char *label, std::string value) {
+            screen->print(145, y, id(font_small), label);
+            screen->print(760, y, id(font_small), TextAlign::TOP_RIGHT, value.c_str());
+          };
+
+          screen->fill(COLOR_OFF);
+          std::string title = id(weather_friendly_name).has_state() ? id(weather_friendly_name).state : "Weather";
+          const std::string title_prefix = "Forecast ";
+          if (title.rfind(title_prefix, 0) == 0) {
+            title = title.substr(title_prefix.length());
+          }
+          screen->print(20, 28, id(font_title), title.c_str());
+          if (id(ha_time).now().is_valid()) {
+            screen->strftime(780, 36, id(font_small), TextAlign::TOP_RIGHT, "Updated %d %b %H:%M", id(ha_time).now());
+          }
+
+          screen->line(20, 100, 780, 100);
+
+          std::string condition = id(weather_condition).has_state() ? id(weather_condition).state : "";
+          screen->print(80, 112, id(mdi_weather_large), TextAlign::TOP_CENTER, condition_icon(condition));
+          screen->print(145, 145, id(font_title), condition_label(condition).c_str());
+
+          screen->print(760, 120, id(font_large), TextAlign::TOP_RIGHT, format_float(id(weather_temperature).state, " °C", 1).c_str());
+          float daily_high = id(forecast_high)[0];
+          float daily_low = id(forecast_low)[0];
+          screen->print(760, 185, id(font_medium), TextAlign::TOP_RIGHT,
+            (format_float(daily_low, " °C", 1) + " - " + format_float(daily_high, " °C", 1)).c_str());
+
+          screen->print(80, 218, id(mdi_detail), TextAlign::TOP_CENTER, "\U000F058E");
+          screen->print(80, 258, id(mdi_detail), TextAlign::TOP_CENTER, "\U000F059D");
+          screen->print(80, 298, id(mdi_detail), TextAlign::TOP_CENTER, "\U000F029A");
+          draw_row(224, "Humidity", format_float(id(weather_humidity).state, "%", 0));
+          screen->print(145, 264, id(font_small), "Wind speed");
+          screen->print(728, 264, id(font_small), TextAlign::TOP_RIGHT, format_float(id(weather_wind_speed).state, " km/h", 1).c_str());
+          screen->print(760, 262, id(font_wind_arrow), TextAlign::TOP_RIGHT, wind_direction(id(weather_wind_bearing).state).c_str());
+          draw_row(304, "Air pressure", format_float(id(weather_pressure).state, " hPa", 1));
+
+          screen->line(20, 352, 780, 352);
+
+  - id: draw_forecast
+    parameters:
+      screen: 'display::Display*'
+      x: int
+      label: string
+      condition: string
+      value: float
+      secondary: float
+      hourly: bool
+    then:
+      - lambda: |-
+          auto valid = [](float v) -> bool {
+            return !std::isnan(v);
+          };
+
+          auto format_float = [&](float value, const char *suffix, int decimals = 1) -> std::string {
+            if (!valid(value)) return "--";
+            char buffer[24];
+            snprintf(buffer, sizeof(buffer), "%.*f%s", decimals, value, suffix);
+            return std::string(buffer);
+          };
+
+          auto condition_icon = [](std::string condition) -> const char * {
+            if (condition == "clear-night") return "\U000F0594";
+            if (condition == "cloudy") return "\U000F0590";
+            if (condition == "fog") return "\U000F0591";
+            if (condition == "hail") return "\U000F0592";
+            if (condition == "lightning") return "\U000F0593";
+            if (condition == "lightning-rainy") return "\U000F067E";
+            if (condition == "partlycloudy") return "\U000F0595";
+            if (condition == "pouring") return "\U000F0596";
+            if (condition == "rainy") return "\U000F0597";
+            if (condition == "snowy") return "\U000F0598";
+            if (condition == "snowy-rainy") return "\U000F067F";
+            if (condition == "sunny") return "\U000F0599";
+            if (condition == "windy") return "\U000F059D";
+            if (condition == "windy-variant") return "\U000F059E";
+            return "\U000F0590";
+          };
+
+          screen->print(x + 55, 366, id(font_small), TextAlign::TOP_CENTER, label.c_str());
+          screen->print(x + 55, 394, id(mdi_weather_small), TextAlign::TOP_CENTER, condition_icon(condition));
+          screen->print(x + 55, 434, id(font_small), TextAlign::TOP_CENTER, format_float(value, "°", 1).c_str());
+          if (hourly) {
+            if (valid(secondary)) {
+              screen->print(x + 55, 456, id(font_xsmall), TextAlign::TOP_CENTER, format_float(secondary, "%", 0).c_str());
+            }
+          } else {
+            screen->print(x + 55, 456, id(font_xsmall), TextAlign::TOP_CENTER, format_float(secondary, "°", 1).c_str());
+          }
+
+  - id: update_daily_forecast
+    mode: restart
+    then:
+      - homeassistant.action:
+          action: weather.get_forecasts
+          data:
+            entity_id: ${weather_entity}
+            type: daily
+          capture_response: true
+          on_success:
+            - lambda: |-
+                JsonArrayConst forecast = response["response"]["${weather_entity}"]["forecast"].as<JsonArrayConst>();
+                int i = 0;
+                for (JsonObjectConst item : forecast) {
+                  if (i >= 6) break;
+
+                  const char *datetime = item["datetime"] | "";
+                  std::string label = "--";
+                  if (strlen(datetime) >= 10) {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    if (sscanf(datetime, "%d-%d-%d", &year, &month, &day) == 3) {
+                      auto days_from_civil = [](int y, unsigned m, unsigned d) -> int64_t {
+                        y -= m <= 2;
+                        const int era = (y >= 0 ? y : y - 399) / 400;
+                        const unsigned yoe = static_cast<unsigned>(y - era * 400);
+                        const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+                        const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+                        return era * 146097 + static_cast<int>(doe) - 719468;
+                      };
+
+                      int weekday = (int) ((days_from_civil(year, month, day) + 4) % 7);
+                      if (weekday < 0) {
+                        weekday += 7;
+                      }
+
+                      const char *days[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                      label = days[weekday];
+                    }
+                  }
+
+                  const char *condition = item["condition"] | "";
+                  float high = item["temperature"].is<float>() ? item["temperature"].as<float>() : NAN;
+                  float low = item["templow"].is<float>() ? item["templow"].as<float>() : NAN;
+                  float rain = item["precipitation_probability"].is<float>() ? item["precipitation_probability"].as<float>() : NAN;
+
+                  id(forecast_day)[i] = label;
+                  id(forecast_condition)[i] = condition;
+                  id(forecast_high)[i] = high;
+                  id(forecast_low)[i] = low;
+                  id(forecast_rain)[i] = rain;
+
+                  i++;
+                }
+          on_error:
+            - logger.log: Failed to fetch weather forecast from Home Assistant
+
+  - id: update_hourly_forecast
+    mode: restart
+    then:
+      - homeassistant.action:
+          action: weather.get_forecasts
+          data:
+            entity_id: ${weather_entity}
+            type: hourly
+          capture_response: true
+          on_success:
+            - lambda: |-
+                JsonArrayConst forecast = response["response"]["${weather_entity}"]["forecast"].as<JsonArrayConst>();
+                int i = 0;
+                for (JsonObjectConst item : forecast) {
+                  if (i >= 6) break;
+
+                  const char *datetime = item["datetime"] | "";
+                  std::string label = "--";
+                  if (strlen(datetime) >= 19) {
+                    int year = 0;
+                    int month = 0;
+                    int day = 0;
+                    int hour = 0;
+                    int minute = 0;
+                    int second = 0;
+                    char tz_sign = 0;
+                    int tz_hour = 0;
+                    int tz_minute = 0;
+
+                    int parsed = sscanf(datetime, "%d-%d-%dT%d:%d:%d%c%d:%d", &year, &month, &day, &hour, &minute, &second, &tz_sign, &tz_hour, &tz_minute);
+                    if (parsed >= 6) {
+                      auto days_from_civil = [](int y, unsigned m, unsigned d) -> int64_t {
+                        y -= m <= 2;
+                        const int era = (y >= 0 ? y : y - 399) / 400;
+                        const unsigned yoe = static_cast<unsigned>(y - era * 400);
+                        const unsigned doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+                        const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+                        return era * 146097 + static_cast<int>(doe) - 719468;
+                      };
+
+                      auto epoch_from_civil = [&](int y, unsigned m, unsigned d, int h, int min, int sec) -> int64_t {
+                        return days_from_civil(y, m, d) * 86400LL + h * 3600LL + min * 60LL + sec;
+                      };
+
+                      int64_t timestamp_utc = epoch_from_civil(year, month, day, hour, minute, second);
+                      if (parsed == 9 && (tz_sign == '+' || tz_sign == '-')) {
+                        int source_offset = (tz_hour * 3600) + (tz_minute * 60);
+                        timestamp_utc += tz_sign == '-' ? source_offset : -source_offset;
+                      }
+
+                      int local_offset = 0;
+                      auto now = id(ha_time).now();
+                      if (now.is_valid()) {
+                        int64_t now_local_as_utc = epoch_from_civil(now.year, now.month, now.day_of_month, now.hour, now.minute, now.second);
+                        local_offset = (int) (now_local_as_utc - (int64_t) now.timestamp);
+                      }
+
+                      int local_hour = (int) (((timestamp_utc + local_offset) / 3600LL) % 24LL);
+                      if (local_hour < 0) {
+                        local_hour += 24;
+                      }
+
+                      char label_buffer[8];
+                      snprintf(label_buffer, sizeof(label_buffer), "%02d:00", local_hour);
+                      label = label_buffer;
+                    }
+                  }
+
+                  const char *condition = item["condition"] | "";
+                  float temperature = item["temperature"].is<float>() ? item["temperature"].as<float>() : NAN;
+                  float rain = item["precipitation_probability"].is<float>() ? item["precipitation_probability"].as<float>() : NAN;
+
+                  id(hourly_time)[i] = label;
+                  id(hourly_condition)[i] = condition;
+                  id(hourly_temperature)[i] = temperature;
+                  id(hourly_rain)[i] = rain;
+
+                  i++;
+                }
+          on_error:
+            - logger.log: Failed to fetch hourly weather forecast from Home Assistant
+
+  - id: forecast_timer
+    mode: restart
+    then:
+      - while:
+          condition:
+            lambda: return true;
+          then:
+            - delay: !lambda |-
+                float update_min = id(forecast_update_min).state;
+                if (std::isnan(update_min) || update_min < 1.0f) {
+                  update_min = ${forecast_update_min};
+                }
+
+                const uint32_t interval_ms = (uint32_t) roundf(update_min) * 60000UL;
+                if (id(forecast_timer_ms) == 0) {
+                  return interval_ms;
+                }
+
+                const uint32_t elapsed_ms = millis() - id(forecast_timer_ms);
+                if (elapsed_ms >= interval_ms) {
+                  return 0UL;
+                }
+                return interval_ms - elapsed_ms;
+            - wait_until:
+                condition:
+                  api.connected:
+                    state_subscription_only: true
+            - script.execute: update_daily_forecast
+            - script.execute: update_hourly_forecast
+            - lambda: |-
+                id(forecast_timer_ms) = millis();
+
+  - id: swap_timer
+    mode: restart
+    then:
+      - while:
+          condition:
+            lambda: return true;
+          then:
+            - delay: !lambda |-
+                float swap_s = id(view_swap_s).state;
+                if (std::isnan(swap_s) || swap_s < 1.0f) {
+                  swap_s = ${view_swap_s};
+                }
+
+                const uint32_t interval_ms = (uint32_t) roundf(swap_s) * 1000UL;
+                if (id(swap_timer_ms) == 0) {
+                  return interval_ms;
+                }
+
+                const uint32_t elapsed_ms = millis() - id(swap_timer_ms);
+                if (elapsed_ms >= interval_ms) {
+                  return 0UL;
+                }
+                return interval_ms - elapsed_ms;
+            - lambda: |-
+                id(swap_timer_ms) = millis();
+            - display.page.show_next: epaper_display
+            - component.update: epaper_display

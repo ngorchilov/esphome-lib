@@ -1,0 +1,52 @@
+substitutions:
+  name: tuya-ceiling-light
+  friendly_name: Tuya Ceiling Light
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+output:
+  - platform: libretiny_pwm
+    id: out_blue
+    pin: PWM0
+    frequency: 1500 Hz
+    max_power: 75% # gmwb=75
+
+  - platform: libretiny_pwm
+    id: out_warm
+    pin: PWM1
+    frequency: 1500 Hz
+
+  - platform: libretiny_pwm
+    id: out_cold
+    pin: PWM2
+    frequency: 1500 Hz
+
+  - platform: libretiny_pwm
+    id: out_green
+    pin: PWM4
+    frequency: 1500 Hz
+    max_power: 70% # gmwg=70
+
+  - platform: libretiny_pwm
+    id: out_red
+    pin: PWM5
+    frequency: 1500 Hz
+    max_power: 100% # gmwr=100
+
+light:
+  - platform: rgbww
+    name: ${friendly_name}
+    id: main_light
+
+    red: out_red
+    green: out_green
+    blue: out_blue
+    warm_white: out_warm
+    cold_white: out_cold
+
+    warm_white_color_temperature: 2700 K
+    cold_white_color_temperature: 6500 K
+
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 200ms
+    gamma_correct: 2.2
+    color_interlock: true

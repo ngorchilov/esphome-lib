@@ -1,0 +1,152 @@
+{
+  "modelId": "000004yb2r",
+  "services": [
+    {
+      "code": "",
+      "name": "Default Service",
+      "description": "",
+      "actions": [],
+      "events": [],
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "switch",
+          "name": "Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 3,
+          "accessMode": "rw",
+          "code": "fan_speed",
+          "name": "Fan Speed Animation",
+          "typeSpec": {
+            "type": "value",
+            "max": 2,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "rw",
+          "code": "humidifier",
+          "name": "Humidifier",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 21,
+          "accessMode": "ro",
+          "code": "temp_current",
+          "name": "Current Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 50,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "humidity_current",
+          "name": "Current Humidity",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "wind_speed_state",
+          "name": "Wind Speed State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "high",
+              "low",
+              "stop"
+            ]
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "rw",
+          "code": "wind_shake",
+          "name": "Wind Speed Setting",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "high",
+              "low",
+              "stop"
+            ]
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "rw",
+          "code": "fan_countdown",
+          "name": "Humidity Setting",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 30,
+            "scale": 0,
+            "step": 5,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "pir_state",
+          "name": "Human Detection State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "pir",
+              "none"
+            ]
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "rw",
+          "code": "switch_pir",
+          "name": "PIR Detection Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "rw",
+          "code": "delay30",
+          "name": "Delay Time Setting (min)",
+          "typeSpec": {
+            "type": "value",
+            "max": 60,
+            "min": 1,
+            "scale": 0,
+            "step": 1,
+            "unit": ""
+          }
+        }
+      ]
+    }
+  ]
+}

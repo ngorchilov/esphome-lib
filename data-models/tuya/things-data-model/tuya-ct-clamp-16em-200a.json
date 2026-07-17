@@ -1,0 +1,451 @@
+{
+  "modelId": "fxagf8",
+  "services": [
+    {
+      "name": "Default Service",
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "properties": [
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "phase_a_data",
+          "name": "Phase A Data",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "phase_b_data",
+          "name": "Phase B Data",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "ro",
+          "code": "phase_c_data",
+          "name": "Phase C Data",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "phase_t_data",
+          "name": "Total Phase Data",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "sub_power",
+          "name": "Sub-circuit Power",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "sub_current",
+          "name": "Sub-circuit Current",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "rw",
+          "code": "sub_phase",
+          "name": "Sub-circuit Phase Setting",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "meter_type",
+          "name": "Measurement Type",
+          "description": "",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "unknow",
+              "3_phase",
+              "1_phase",
+              "1_phase_3_wire",
+              "other"
+            ]
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "rw",
+          "code": "solar_en",
+          "name": "Solar Enable",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "wr",
+          "code": "clear_energy",
+          "name": "Clear Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "rw",
+          "code": "vol_multi_set",
+          "name": "Voltage Multiplier Setting",
+          "description": "Only for 2-phase",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "rw",
+          "code": "solar_en_total",
+          "name": "Enable Solar Main Switch",
+          "description": "",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "unknow",
+              "disable",
+              "enable"
+            ]
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "ct_check",
+          "name": "CT Insertion Detection",
+          "description": "",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "wr",
+          "code": "refresh",
+          "name": "Refresh",
+          "description": "",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "solar_en",
+              "ct_insert"
+            ]
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "ro",
+          "code": "energy_sub1",
+          "name": "Sub-circuit 1 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "ro",
+          "code": "energy_sub2",
+          "name": "Sub-circuit 2 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "ro",
+          "code": "energy_sub3",
+          "name": "Sub-circuit 3 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "ro",
+          "code": "energy_sub4",
+          "name": "Sub-circuit 4 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 119,
+          "accessMode": "ro",
+          "code": "energy_sub5",
+          "name": "Sub-circuit 5 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 120,
+          "accessMode": "ro",
+          "code": "energy_sub6",
+          "name": "Sub-circuit 6 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "ro",
+          "code": "energy_sub7",
+          "name": "Sub-circuit 7 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "ro",
+          "code": "energy_sub8",
+          "name": "Sub-circuit 8 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "ro",
+          "code": "energy_sub9",
+          "name": "Sub-circuit 9 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 124,
+          "accessMode": "ro",
+          "code": "energy_sub10",
+          "name": "Sub-circuit 10 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 125,
+          "accessMode": "ro",
+          "code": "energy_sub11",
+          "name": "Sub-circuit 11 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "ro",
+          "code": "energy_sub12",
+          "name": "Sub-circuit 12 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 127,
+          "accessMode": "ro",
+          "code": "energy_sub13",
+          "name": "Sub-circuit 13 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 128,
+          "accessMode": "ro",
+          "code": "energy_sub14",
+          "name": "Sub-circuit 14 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 129,
+          "accessMode": "ro",
+          "code": "energy_sub15",
+          "name": "Sub-circuit 15 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 130,
+          "accessMode": "ro",
+          "code": "energy_sub16",
+          "name": "Sub-circuit 16 Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 131,
+          "accessMode": "ro",
+          "code": "energy_consumed_total",
+          "name": "Total Consumed Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        },
+        {
+          "abilityId": 132,
+          "accessMode": "ro",
+          "code": "energy_generate_total",
+          "name": "Total Generated Energy",
+          "description": "",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000000000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "kW·h"
+          }
+        }
+      ]
+    }
+  ]
+}

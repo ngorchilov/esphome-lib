@@ -1,0 +1,175 @@
+substitutions:
+  name: tuya-8-in-1-water-meter
+  friendly_name: Tuya 8-in-1 Water Quality Meter
+  scale_temp: '0.1'
+  scale_ph: '0.01'
+  scale_pro: '0.001'
+  scale_cf: '0.01'
+
+packages:
+  - !include ../packages/boards/tuya/cb3s.yaml
+logger:
+  baud_rate: 0
+  level: DEBUG
+
+uart:
+  rx_pin: P10
+  tx_pin: P11
+  baud_rate: 9600
+  rx_buffer_size: 1024
+
+tuya:
+  id: my_meter
+  time_id: ha_time
+
+  on_datapoint_update:
+    - sensor_datapoint: 101
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            auto &vec = x;
+            id(sensor_temperature)->publish_state(vec.size() > 0 && vec[0] == 1);
+            id(sensor_ph)         ->publish_state(vec.size() > 1 && vec[1] == 1);
+            id(sensor_tds)        ->publish_state(vec.size() > 2 && vec[2] == 1);
+            id(sensor_ec)         ->publish_state(vec.size() > 3 && vec[3] == 1);
+            id(sensor_salinity)   ->publish_state(vec.size() > 4 && vec[4] == 1);
+            id(sensor_pro)        ->publish_state(vec.size() > 5 && vec[5] == 1);
+            id(sensor_orp)        ->publish_state(vec.size() > 6 && vec[6] == 1);
+            id(sensor_cf)         ->publish_state(vec.size() > 7 && vec[7] == 1);
+            id(sensor_rh)         ->publish_state(vec.size() > 8 && vec[8] == 1);
+
+sensor:
+  - platform: tuya
+    name: Temperature
+    sensor_datapoint: 8
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    icon: mdi:thermometer
+    filters:
+      - multiply: ${scale_temp}
+
+  - platform: tuya
+    name: pH Value
+    sensor_datapoint: 106
+    unit_of_measurement: pH
+    accuracy_decimals: 2
+    icon: mdi:ph
+    filters:
+      - multiply: ${scale_ph}
+
+  - platform: tuya
+    name: TDS Value
+    sensor_datapoint: 111
+    unit_of_measurement: ms/cm
+    accuracy_decimals: 0
+    icon: mdi:water-opacity
+
+  - platform: tuya
+    name: EC Value
+    sensor_datapoint: 116
+    unit_of_measurement: µS
+    accuracy_decimals: 0
+    icon: mdi:omega
+
+  - platform: tuya
+    name: Salinity Value
+    sensor_datapoint: 121
+    unit_of_measurement: PPM
+    accuracy_decimals: 0
+    icon: mdi:shaker-outline
+
+  - platform: tuya
+    name: Specific Gravity
+    sensor_datapoint: 126
+    unit_of_measurement: S.G
+    accuracy_decimals: 3
+    icon: mdi:weight
+    filters:
+      - multiply: ${scale_pro}
+
+  - platform: tuya
+    name: ORP Value
+    sensor_datapoint: 131
+    unit_of_measurement: mV
+    accuracy_decimals: 0
+    icon: mdi:flash
+
+  - platform: tuya
+    name: CF Value
+    sensor_datapoint: 136
+    unit_of_measurement: CF
+    accuracy_decimals: 2
+    icon: mdi:calculator
+    filters:
+      - multiply: ${scale_cf}
+
+  - platform: tuya
+    name: Humidity
+    sensor_datapoint: 141
+    unit_of_measurement: '%'
+    accuracy_decimals: 0
+    icon: mdi:water-percent
+
+binary_sensor:
+  - platform: template
+    id: sensor_temperature
+    name: 'Sensor: Temperature'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_ph
+    name: 'Sensor: pH'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_tds
+    name: 'Sensor: TDS'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_ec
+    name: 'Sensor: EC'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_salinity
+    name: 'Sensor: Salinity'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_pro
+    name: 'Sensor: Specific Gravity'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_orp
+    name: 'Sensor: ORP'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_cf
+    name: 'Sensor: CF'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update
+
+  - platform: template
+    id: sensor_rh
+    name: 'Sensor: Humidity'
+    entity_category: diagnostic
+    lambda: |-
+      return {}; // will be updated via on_datapoint_update

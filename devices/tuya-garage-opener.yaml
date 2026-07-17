@@ -1,0 +1,171 @@
+substitutions:
+  name: tuya-garage-opener
+  friendly_name: Tuya Garage Opener
+  led_pin: GPIO6
+  button_pin: GPIO7
+  relay_pin: GPIO8
+  magnetic_pin: GPIO26
+  magnetic_contact_delay: 0.5s # delay for magnetic sensor stabilization
+  pulse_duration: 0.2s
+  door_travel_time: '30' # Default time in seconds. Can be overwritten by the users via number component bellow
+
+packages:
+  - !include ../packages/boards/tuya/cbu.yaml
+logger:
+  level: DEBUG
+
+number:
+  - platform: template
+    name: Door Travel Time
+    id: door_travel_time_sensor
+    mode: box
+    entity_category: config
+    min_value: 5
+    max_value: 60
+    step: 1
+    initial_value: ${door_travel_time}
+    restore_value: true
+    optimistic: true
+    unit_of_measurement: s
+    on_value:
+      then:
+        - lambda: |-
+            uint32_t new_duration = ((uint32_t)x * 1000UL);
+            // If you need to update any cover-specific durations, you can do it here.
+            // In this template cover, we use the sensor and a delay for opening.
+            ESP_LOGD("main", "New door travel time: %ums", new_duration);
+
+output:
+  - id: relay_output
+    platform: gpio
+    pin: ${relay_pin}
+  - id: led_output
+    platform: gpio
+    pin: ${led_pin}
+    inverted: true
+
+light:
+  - platform: binary
+    id: garage_door_led
+    output: led_output
+    internal: true
+
+script:
+  - id: pulse_relay
+    then:
+      - output.turn_on: relay_output
+      - light.turn_on: garage_door_led
+      - delay: ${pulse_duration}
+      - output.turn_off: relay_output
+      - light.turn_off: garage_door_led
+
+globals:
+  # Timestamp (in milliseconds) when a cover operation started.
+  - id: op_start
+    type: uint32_t
+    restore_value: no
+    initial_value: '0'
+
+cover:
+  - platform: template
+    name: Door
+    id: garage_door
+    device_class: garage
+    optimistic: false
+    lambda: |-
+      uint32_t now = ::millis();
+      uint32_t travel_time = (uint32_t)(id(door_travel_time_sensor).state * 1000UL);
+
+      // If an operation is in progress:
+      if (id(garage_door).current_operation != COVER_OPERATION_IDLE) {
+        // For a closing operation, if the magnetic sensor reports closed, finish immediately.
+        if (id(garage_door).current_operation == COVER_OPERATION_CLOSING) {
+          if (id(magnetic_contact).state) {
+            id(garage_door).current_operation = COVER_OPERATION_IDLE;
+            id(op_start) = 0;
+            return COVER_CLOSED;
+          }
+        }
+        // Check if the expected operation time has elapsed.
+        if ((id(op_start) + travel_time) < now) {
+          id(op_start) = 0;
+          id(garage_door).current_operation = COVER_OPERATION_IDLE;
+          if (id(garage_door).current_operation == COVER_OPERATION_OPENING) {
+            return COVER_OPEN;
+          } else if (id(garage_door).current_operation == COVER_OPERATION_CLOSING) {
+            id(op_start) = 0;
+            return COVER_CLOSED;
+          } else {
+            ESP_LOGD("cover", "Huston, we have a problem! Unknown operation detected: current_operation=%d", id(garage_door).current_operation);
+            return {};
+          }
+        } else {
+          // Operation still in progress; return unchanged state.
+          return {};
+        }
+        ESP_LOGD("cover", "Huston, we have a problem! We shall not be here.");
+        return {};
+      } else {
+        // If idle, check sensor state to detect manual changes.
+        if (id(magnetic_contact).state) {
+          return COVER_CLOSED;
+        } else {
+          return COVER_OPEN;
+        }
+      }
+
+    open_action:
+      - lambda: |-
+          if (id(garage_door).current_operation == COVER_OPERATION_IDLE) {
+            id(garage_door).current_operation = COVER_OPERATION_OPENING;
+            id(pulse_relay).execute();
+            id(op_start) = ::millis();
+            id(garage_door).publish_state(COVER_OPERATION_OPENING);
+          } else {
+            ESP_LOGD("cover", "Cover not idle (current_operation=%d), ignoring OPEN command", id(garage_door).current_operation);
+          }
+    close_action:
+      - lambda: |-
+          if (id(garage_door).current_operation == COVER_OPERATION_IDLE) {
+            id(garage_door).current_operation = COVER_OPERATION_CLOSING;
+            id(pulse_relay).execute();
+            id(op_start) = ::millis();
+            id(garage_door).publish_state(COVER_OPERATION_CLOSING);
+          } else {
+            ESP_LOGD("cover", "Cover not idle (current_operation=%d), ignoring CLOSE command", id(garage_door).current_operation);
+          }
+    toggle_action:
+      - lambda: |-
+          if (id(garage_door).current_operation == COVER_OPERATION_IDLE) {
+            // Use the sensor to decide which command to issue.
+            if (id(garage_door).position == COVER_CLOSED) {
+              ESP_LOGD("cover", "Toggle action: sensor indicates CLOSED, triggering OPEN");
+              id(garage_door).make_call().set_command_open().perform();
+            } else {
+              ESP_LOGD("cover", "Toggle action: sensor indicates OPEN, triggering CLOSE");
+              id(garage_door).make_call().set_command_close().perform();
+            }
+          } else {
+            ESP_LOGD("cover", "Cover not idle (current_operation=%d), ignoring TOGGLE command", id(garage_door).current_operation);
+          }
+
+binary_sensor:
+  - platform: gpio
+    name: Toggle Button
+    id: toggle_button
+    pin:
+      number: ${button_pin}
+      mode: INPUT_PULLUP
+      inverted: true
+    on_press:
+      then:
+        - cover.toggle: garage_door
+
+  - platform: gpio
+    id: magnetic_contact
+    name: Magnetic Contact
+    pin:
+      number: ${magnetic_pin}
+      mode: INPUT_PULLUP
+    filters:
+      - delayed_on: ${magnetic_contact_delay}
