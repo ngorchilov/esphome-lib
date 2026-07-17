@@ -46,6 +46,8 @@ external_components:
 
 esp32:
   board: ${esp32_board_${board_profile}}
+  # ESPHome 2026.7 native ESP-IDF ignores the external component's .cc sources.
+  toolchain: platformio
   framework:
     type: esp-idf
     advanced:
