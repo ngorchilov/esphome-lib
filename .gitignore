@@ -8,3 +8,6 @@ secrets.yaml
 # Python bytecode and caches
 __pycache__/
 *.py[cod]
+
+/bootstrap/
+/components/wbr3_layout_bridge/

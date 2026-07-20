@@ -8,6 +8,25 @@ packages:
   - !include base-board.yaml
 
 text_sensor:
+  - platform: template
+    name: Active Firmware Image
+    id: mcu_active_firmware_image
+    entity_category: diagnostic
+    disabled_by_default: true
+    update_interval: 30s
+    lambda: |-
+      extern unsigned char current_ota_slot() asm("lt_ota_dual_get_current");
+      switch (current_ota_slot()) {
+        case 0:
+          return {"Single"};
+        case 1:
+          return {"First"};
+        case 2:
+          return {"Second"};
+        default:
+          return {"Unknown"};
+      }
+
   - platform: libretiny
     version:
       name: LibreTiny Version
