@@ -131,9 +131,9 @@ when the behavior is unique, experimental, or depends on one physical product.
 ### wMBus Meter Profiles
 
 `packages/modules/wmbus/qwater-meter.yaml` is a multi-instance profile for QWater meters. It creates
-the meter component plus its RSSI, current volume, end-of-month, end-of-year, and corresponding date
-entities. The receiver must already provide a `wmbus_radio`; the LoRa receiver appliance exposes it
-as `lora_radio`.
+the meter component plus its RSSI, current volume in cubic metres, derived consumption in litres,
+end-of-month, end-of-year, and corresponding date entities. The receiver must already provide a
+`wmbus_radio`; the LoRa receiver appliance exposes it as `lora_radio`.
 
 ```yaml
 packages:
@@ -151,7 +151,9 @@ packages:
 separate `wmbus_common.drivers` entry is unnecessary unless additional uninstantiated drivers are
 required. QWater date fields are `PointInTime` values, which the current adapter does not expose to
 `wmbus_meter` text sensors. The profile therefore publishes its date template sensors from the
-meter's `on_telegram` callback.
+meter's `on_telegram` callback and marks them with the native `date` device class. Last Update uses
+the adapter's UTC timestamp field and native `timestamp` device class; the meter clock remains text
+because its reported wall-clock value has no timezone.
 
 ## Firmware Families
 
@@ -346,6 +348,8 @@ packages:
 - Prefer readable YAML over compact one-liners.
 - Keep comments short and useful.
 - Do not add explanatory comments for obvious YAML.
+- Let `device_class` select the default Home Assistant icon. Set `icon` only for an intentional
+  override or when the entity has no suitable device class.
 
 ESPHome component attribute order:
 

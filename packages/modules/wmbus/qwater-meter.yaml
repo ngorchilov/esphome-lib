@@ -28,7 +28,7 @@ wmbus_meter:
 
 sensor:
   - platform: wmbus_meter
-    name: ${qwater_name} RSSi
+    name: ${qwater_name} RSSI
     id: ${qwater_id}_rssi
     parent_id: ${qwater_id}
     field: rssi_dbm
@@ -47,7 +47,17 @@ sensor:
     unit_of_measurement: m³
     device_class: water
     state_class: total_increasing
-    icon: mdi:water
+
+  - platform: copy
+    name: ${qwater_name} Consumption
+    id: ${qwater_id}_consumption
+    source_id: ${qwater_id}_current
+    accuracy_decimals: 0
+    unit_of_measurement: L
+    device_class: water
+    state_class: total_increasing
+    filters:
+      - multiply: 1000
 
   - platform: wmbus_meter
     name: ${qwater_name} EoM
@@ -58,7 +68,7 @@ sensor:
     unit_of_measurement: m³
     device_class: water
     state_class: total_increasing
-    icon: mdi:water
+    entity_category: diagnostic
 
   - platform: wmbus_meter
     name: ${qwater_name} EoY
@@ -69,15 +79,16 @@ sensor:
     unit_of_measurement: m³
     device_class: water
     state_class: total_increasing
-    icon: mdi:water
+    entity_category: diagnostic
 
 text_sensor:
   - platform: wmbus_meter
     name: ${qwater_name} Last Update
     id: ${qwater_id}_last_update
     parent_id: ${qwater_id}
-    field: timestamp
+    field: timestamp_zulu
     entity_category: diagnostic
+    device_class: timestamp
 
   - platform: wmbus_meter
     name: ${qwater_name} Clock
@@ -91,12 +102,12 @@ text_sensor:
     name: ${qwater_name} EoM Date
     id: ${qwater_id}_eom_date
     entity_category: diagnostic
-    icon: mdi:calendar
+    device_class: date
     update_interval: never
 
   - platform: template
     name: ${qwater_name} EoY Date
     id: ${qwater_id}_eoy_date
     entity_category: diagnostic
-    icon: mdi:calendar
+    device_class: date
     update_interval: never
