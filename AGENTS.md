@@ -6,6 +6,7 @@
 
 - board packages that describe MCU families and physical board targets
 - base-board packages that add common ESPHome services and diagnostics
+- appliance packages that assemble a board and its integrated peripherals
 - networking packages for Wi-Fi, Ethernet, API, OTA, and mDNS
 - functional modules for relays, lights, switches, energy monitors, and integrations
 - concrete `devices/*.yaml` files that compose those packages into real devices
@@ -20,7 +21,10 @@ The library is layered. Most concrete devices follow this shape:
 
 ```text
 devices/<device>.yaml
-  -> packages/boards/<vendor-or-family>/<board>.yaml
+  -> packages/appliances/<appliance>.yaml (when a complete hardware assembly exists)
+    -> packages/boards/<vendor-or-family>/<board>.yaml
+    -> packages/modules/*.yaml
+  -> packages/boards/<vendor-or-family>/<board>.yaml (otherwise)
     -> packages/boards/templates/base-board-<family>.yaml
       -> packages/boards/templates/base-board.yaml
         -> packages/modules/networking.yaml
@@ -33,7 +37,7 @@ devices/<device>.yaml
 `devices/*.yaml` files are concrete firmware configurations. They should mostly:
 
 - define device substitutions such as `name`, `friendly_name`, pins, inversion flags, and feature choices
-- include exactly one board package
+- include exactly one board package, directly or through an appliance package
 - include reusable modules when possible
 - contain device-specific behavior only when it truly belongs to that one device
 
@@ -77,6 +81,35 @@ Board packages may define platform facts such as `firmware_family` through the b
 Keep base-board packages broad and boring. If a behavior is not useful across many devices, it
 probably belongs in a device file or a functional module instead.
 
+### Appliance Packages
+
+`packages/appliances/*.yaml` files represent complete, reusable hardware assemblies. An appliance
+may select a concrete board package and compose integrated peripherals whose wiring is fixed by that
+board. Use an appliance when it removes physical pin knowledge from device files and presents a
+smaller capability-oriented API; do not use one merely to regroup a few component declarations.
+
+`packages/appliances/lora-receiver.yaml` supports the Heltec WiFi LoRa 32 V2 and LilyGO TTGO LoRa32
+V2.1 profiles. Its public API is:
+
+```yaml
+packages:
+  - !include
+    file: ../packages/appliances/lora-receiver.yaml
+    vars:
+      lora:
+        board: lilygo # heltec | lilygo
+        radio:
+          driver: sx127x # sx127x | wmbus
+        display:
+          enabled: true
+```
+
+The appliance owns the board target, radio and display buses, integrated GPIO wiring, OLED font,
+and status LED. Applications extend `lora_radio` and `lora_display` with protocol callbacks and
+presentation logic. Stable infrastructure ids include `lora_spi`, `lora_i2c`, `lora_oled_font`,
+and `lora_status_led`. Keep external component declarations and driver-specific toolchain workarounds
+in the consuming device when they are not intrinsic to the physical board.
+
 ### Functional Modules
 
 `packages/modules/*.yaml` files add reusable behavior. Modules should be designed around explicit
@@ -89,6 +122,7 @@ Important modules:
 - `relay-control.yaml` is the public relay-control assembler and composes smaller relay-control packages.
 - `energy-monitoring-bl0937.yaml` and `energy-monitoring-bl0942.yaml` expose reusable energy monitor setups.
 - `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
+- `lora/radio.yaml` and `lora/display.yaml` provide the capability layers used by the LoRa receiver appliance.
 
 Prefer a module over copy/paste device logic when the behavior is reusable. Prefer device-local YAML
 when the behavior is unique, experimental, or depends on one physical product.

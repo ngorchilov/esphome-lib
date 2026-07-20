@@ -1,0 +1,7 @@
+substitutions:
+  name: kickstart-heltec-lora32-v2
+  friendly_name: Kickstart Heltec WiFi LoRa 32 V2
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/espressif/heltec-wifi-lora-32-v2.yaml

@@ -1,0 +1,13 @@
+substitutions:
+  name: base-board-heltec-wifi-lora-32-v2
+  friendly_name: Base Board Heltec WiFi LoRa 32 V2
+
+packages:
+  - !include ../templates/base-board-esphome-esp32.yaml
+
+esp32:
+  board: heltec_wifi_lora_32_V2
+  framework:
+    type: esp-idf
+    advanced:
+      sram1_as_iram: true

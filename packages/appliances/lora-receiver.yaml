@@ -1,0 +1,35 @@
+# LoRa Receiver (virtual appliance)
+# Selects a physical LoRa board and assembles its radio and optional display.
+
+defaults:
+  lora: ${ lora | default({}) }
+  lora_radio: ${ lora.get("radio", {}) }
+  lora_display: ${ lora.get("display", {}) }
+
+  lora_board: ${ lora.get("board", "heltec") } # heltec | lilygo
+  lora_radio_driver: ${ lora_radio.get("driver", "sx127x") } # sx127x | wmbus
+  lora_display_enabled: ${ lora_display.get("enabled", true) }
+
+  # Physical board profile
+  lora_radio_reset_pin: ${ "GPIO14" if lora_board == "heltec" else "GPIO23" }
+  lora_radio_irq_pin: ${ "GPIO35" if lora_board == "heltec" else "GPIO33" }
+  lora_i2c_sda_pin: ${ "GPIO4" if lora_board == "heltec" else "GPIO21" }
+  lora_i2c_scl_pin: ${ "GPIO15" if lora_board == "heltec" else "GPIO22" }
+  lora_i2c_scl_strapping: ${ lora_board == "heltec" }
+
+  _lora_board_heltec_pkg: !include ../boards/espressif/heltec-wifi-lora-32-v2.yaml
+  _lora_board_lilygo_pkg: !include ../boards/espressif/lilygo-ttgo-lora32-v21.yaml
+  _lora_heltec_outputs_pkg: !include lora-receiver/heltec-outputs.yaml
+  _lora_radio_pkg: !include ../modules/lora/radio.yaml
+  _lora_display_pkg: !include ../modules/lora/display.yaml
+
+packages:
+  - ${ _lora_board_heltec_pkg if lora_board == 'heltec' else _lora_board_lilygo_pkg }
+  - ${ _lora_heltec_outputs_pkg if lora_board == 'heltec' else {} }
+  - ${ _lora_radio_pkg }
+  - ${ _lora_display_pkg if lora_display_enabled else {} }
+
+output:
+  - platform: gpio
+    id: lora_status_led
+    pin: GPIO25

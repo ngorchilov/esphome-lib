@@ -1,0 +1,8 @@
+wmbus_radio:
+  - id: lora_radio
+    radio_id: lora_radio_transceiver
+    spi_id: lora_spi
+    radio_type: SX1276
+    cs_pin: GPIO18
+    reset_pin: ${lora_radio_reset_pin}
+    irq_pin: ${lora_radio_irq_pin}

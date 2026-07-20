@@ -1,0 +1,7 @@
+substitutions:
+  name: kickstart-lilygo-lora32-v21
+  friendly_name: Kickstart LilyGO TTGO LoRa32 V2.1
+  wifi_ap_enabled: true
+
+packages:
+  - !include ../packages/boards/espressif/lilygo-ttgo-lora32-v21.yaml

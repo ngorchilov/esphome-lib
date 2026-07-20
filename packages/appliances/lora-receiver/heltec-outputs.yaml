@@ -1,0 +1,10 @@
+output:
+  - platform: gpio
+    id: lora_vext_output
+    pin: GPIO21
+    inverted: true
+
+  - platform: gpio
+    id: lora_oled_reset
+    pin: GPIO16
+    inverted: true
