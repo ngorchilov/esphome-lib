@@ -379,6 +379,22 @@ Known fragile patterns:
 If a templating approach is required for reusable infrastructure, validate it with `esphome config`
 on concrete ESPHome and LibreTiny devices when applicable.
 
+## Dependency Workarounds
+
+When a defect is traced to ESPHome, LibreTiny, PlatformIO, an SDK, or another dependency, do not
+stop at identifying the upstream fault. Proactively evaluate workaround layers in this order:
+
+1. Existing configuration or extension hooks
+2. Application-level overrides
+3. Linker wrapping, symbol aliases, and build flags
+4. Small external components
+5. Temporary dependency patches or forks
+
+Prefer the narrowest reversible solution that keeps upstream dependencies unmodified. Verify the
+mechanism against the relevant source and actual toolchain before recommending or implementing it.
+Document the upstream issue, any version-specific assumptions, and how to remove the workaround
+after an official fix becomes available.
+
 ## Validation Standards
 
 Run validation from:
