@@ -5,3 +5,16 @@ substitutions:
 
 packages:
   - !include base-board-libretiny.yaml
+
+button:
+  # RTL8720C modules may not boot after LibreTiny's CPU-only reset.
+  - platform: template
+    name: MCU Restart
+    id: !extend mcu_restart
+    entity_category: config
+    device_class: restart
+    on_press:
+      - lambda: |-
+          extern void realtek_system_reset(void) asm("sys_reset");
+          realtek_system_reset();
+          while (true) {}
