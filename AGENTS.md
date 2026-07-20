@@ -123,9 +123,35 @@ Important modules:
 - `energy-monitoring-bl0937.yaml` and `energy-monitoring-bl0942.yaml` expose reusable energy monitor setups.
 - `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
 - `lora/radio.yaml` and `lora/display.yaml` provide the capability layers used by the LoRa receiver appliance.
+- `wmbus/qwater-meter.yaml` exposes one complete QWater meter entity profile per include.
 
 Prefer a module over copy/paste device logic when the behavior is reusable. Prefer device-local YAML
 when the behavior is unique, experimental, or depends on one physical product.
+
+### wMBus Meter Profiles
+
+`packages/modules/wmbus/qwater-meter.yaml` is a multi-instance profile for QWater meters. It creates
+the meter component plus its RSSI, current volume, end-of-month, end-of-year, and corresponding date
+entities. The receiver must already provide a `wmbus_radio`; the LoRa receiver appliance exposes it
+as `lora_radio`.
+
+```yaml
+packages:
+  - !include
+    file: ../packages/modules/wmbus/qwater-meter.yaml
+    vars:
+      meter:
+        id: main_water
+        name: Water Main
+        meter_id: 0x12345678
+```
+
+`meter.id` prefixes every generated id and must be unique. `meter.radio_id` defaults to
+`lora_radio`. Including the profile multiple times automatically registers the QWater driver, so a
+separate `wmbus_common.drivers` entry is unnecessary unless additional uninstantiated drivers are
+required. QWater date fields are `PointInTime` values, which the current adapter does not expose to
+`wmbus_meter` text sensors. The profile therefore publishes its date template sensors from the
+meter's `on_telegram` callback.
 
 ## Firmware Families
 

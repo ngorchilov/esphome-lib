@@ -1,0 +1,102 @@
+# QWater meter profile
+
+defaults:
+  meter: ${ meter | default({}) }
+  qwater_id: ${ meter.get("id", "water_meter") }
+  qwater_name: ${ meter.get("name", "Water") }
+  qwater_meter_id: ${ meter.get("meter_id", "") }
+  qwater_radio_id: ${ meter.get("radio_id", "lora_radio") }
+
+wmbus_meter:
+  - id: ${qwater_id}
+    radio_id: ${qwater_radio_id}
+    meter_id: ${qwater_meter_id}
+    type: qwater
+    on_telegram:
+      then:
+        # The adapter only exports Quantity::Text to text sensors. QWater dates are PointInTime.
+        - lambda: |-
+            auto eom_date = meter.get_numeric_field("due_17_date");
+            if (eom_date.has_value()) {
+              id(${qwater_id}_eom_date).publish_state(strdate(*eom_date));
+            }
+
+            auto eoy_date = meter.get_numeric_field("due_date");
+            if (eoy_date.has_value()) {
+              id(${qwater_id}_eoy_date).publish_state(strdate(*eoy_date));
+            }
+
+sensor:
+  - platform: wmbus_meter
+    name: ${qwater_name} RSSi
+    id: ${qwater_id}_rssi
+    parent_id: ${qwater_id}
+    field: rssi_dbm
+    accuracy_decimals: 0
+    unit_of_measurement: dBm
+    device_class: signal_strength
+    state_class: measurement
+    entity_category: diagnostic
+
+  - platform: wmbus_meter
+    name: ${qwater_name} Current
+    id: ${qwater_id}_current
+    parent_id: ${qwater_id}
+    field: total_m3
+    accuracy_decimals: 3
+    unit_of_measurement: m³
+    device_class: water
+    state_class: total_increasing
+    icon: mdi:water
+
+  - platform: wmbus_meter
+    name: ${qwater_name} EoM
+    id: ${qwater_id}_eom
+    parent_id: ${qwater_id}
+    field: due_17_date_m3
+    accuracy_decimals: 3
+    unit_of_measurement: m³
+    device_class: water
+    state_class: total_increasing
+    icon: mdi:water
+
+  - platform: wmbus_meter
+    name: ${qwater_name} EoY
+    id: ${qwater_id}_eoy
+    parent_id: ${qwater_id}
+    field: due_date_m3
+    accuracy_decimals: 3
+    unit_of_measurement: m³
+    device_class: water
+    state_class: total_increasing
+    icon: mdi:water
+
+text_sensor:
+  - platform: wmbus_meter
+    name: ${qwater_name} Last Update
+    id: ${qwater_id}_last_update
+    parent_id: ${qwater_id}
+    field: timestamp
+    entity_category: diagnostic
+
+  - platform: wmbus_meter
+    name: ${qwater_name} Clock
+    id: ${qwater_id}_clock
+    parent_id: ${qwater_id}
+    field: meter_datetime
+    entity_category: diagnostic
+    icon: mdi:clock
+
+  - platform: template
+    name: ${qwater_name} EoM Date
+    id: ${qwater_id}_eom_date
+    entity_category: diagnostic
+    icon: mdi:calendar
+    update_interval: never
+
+  - platform: template
+    name: ${qwater_name} EoY Date
+    id: ${qwater_id}_eoy_date
+    entity_category: diagnostic
+    icon: mdi:calendar
+    update_interval: never
