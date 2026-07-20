@@ -17,6 +17,7 @@ behavior against the physical device.
 - Store only the decoded `user_param_key` object, without an API or extraction-tool wrapper.
 - Preserve original key names and numeric values.
 - Keep JSON pretty-printed with two-space indentation and a final newline.
+- An empty object (`{}`) is a placeholder awaiting a captured profile.
 
 For example:
 
@@ -24,6 +25,14 @@ For example:
 devices/earu-breaker.yaml
 data-models/tuya/user-param-key/earu-breaker.json
 ```
+
+## Reconstructed Profiles
+
+`tuya-socket-1pm-v1-cb2s.json` is partially reconstructed because only the V2 stock profile remains.
+Its button, network LED, and relay pins and active levels follow the corresponding device YAML; the
+other settings come from the surviving V2 profile. The `crc` field is omitted because it cannot be
+reconstructed after changing those values. Replace this profile with an original extraction if one
+becomes available.
 
 ## Security
 

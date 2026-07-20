@@ -1,6 +1,6 @@
 substitutions:
-  name: tuya-socket-1pm-cb2s
-  friendly_name: Tuya Socket 1PM (CB2S)
+  name: tuya-socket-1pm-v1-cb2s
+  friendly_name: Tuya Socket 1PM V1 (CB2S)
 
 packages:
   - !include ../packages/boards/tuya/cb2s.yaml

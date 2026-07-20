@@ -1,0 +1,468 @@
+{
+  "modelId": "000004mgyh",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 8,
+          "accessMode": "ro",
+          "code": "temp_current",
+          "description": "Display range: -10℃ to 110℃",
+          "extensions": {
+            "iconName": "icon-wendu1",
+            "attribute": "1024",
+            "trigger": "direct"
+          },
+          "name": "Current Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 1100,
+            "min": -100,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "sensor_list",
+          "description": "Two bytes represent 16 bits from Bit0 to Bit8 corresponding to 9 sensors. 1 means present, 0 means absent. Order: Temperature, pH, TDS, EC, Salinity, Specific Gravity, ORP, CF, Humidity. Example: 0x01FF means all 9 sensors are present. 0x0001 means only Temperature. 0x0003 means Temperature and pH.",
+          "name": "Sensor List",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "rw",
+          "code": "temp_warn_max",
+          "description": "Display range: -10℃ to 110℃",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Temperature High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 1100,
+            "min": -100,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "rw",
+          "code": "temp_warn_min",
+          "description": "Display range: -10℃ to 110℃",
+          "name": "Temperature Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 1100,
+            "min": -100,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "ph_current",
+          "description": "Display range: 0 to 15.00",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current pH Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 1500,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "pH"
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "rw",
+          "code": "ph_warn_max",
+          "description": "Display range: 0 to 15.00",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "pH High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 1500,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "pH"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "rw",
+          "code": "ph_warn_min",
+          "description": "Display range: 0 to 15.00",
+          "name": "pH Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 1500,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "pH"
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "ro",
+          "code": "tds_current",
+          "description": "Display range: 0 to 199999",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current TDS Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ms/cm"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "rw",
+          "code": "tds_warn_max",
+          "description": "Display range: 0 to 199999",
+          "name": "TDS High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "PPM"
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "rw",
+          "code": "tds_warn_min",
+          "description": "Display range: 0 to 199999",
+          "name": "TDS Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "PPM"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "ro",
+          "code": "ec_current",
+          "description": "Display range: 0 to 199999",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current EC Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "µS"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "rw",
+          "code": "ec_warn_max",
+          "description": "Display range: 0 to 199999",
+          "name": "EC High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "µS"
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "rw",
+          "code": "ec_warn_min",
+          "description": "Display range: 0 to 199999",
+          "name": "EC Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "µS"
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "ro",
+          "code": "salinity_current",
+          "description": "Display range: 0 to 199999",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current Salinity Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "PPM"
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "rw",
+          "code": "salinity_warn_max",
+          "description": "Display range: 0 to 199999",
+          "name": "Salinity High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "PPM"
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "rw",
+          "code": "salinity_warn_min",
+          "description": "Display range: 0 to 199999",
+          "name": "Salinity Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "PPM"
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "ro",
+          "code": "pro_current",
+          "description": "Display range: 0.500 to 2.000",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current Specific Gravity",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": 500,
+            "scale": 3,
+            "step": 1,
+            "unit": "S.G"
+          }
+        },
+        {
+          "abilityId": 127,
+          "accessMode": "rw",
+          "code": "pro_warn_max",
+          "description": "Display range: 0.500 to 2.000",
+          "name": "Specific Gravity High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": 500,
+            "scale": 3,
+            "step": 1,
+            "unit": "S.G"
+          }
+        },
+        {
+          "abilityId": 128,
+          "accessMode": "rw",
+          "code": "pro_warn_min",
+          "description": "Display range: 0.500 to 2.000",
+          "name": "Specific Gravity Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": 500,
+            "scale": 3,
+            "step": 1,
+            "unit": "S.G"
+          }
+        },
+        {
+          "abilityId": 131,
+          "accessMode": "ro",
+          "code": "orp_current",
+          "description": "Display range: -2000mV to +2000mV",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current ORP Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": -2000,
+            "scale": 0,
+            "step": 1,
+            "unit": "mV"
+          }
+        },
+        {
+          "abilityId": 132,
+          "accessMode": "rw",
+          "code": "orp_warn_max",
+          "description": "Display range: -2000mV to +2000mV",
+          "name": "ORP High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": -2000,
+            "scale": 0,
+            "step": 1,
+            "unit": "mV"
+          }
+        },
+        {
+          "abilityId": 133,
+          "accessMode": "rw",
+          "code": "orp_warn_min",
+          "description": "Display range: -2000mV to +2000mV",
+          "name": "ORP Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": -2000,
+            "scale": 0,
+            "step": 1,
+            "unit": "mV"
+          }
+        },
+        {
+          "abilityId": 136,
+          "accessMode": "ro",
+          "code": "cf_current",
+          "description": "Display range: 0 to 1999.99",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current CF Value",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "CF"
+          }
+        },
+        {
+          "abilityId": 137,
+          "accessMode": "rw",
+          "code": "cf_warn_max",
+          "description": "Display range: 0 to 1999.99",
+          "name": "CF High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "CF"
+          }
+        },
+        {
+          "abilityId": 138,
+          "accessMode": "rw",
+          "code": "cf_warn_min",
+          "description": "Display range: 0 to 1999.99",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "CF Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 199999,
+            "min": 1,
+            "scale": 2,
+            "step": 1,
+            "unit": "CF"
+          }
+        },
+        {
+          "abilityId": 141,
+          "accessMode": "ro",
+          "code": "rh_current",
+          "description": "Display range: 0% to 100%",
+          "extensions": {
+            "trigger": "direct"
+          },
+          "name": "Current Humidity",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 142,
+          "accessMode": "rw",
+          "code": "rh_warn_max",
+          "description": "Display range: 0% to 100%",
+          "name": "Humidity High Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 143,
+          "accessMode": "rw",
+          "code": "rh_warn_min",
+          "description": "Display range: 0% to 100%",
+          "name": "Humidity Low Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        }
+      ]
+    }
+  ]
+}

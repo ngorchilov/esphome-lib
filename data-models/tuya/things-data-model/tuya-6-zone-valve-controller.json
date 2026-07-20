@@ -1,0 +1,311 @@
+{
+  "modelId": "e1ktpl08",
+  "services": [
+    {
+      "code": "",
+      "name": "",
+      "description": "",
+      "actions": [],
+      "events": [],
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "switch_1",
+          "name": "Switch 1",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "rw",
+          "code": "switch_2",
+          "name": "Switch 2",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 3,
+          "accessMode": "rw",
+          "code": "switch_3",
+          "name": "Switch 3",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 4,
+          "accessMode": "rw",
+          "code": "switch_4",
+          "name": "Switch 4",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 5,
+          "accessMode": "rw",
+          "code": "switch_5",
+          "name": "Switch 5",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 6,
+          "accessMode": "rw",
+          "code": "switch_6",
+          "name": "Switch 6",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 9,
+          "accessMode": "rw",
+          "code": "countdown_1",
+          "name": "Irrigation Duration 1",
+          "typeSpec": {
+            "type": "value",
+            "max": 1439,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "rw",
+          "code": "countdown_2",
+          "name": "Switch 2 Countdown",
+          "typeSpec": {
+            "type": "value",
+            "max": 86400,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 11,
+          "accessMode": "rw",
+          "code": "countdown_3",
+          "name": "Switch 3 Countdown",
+          "typeSpec": {
+            "type": "value",
+            "max": 86400,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 12,
+          "accessMode": "rw",
+          "code": "countdown_4",
+          "name": "Switch 4 Countdown",
+          "typeSpec": {
+            "type": "value",
+            "max": 86400,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 13,
+          "accessMode": "rw",
+          "code": "countdown_5",
+          "name": "Switch 5 Countdown",
+          "typeSpec": {
+            "type": "value",
+            "max": 86400,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 14,
+          "accessMode": "rw",
+          "code": "countdown_6",
+          "name": "Switch 6 Countdown",
+          "typeSpec": {
+            "type": "value",
+            "max": 86400,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 45,
+          "accessMode": "rw",
+          "code": "switch_all",
+          "name": "All Switches",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "rw",
+          "code": "irrigation_mode",
+          "name": "Irrigation Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "order",
+              "together"
+            ]
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "rw",
+          "code": "cycle_timing",
+          "name": "Cycle Timing",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "rw",
+          "code": "no_irrigation_timing",
+          "name": "No Irrigation Time (raw)",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "rw",
+          "code": "weather_switch",
+          "name": "Weather Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "rw",
+          "code": "smart_weather",
+          "name": "Smart Weather Status",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "sun",
+              "rainy"
+            ]
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "rw",
+          "code": "weather_delay",
+          "name": "Manual Delay",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "cancel",
+              "24h",
+              "48h",
+              "72h"
+            ]
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "rw",
+          "code": "switch_choose",
+          "name": "Valve Selection",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "rw",
+          "code": "timer",
+          "name": "Timer",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "ro",
+          "code": "irrigation_log_1",
+          "name": "Irrigation Log 1",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "irrigation_log_2",
+          "name": "Irrigation Log 2",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "ro",
+          "code": "irrigation_log_3",
+          "name": "Irrigation Log 3",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "ro",
+          "code": "irrigation_log_4",
+          "name": "Irrigation Log 4",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "irrigation_log_5",
+          "name": "Irrigation Log 5",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "ro",
+          "code": "irrigation_log_6",
+          "name": "Irrigation Log 6",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        }
+      ]
+    }
+  ]
+}

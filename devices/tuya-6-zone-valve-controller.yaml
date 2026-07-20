@@ -9,6 +9,10 @@ logger:
   baud_rate: 0
   level: DEBUG
 
+# TODO (hardware, around 2026-08-10): Verify whether this product uses a separate Tuya MCU over
+# UART. The P9/P15/P17 control sequence was discovered experimentally, and its relationship to the
+# Tuya MCU datapoints is unknown.
+
 # ----------------- Software state for frame-write -----------------
 globals:
   # Desired on/off for each valve (optimistic UI)
