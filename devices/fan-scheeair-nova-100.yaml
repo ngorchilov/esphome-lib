@@ -3,14 +3,14 @@ substitutions:
   friendly_name: Fan SCHEEAIR Nova 100
 
 packages:
-  - !include ../packages/boards/tuya/bw15.yaml # TODO: make it work with the WBR3
+  - !include ../packages/boards/tuya/wbr3.yaml
 
 logger:
   level: DEBUG
 
 uart:
-  tx_pin: TX0
-  rx_pin: RX0
+  tx_pin: PA14 # WBR3 pin 16 (TX0)
+  rx_pin: PA13 # WBR3 pin 15 (RX0)
   baud_rate: 9600
 
 tuya:
