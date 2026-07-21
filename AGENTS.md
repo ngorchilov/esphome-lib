@@ -258,6 +258,8 @@ Relay-control concepts:
 Core invariants:
 
 - The local power relay switch is always present.
+- The local power relay name defaults to `None`, making it the device's primary entity. Set
+  `rc.power.name` explicitly when another facade is the primary entity.
 - The power relay is always directly controllable, even in detached mode.
 - Indicator LEDs, when present, follow the power relay state for safety.
 - Integrated physical buttons, when present, toggle the power relay.
@@ -283,7 +285,6 @@ packages:
     vars:
       rc:
         id: r1
-        name: none
         power:
           pin: GPIO4
           inverted: false
@@ -314,6 +315,8 @@ packages:
   generated id.
 - Shared base-board diagnostics may use stable `mcu_*` ids.
 - Single-instance modules may use simple ids only when the module is clearly not multi-instance.
+- When a device has one obvious primary entity, prefer `name: None` so Home Assistant presents it
+  using the device name. Ask before selecting a primary entity when the choice is ambiguous.
 - Do not change entity names just because they look odd. Some names intentionally influence Home
   Assistant display behavior.
 

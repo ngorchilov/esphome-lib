@@ -30,6 +30,7 @@ packages:
         id: sbr4
         name: none
         power:
+          name: Power
           pin: ${relay_pin}
           inverted: ${relay_inverted}
           strapping: ${relay_strapping}

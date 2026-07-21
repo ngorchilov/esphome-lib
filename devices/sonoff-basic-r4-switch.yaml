@@ -25,7 +25,6 @@ packages:
     vars:
       rc:
         id: sbr4
-        name: none
         power:
           pin: ${relay_pin}
           inverted: ${relay_inverted}

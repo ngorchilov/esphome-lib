@@ -6,8 +6,8 @@ defaults:
   rc_indicator_led: ${ rc.get("indicator_led", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  rc_name: ${ rc.get("name", "Relay") }
 
+  led_name: ${ rc_indicator_led.get("name", "Relay LED") }
   led_pin: ${ rc_indicator_led.get("pin", "GPIO0") }
   led_inverted: ${ rc_indicator_led.get("inverted", false) }
   led_strapping: ${ rc_indicator_led.get("strapping", false) }
@@ -28,7 +28,7 @@ output:
 
 light:
   - platform: binary
-    name: ${rc_name} Relay LED
+    name: ${led_name}
     id: ${rc_id}_indicator_led
     output: ${rc_id}_indicator_output
     internal: ${led_internal}

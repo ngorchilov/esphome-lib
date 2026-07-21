@@ -12,7 +12,6 @@ defaults:
   rc_light: ${ rc.get("light", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  rc_name: ${ rc.get("name", "Relay") }
 
   # Control:
   # - local: external control toggles the local relay
@@ -31,8 +30,10 @@ defaults:
   has_external_switch_gpio: ${ rc_external_switch.get("enabled", false) }
   has_external_magic: ${ rc_external_magic.get("enabled", false) }
   has_expose_light: ${ rc_light.get("enabled", false) }
+  has_power_name: ${ "name" in rc_power }
 
   # Indicator LED vars (used only when has_indicator_led: true)
+  led_name: ${ rc_indicator_led.get("name", "Relay LED") }
   led_pin: ${ rc_indicator_led.get("pin", "GPIO0") }
   led_inverted: ${ rc_indicator_led.get("inverted", false) }
   led_strapping: ${ rc_indicator_led.get("strapping", false) }
@@ -66,6 +67,7 @@ defaults:
 
   _rc_target_local_pkg: !include relay-control/control-target/local.yaml
   _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
+  _rc_power_name_pkg: !include relay-control/power-name.yaml
   _rc_indicator_led_pkg: !include relay-control/indicator-led.yaml
   _rc_integrated_button_pkg: !include relay-control/input/integrated-button-gpio.yaml
   _rc_external_switch_gpio_pkg: !include relay-control/input/external-gpio.yaml
@@ -74,6 +76,8 @@ defaults:
 
 packages:
   - !include relay-control/core.yaml
+
+  - ${ has_power_name and _rc_power_name_pkg or {} }
 
   - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
 

@@ -9,7 +9,6 @@ packages:
     vars:
       rc:
         id: relay
-        name: Relay
         power:
           pin: GPIO26
           inverted: false

@@ -8,7 +8,6 @@ defaults:
   rc_power: ${ rc.get("power", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  rc_name: ${ rc.get("name", "Relay") }
 
   relay_pin: ${ rc_power.get("pin", "GPIO0") }
   relay_inverted: ${ rc_power.get("inverted", false) }
@@ -23,7 +22,7 @@ esphome:
 
 switch:
   - platform: gpio
-    name: ${rc_name} Power
+    name: None
     id: ${rc_id}_power_relay
     pin: !include
       file: ../pin.yaml
