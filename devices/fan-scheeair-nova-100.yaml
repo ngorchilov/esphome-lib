@@ -5,16 +5,23 @@ substitutions:
 packages:
   - !include ../packages/boards/tuya/wbr3.yaml
 
+external_components:
+  - source: github://ngorchilov/esphome-lib
+    components: [rtl8720c_uart]
+    refresh: 1d
+
 logger:
   level: DEBUG
 
-uart:
+rtl8720c_uart:
+  id: tuyamcu_uart
   tx_pin: PA14 # WBR3 pin 16 (TX0)
   rx_pin: PA13 # WBR3 pin 15 (RX0)
   baud_rate: 9600
 
 tuya:
   id: tuyamcu
+  uart_id: tuyamcu_uart
   time_id: ha_time
   # =======================
   # Event-driven decoding (no polling)

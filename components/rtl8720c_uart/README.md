@@ -9,7 +9,7 @@ and PA13 for RX.
 
 ```yaml
 external_components:
-  - source: github://ngorchilov/esphome-lib@main
+  - source: github://ngorchilov/esphome-lib
     components:
       - rtl8720c_uart
 
