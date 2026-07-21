@@ -265,6 +265,8 @@ Core invariants:
 - Integrated physical buttons, when present, toggle the power relay.
 - External wall-switch inputs toggle CONTROL.
 - The optional light facade targets CONTROL while the power switch remains independent.
+- The optional power-cycle feature exposes a template button backed by an `${rc.id}_power_cycle`
+  script. The off-time defaults to `3s`; `rc.power_cycle.delay` overrides it when needed.
 
 `rc.control.mode` values:
 
@@ -291,6 +293,9 @@ packages:
           strapping: false
         control:
           mode: local
+        power_cycle:
+          enabled: true
+          name: Power Cycle
 ```
 
 ## Package Design Standards

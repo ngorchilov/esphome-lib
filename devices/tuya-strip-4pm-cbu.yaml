@@ -37,7 +37,77 @@ substitutions:
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
   - !include
-    file: ../packages/modules/energy-monitoring-bl0942.yaml
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay1_id}
+        power:
+          name: ${relay1_name}
+          pin: ${relay1_pin}
+          inverted: ${relay1_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay1_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay2_id}
+        power:
+          name: ${relay2_name}
+          pin: ${relay2_pin}
+          inverted: ${relay2_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay2_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay3_id}
+        power:
+          name: ${relay3_name}
+          pin: ${relay3_pin}
+          inverted: ${relay3_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay3_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay4_id}
+        power:
+          name: ${relay4_name}
+          pin: ${relay4_pin}
+          inverted: ${relay4_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay4_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay5_id}
+        power:
+          name: ${relay5_name}
+          pin: ${relay5_pin}
+          inverted: ${relay5_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay5_name}
+  - !include ../packages/modules/energy-monitoring-bl0942.yaml
+
 esphome:
   on_boot:
     - if:
@@ -64,9 +134,9 @@ binary_sensor:
     id: power_status
     name: Power Status
     lambda: |-
-      return id(${relay1_id}).state || id(${relay2_id}).state ||
-             id(${relay3_id}).state || id(${relay4_id}).state ||
-             id(${relay5_id}).state;
+      return id(${relay1_id}_power_relay).state || id(${relay2_id}_power_relay).state ||
+             id(${relay3_id}_power_relay).state || id(${relay4_id}_power_relay).state ||
+             id(${relay5_id}_power_relay).state;
     on_state:
       then:
         - if:
@@ -91,55 +161,24 @@ binary_sensor:
             condition:
               binary_sensor.is_on: power_status
             then:
-              - switch.turn_off: ${relay1_id}
-              - switch.turn_off: ${relay2_id}
-              - switch.turn_off: ${relay3_id}
-              - switch.turn_off: ${relay4_id}
-              - switch.turn_off: ${relay5_id}
+              - switch.turn_off: ${relay1_id}_power_relay
+              - switch.turn_off: ${relay2_id}_power_relay
+              - switch.turn_off: ${relay3_id}_power_relay
+              - switch.turn_off: ${relay4_id}_power_relay
+              - switch.turn_off: ${relay5_id}_power_relay
             else:
-              - switch.turn_on: ${relay1_id}
-              - switch.turn_on: ${relay2_id}
-              - switch.turn_on: ${relay3_id}
-              - switch.turn_on: ${relay4_id}
-              - switch.turn_on: ${relay5_id}
+              - switch.turn_on: ${relay1_id}_power_relay
+              - switch.turn_on: ${relay2_id}_power_relay
+              - switch.turn_on: ${relay3_id}_power_relay
+              - switch.turn_on: ${relay4_id}_power_relay
+              - switch.turn_on: ${relay5_id}_power_relay
 
-switch:
-  - platform: gpio
-    name: ${relay1_name}
-    id: ${relay1_id}
-    pin:
-      number: ${relay1_pin}
-      inverted: ${relay1_inverted}
-    restore_mode: RESTORE_DEFAULT_OFF
-
-  - platform: gpio
-    name: ${relay2_name}
-    id: ${relay2_id}
-    pin:
-      number: ${relay2_pin}
-      inverted: ${relay2_inverted}
-    restore_mode: RESTORE_DEFAULT_OFF
-
-  - platform: gpio
-    name: ${relay3_name}
-    id: ${relay3_id}
-    pin:
-      number: ${relay3_pin}
-      inverted: ${relay3_inverted}
-    restore_mode: RESTORE_DEFAULT_OFF
-
-  - platform: gpio
-    name: ${relay4_name}
-    id: ${relay4_id}
-    pin:
-      number: ${relay4_pin}
-      inverted: ${relay4_inverted}
-    restore_mode: RESTORE_DEFAULT_OFF
-
-  - platform: gpio
-    name: ${relay5_name}
-    id: ${relay5_id}
-    pin:
-      number: ${relay5_pin}
-      inverted: ${relay5_inverted}
-    restore_mode: RESTORE_DEFAULT_OFF
+button:
+  - platform: template
+    name: Reboot All Relays
+    on_press:
+      - script.execute: ${relay1_id}_power_cycle
+      - script.execute: ${relay2_id}_power_cycle
+      - script.execute: ${relay3_id}_power_cycle
+      - script.execute: ${relay4_id}_power_cycle
+      - script.execute: ${relay5_id}_power_cycle

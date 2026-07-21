@@ -1,0 +1,22 @@
+defaults:
+  rc: ${ rc | default({}) }
+  rc_power_cycle: ${ rc.get("power_cycle", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  power_cycle_name: ${ rc_power_cycle.get("name", "Power Cycle") }
+  power_cycle_delay: ${ rc_power_cycle.get("delay", "3s") }
+
+script:
+  - id: ${rc_id}_power_cycle
+    mode: restart
+    then:
+      - switch.turn_off: ${rc_id}_power_relay
+      - delay: ${power_cycle_delay}
+      - switch.turn_on: ${rc_id}_power_relay
+
+button:
+  - platform: template
+    name: ${power_cycle_name}
+    id: ${rc_id}_power_cycle_button
+    on_press:
+      - script.execute: ${rc_id}_power_cycle
