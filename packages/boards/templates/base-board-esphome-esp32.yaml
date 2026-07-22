@@ -10,12 +10,8 @@ esp32:
     type: esp-idf
 
 text_sensor:
-  - platform: template
-    name: Active Firmware Image
-    id: mcu_active_firmware_image
-    entity_category: diagnostic
-    disabled_by_default: true
-    update_interval: 30s
+  - id: !extend mcu_active_firmware_image
+    internal: false
     lambda: |-
       const esp_partition_t *running = esp_ota_get_running_partition();
       if (running == nullptr) {

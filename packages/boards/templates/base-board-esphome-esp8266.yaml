@@ -12,10 +12,6 @@ sensor:
   - id: !remove mcu_temperature # not available in esp8266
 
 text_sensor:
-  - platform: template
-    name: Active Firmware Image
-    id: mcu_active_firmware_image
-    entity_category: diagnostic
-    disabled_by_default: true
-    update_interval: 30s
+  - id: !extend mcu_active_firmware_image
+    internal: false
     lambda: return {"Single"};

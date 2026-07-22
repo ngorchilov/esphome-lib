@@ -8,12 +8,8 @@ packages:
   - !include base-board.yaml
 
 text_sensor:
-  - platform: template
-    name: Active Firmware Image
-    id: mcu_active_firmware_image
-    entity_category: diagnostic
-    disabled_by_default: true
-    update_interval: 30s
+  - id: !extend mcu_active_firmware_image
+    internal: false
     lambda: |-
       extern unsigned char current_ota_slot() asm("lt_ota_dual_get_current");
       switch (current_ota_slot()) {

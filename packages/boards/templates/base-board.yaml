@@ -17,6 +17,11 @@ esphome:
   # Requires conditional packages and reliable !include vars substitution in lambdas.
   min_version: 2026.5.0
 
+  on_boot:
+    - priority: 500
+      then:
+        - component.update: mcu_active_firmware_image
+
 logger:
   level: ${log_level}
 
@@ -43,6 +48,14 @@ binary_sensor:
     disabled_by_default: true
 
 text_sensor:
+  - platform: template
+    name: Active Firmware Image
+    id: mcu_active_firmware_image
+    internal: true
+    entity_category: diagnostic
+    disabled_by_default: true
+    update_interval: never
+
   - platform: version
     name: ESPhome Version
     id: mcu_version_esphome
