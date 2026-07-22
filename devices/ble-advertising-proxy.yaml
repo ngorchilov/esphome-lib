@@ -1,0 +1,28 @@
+# BLE advertising proxy for devices supported by the Home Assistant ha-ble-adv integration.
+# Install ha-ble-adv through HACS, then pair and control supported LampSmart devices from HA.
+
+substitutions:
+  name: ble-advertising-proxy
+  friendly_name: BLE Advertising Proxy
+
+packages:
+  - !include ../packages/boards/espressif/${ (ble_proxy | default({})).get("board", "esp32dev") }.yaml
+
+external_components:
+  - source: github://NicoIIT/esphome-ble_adv_proxy
+
+api:
+  custom_services: true
+  homeassistant_services: true
+
+esp32_ble_tracker:
+  scan_parameters:
+    window: 20ms
+    interval: 20ms
+
+bluetooth_proxy:
+
+ble_adv_proxy:
+  use_max_tx_power: true
+  # Keep this stable; changing it requires reconfiguring the adapter in Home Assistant.
+  adapter_name: ${name}
