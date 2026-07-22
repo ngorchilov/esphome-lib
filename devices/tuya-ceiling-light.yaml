@@ -34,7 +34,7 @@ output:
 
 light:
   - platform: rgbww
-    name: ${friendly_name}
+    name: None
     id: main_light
 
     red: out_red
