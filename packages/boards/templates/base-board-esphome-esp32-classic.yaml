@@ -1,0 +1,25 @@
+# Base Board ESPHome (original ESP32)
+# Adds opt-in settings that ESPHome supports only on the original ESP32 variant.
+
+defaults:
+  esp32_classic: ${ esp32_classic | default({}) }
+
+  esp32_classic_minimum_chip_revision: ${ esp32_classic.get("minimum_chip_revision", false) }
+  esp32_classic_sram1_as_iram: ${ esp32_classic.get("sram1_as_iram", false) }
+
+  _esp32_classic_minimum_chip_revision_pkg:
+    esp32:
+      framework:
+        advanced:
+          minimum_chip_revision: ${esp32_classic_minimum_chip_revision}
+
+  _esp32_classic_sram1_as_iram_pkg:
+    esp32:
+      framework:
+        advanced:
+          sram1_as_iram: ${esp32_classic_sram1_as_iram}
+
+packages:
+  - !include base-board-esphome-esp32.yaml
+  - ${ _esp32_classic_minimum_chip_revision_pkg if esp32_classic_minimum_chip_revision else {} }
+  - ${ _esp32_classic_sram1_as_iram_pkg if esp32_classic_sram1_as_iram else {} }

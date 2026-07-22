@@ -3,7 +3,7 @@ substitutions:
   friendly_name: Base Board ESP32 Dev Module
 
 packages:
-  - !include ../templates/base-board-esphome-esp32.yaml
+  - !include ../templates/base-board-esphome-esp32-classic.yaml
 
 esp32:
   board: esp32dev

@@ -81,6 +81,22 @@ Board packages may define platform facts such as `firmware_family` through the b
 Keep base-board packages broad and boring. If a behavior is not useful across many devices, it
 probably belongs in a device file or a functional module instead.
 
+Original ESP32 boards include `base-board-esphome-esp32-classic.yaml` between their concrete board
+package and the shared ESP32-family template. It exposes original-ESP32-only build settings through
+an optional `esp32_classic:` vars object:
+
+```yaml
+vars:
+  esp32_classic:
+    minimum_chip_revision: 3.1
+    sram1_as_iram: true
+```
+
+Do not pass these options to C3, C6, S2, S3, or other ESP32 variants. Leave them unset until the
+running device reports its chip revision and confirms that its bootloader supports SRAM1 as IRAM.
+Both options default to disabled. The M5Stack Core ESP32, Heltec WiFi LoRa 32 V2, and LilyGO TTGO
+LoRa32 V2.1 board packages enable both by default for their known hardware.
+
 ### Appliance Packages
 
 `packages/appliances/*.yaml` files represent complete, reusable hardware assemblies. An appliance
