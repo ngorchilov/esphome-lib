@@ -9,8 +9,7 @@ packages:
     vars:
       rc:
         id: relay
-        primary:
-          type: ${ (device | default({})).get("type", "switch") }
+        entity: ${ entity | default({}) }
         power:
           pin: GPIO20
           inverted: false

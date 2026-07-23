@@ -36,8 +36,10 @@ packages:
     vars:
       rc:
         id: ${relay1_id}
-        power:
+        entity:
+          type: switch
           name: ${relay1_name}
+        power:
           pin: ${relay1_pin}
           inverted: ${relay1_inverted}
         control:
@@ -50,8 +52,10 @@ packages:
     vars:
       rc:
         id: ${relay2_id}
-        power:
+        entity:
+          type: switch
           name: ${relay2_name}
+        power:
           pin: ${relay2_pin}
           inverted: ${relay2_inverted}
         control:
@@ -64,8 +68,10 @@ packages:
     vars:
       rc:
         id: ${relay3_id}
-        power:
+        entity:
+          type: switch
           name: ${relay3_name}
+        power:
           pin: ${relay3_pin}
           inverted: ${relay3_inverted}
         control:
@@ -78,8 +84,10 @@ packages:
     vars:
       rc:
         id: ${relay4_id}
-        power:
+        entity:
+          type: switch
           name: ${relay4_name}
+        power:
           pin: ${relay4_pin}
           inverted: ${relay4_inverted}
         control:

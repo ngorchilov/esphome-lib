@@ -261,18 +261,19 @@ you have validated a different approach with concrete devices.
 
 ## Relay-Control Framework
 
-`packages/modules/relay-control.yaml` is the public entrypoint for reusable relay, switch, and light
-control behavior. It is an assembler package: it composes core relay behavior, one control target,
-and optional feature packages.
+`packages/modules/relay-control.yaml` is the public entrypoint for reusable relay-backed switch,
+light, and valve behavior. It is an assembler package: it composes core relay behavior, one entity
+type, one control target, and optional feature packages.
 
 Relay-control concepts:
 
 - POWER is the local physical relay.
 - CONTROL is the logical target for external inputs and optional entity facades.
 - CONTROL may map to POWER locally, call a detached Home Assistant entity, or remain no-op.
-- PRIMARY is the user-facing entity type selected by `rc.primary.type`.
+- ENTITY is the complete user-facing role configuration under `rc.entity`.
+- PRIMARY is the command path that operates the selected ENTITY.
 
-Supported primary entity types:
+Supported `rc.entity.type` values:
 
 - `switch` (default): expose the local power relay as the primary entity.
 - `light`: expose the CONTROL light facade as the primary entity and hide the backing power relay
@@ -280,10 +281,28 @@ Supported primary entity types:
 - `valve`: expose a binary CONTROL valve facade as the primary entity, report the local power relay
   as its open/closed state, and hide the backing power relay by default.
 
-Hardware profiles should describe the relay device once and expose the primary entity type as a
-parameter. Add future primary facades such as valves or fans to relay-control itself; do not create
-separate hardware-profile files for each Home Assistant entity type. `rc.power.internal` may
-explicitly override the backing relay visibility when a facade is primary.
+Valve entities accept an optional `rc.entity.device_class` (`water`, `gas`, or empty). Do not assign
+a generic valve device class when the physical medium is unknown.
+
+Hardware profiles should describe fixed pins and physical features once, then forward the caller's
+complete `entity` vars object as `rc.entity`. Do not unpack entity fields in each hardware profile.
+Add future entity types such as fans to relay-control itself; hardware profiles must remain unchanged.
+
+Single-relay device profiles expose this package API:
+
+```yaml
+files:
+  - path: devices/tuya-mini-switch-1dc-5a.yaml
+    vars:
+      entity:
+        type: valve
+        name: Main Water Valve
+        device_class: water
+```
+
+Omitting `entity` produces the default unnamed switch. Light and valve entities hide the backing
+power switch by default. `rc.entity.power.exposed: true` exposes it separately, and
+`rc.entity.power.name` sets its name.
 
 Core invariants:
 
@@ -293,7 +312,7 @@ Core invariants:
 - Indicator LEDs, when present, follow the power relay state for safety.
 - Integrated physical buttons, when present, toggle the power relay.
 - External wall-switch inputs toggle PRIMARY so facade state remains synchronized.
-- The optional light facade targets CONTROL while the power switch remains independent.
+- Light and valve entities target CONTROL while the power switch remains independent.
 - The optional power-cycle feature exposes a template button backed by an `${rc.id}_power_cycle`
   script. The off-time defaults to `3s`; `rc.power_cycle.delay` overrides it when needed.
 
@@ -303,11 +322,14 @@ CONTROL; light and valve commands operate their facade, which then delegates the
 CONTROL. Device-specific input components should call these PRIMARY scripts rather than bypassing
 the selected facade.
 
-`rc.control.mode` values:
+`rc.entity.control.mode` values:
 
 - `local`: CONTROL delegates to POWER.
-- `detached`: CONTROL calls Home Assistant service/action on `rc.control.entity_id`.
+- `detached`: CONTROL calls Home Assistant service/action on `rc.entity.control.entity_id`.
 - `none`: CONTROL scripts remain no-op.
+
+Low-level callers may define the same defaults under `rc.control`; values under `rc.entity.control`
+take precedence.
 
 Relay-control is multi-instance by design. Every generated id must include `rc.id` or another
 caller-provided unique prefix. Do not move instance-specific values into global substitutions unless
@@ -322,8 +344,9 @@ packages:
     vars:
       rc:
         id: r1
-        primary:
+        entity:
           type: switch
+          name: None
         power:
           pin: GPIO4
           inverted: false
@@ -368,7 +391,7 @@ packages:
 
 - Optional subcomponents should be opt-in and easy to disable.
 - Prefer clear namespaced booleans such as `rc.indicator_led.enabled`,
-  `rc.external_switch.enabled`, or `rc.light.enabled`.
+  `rc.external_switch.enabled`, or `rc.power_cycle.enabled`.
 - Disabled optional packages should contribute no components.
 - Feature flags should not require callers to pass irrelevant pins or entity ids.
 

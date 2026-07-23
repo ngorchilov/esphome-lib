@@ -1,0 +1,38 @@
+# Binary valve entity delegates state changes to CONTROL and reports POWER state.
+
+defaults:
+  rc: ${ rc | default({}) }
+  rc_entity: ${ rc.get("entity", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  entity_name: ${ "none" if rc_entity.get("name", "none") == "None" else rc_entity.get("name", "none") }
+  entity_internal: ${ rc_entity.get("internal", false) }
+  entity_device_class: ${ rc_entity.get("device_class", "") }
+
+valve:
+  - platform: template
+    name: ${entity_name}
+    id: ${rc_id}_control_valve
+    internal: ${entity_internal}
+    device_class: ${entity_device_class}
+    lambda: |-
+      return id(${rc_id}_power_relay).state ? 1.0f : 0.0f;
+    open_action:
+      - script.execute: ${rc_id}_control_on
+    close_action:
+      - script.execute: ${rc_id}_control_off
+    toggle_action:
+      - script.execute: ${rc_id}_control_toggle
+
+script:
+  - id: !extend ${rc_id}_primary_on
+    then:
+      - valve.open: ${rc_id}_control_valve
+
+  - id: !extend ${rc_id}_primary_off
+    then:
+      - valve.close: ${rc_id}_control_valve
+
+  - id: !extend ${rc_id}_primary_toggle
+    then:
+      - valve.toggle: ${rc_id}_control_valve

@@ -9,21 +9,13 @@ packages:
     vars:
       rc:
         id: sbr4
-        primary:
-          type: ${ (device | default({})).get("type", "switch") }
-          name: ${ (device | default({})).get("primary", {}).get("name", "none") }
+        entity: ${ entity | default({}) }
         power:
-          name: ${ (device | default({})).get("power", {}).get("name", "None") }
-          internal: ${ (device | default({})).get("power", {}).get("internal", (device | default({})).get("type", "switch") in ("light", "valve")) }
           pin: GPIO4
           inverted: false
           strapping: false
         control:
-          mode: ${ (device | default({})).get("control", {}).get("mode", "local") }
-          entity_id: ${ (device | default({})).get("control", {}).get("entity_id", "") }
-          service_on: ${ (device | default({})).get("control", {}).get("service_on", "light.turn_on") }
-          service_off: ${ (device | default({})).get("control", {}).get("service_off", "light.turn_off") }
-          service_toggle: ${ (device | default({})).get("control", {}).get("service_toggle", "light.toggle") }
+          mode: local
         indicator_led:
           enabled: true
           pin: GPIO6
@@ -41,9 +33,9 @@ external_components:
 
 switch:
   - platform: template
-    name: ${ (device | default({})).get("magic_switch", {}).get("dnd", {}).get("name", "Do Not Disturb") }
+    name: ${ (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("name", "Do Not Disturb") }
     id: sbr4_magic_switch_dnd
-    internal: ${ not (device | default({})).get("magic_switch", {}).get("dnd", {}).get("enabled", false) }
+    internal: ${ not (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("enabled", false) }
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
 
@@ -53,7 +45,7 @@ magic_switch:
     number: GPIO5
     inverted: false
     ignore_strapping_warning: false
-  timeout: ${ (device | default({})).get("magic_switch", {}).get("timeout", "1ms") }
+  timeout: ${ (entity | default({})).get("magic_switch", {}).get("timeout", "1ms") }
   on_switch:
     - if:
         condition:

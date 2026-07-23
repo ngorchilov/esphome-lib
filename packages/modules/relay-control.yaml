@@ -3,112 +3,48 @@
 
 defaults:
   rc: ${ rc | default({}) }
-  rc_primary: ${ rc.get("primary", {}) }
+  rc_entity: ${ rc.get("entity", {}) }
   rc_control: ${ rc.get("control", {}) }
-  rc_power: ${ rc.get("power", {}) }
   rc_indicator_led: ${ rc.get("indicator_led", {}) }
   rc_integrated_button: ${ rc.get("integrated_button", {}) }
   rc_external_switch: ${ rc.get("external_switch", {}) }
   rc_external_magic: ${ rc.get("external_magic", {}) }
-  rc_light: ${ rc.get("light", {}) }
-  rc_valve: ${ rc.get("valve", {}) }
   rc_power_cycle: ${ rc.get("power_cycle", {}) }
 
-  rc_id: ${ rc.get("id", "rc1") }
-
-  # Primary entity:
-  # - switch: expose the local power relay
-  # - light: expose a light facade and hide the backing relay by default
-  # - valve: expose a binary valve facade and hide the backing relay by default
-  primary_type: ${ rc_primary.get("type", "switch") }
+  entity_type: ${ rc_entity.get("type", "switch") }
+  entity_control: ${ rc_entity.get("control", {}) }
 
   # Control:
   # - local: external control toggles the local relay
   # - detached: external control toggles a HA entity (relay remains always controllable via Power switch)
-  control_mode: ${ rc_control.get("mode", "local") }
-
-  # Detached control target (used only when control_mode: detached)
-  control_entity_id: ${ rc_control.get("entity_id", "") }
-  control_service_on: ${ rc_control.get("service_on", "light.turn_on") }
-  control_service_off: ${ rc_control.get("service_off", "light.turn_off") }
-  control_service_toggle: ${ rc_control.get("service_toggle", "light.toggle") }
+  control_mode: ${ entity_control.get("mode", rc_control.get("mode", "local")) }
 
   # Optional plugins
   has_indicator_led: ${ rc_indicator_led.get("enabled", false) }
   has_integrated_button: ${ rc_integrated_button.get("enabled", false) }
   has_external_switch_gpio: ${ rc_external_switch.get("enabled", false) }
   has_external_magic: ${ rc_external_magic.get("enabled", false) }
-  has_expose_light: ${ primary_type == "light" or rc_light.get("enabled", false) }
-  has_expose_valve: ${ primary_type == "valve" or rc_valve.get("enabled", false) }
-  has_power_name: ${ "name" in rc_power }
   has_power_cycle: ${ rc_power_cycle.get("enabled", false) }
-
-  # Indicator LED vars (used only when has_indicator_led: true)
-  led_name: ${ rc_indicator_led.get("name", "Relay LED") }
-  led_pin: ${ rc_indicator_led.get("pin", "GPIO0") }
-  led_inverted: ${ rc_indicator_led.get("inverted", false) }
-  led_strapping: ${ rc_indicator_led.get("strapping", false) }
-  led_internal: ${ rc_indicator_led.get("internal", false) }
-
-  # Integrated button vars (used only when has_integrated_button: true)
-  button_pin: ${ rc_integrated_button.get("pin", "GPIO0") }
-  button_inverted: ${ rc_integrated_button.get("inverted", false) }
-  button_strapping: ${ rc_integrated_button.get("strapping", false) }
-  button_internal: ${ rc_integrated_button.get("internal", false) }
-
-  # External GPIO switch vars (used only when has_external_switch_gpio: true)
-  ext_pin: ${ rc_external_switch.get("pin", "GPIO0") }
-  ext_inverted: ${ rc_external_switch.get("inverted", false) }
-  ext_strapping: ${ rc_external_switch.get("strapping", false) }
-  ext_mode: ${ rc_external_switch.get("mode", "rocker") }
-
-  # External magic vars (used only when has_external_magic: true)
-  ext_magic_source_id: ${ rc_external_magic.get("source_id", "external_magic_source") }
-  magic_state_internal: ${ rc_external_magic.get("state_internal", false) }
-
-  # Light facade vars (used only when has_expose_light: true)
-  control_restore_mode: ${ rc_light.get("restore_mode", "RESTORE_DEFAULT_OFF") }
-  expose_light_internal: ${ rc_light.get("internal", false) }
-
-  # Valve facade vars (used only when has_expose_valve: true)
-  expose_valve_internal: ${ rc_valve.get("internal", false) }
-
-  # Power-cycle vars (used only when has_power_cycle: true)
-  power_cycle_name: ${ rc_power_cycle.get("name", "Power Cycle") }
-  power_cycle_delay: ${ rc_power_cycle.get("delay", "3s") }
-
-  # Power relay (always present)
-  relay_pin: ${ rc_power.get("pin", "GPIO0") }
-  relay_inverted: ${ rc_power.get("inverted", false) }
-  relay_strapping: ${ rc_power.get("strapping", false) }
-  relay_restore_mode: ${ rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF") }
 
   _rc_target_local_pkg: !include relay-control/control-target/local.yaml
   _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
-  _rc_primary_switch_pkg: !include relay-control/primary/switch.yaml
-  _rc_primary_light_pkg: !include relay-control/primary/light.yaml
-  _rc_primary_valve_pkg: !include relay-control/primary/valve.yaml
-  _rc_power_name_pkg: !include relay-control/power-name.yaml
+  _rc_entity_switch_pkg: !include relay-control/entity/switch.yaml
+  _rc_entity_light_pkg: !include relay-control/entity/light.yaml
+  _rc_entity_valve_pkg: !include relay-control/entity/valve.yaml
   _rc_indicator_led_pkg: !include relay-control/indicator-led.yaml
   _rc_integrated_button_pkg: !include relay-control/input/integrated-button-gpio.yaml
   _rc_external_switch_gpio_pkg: !include relay-control/input/external-gpio.yaml
-  _rc_expose_light_pkg: !include relay-control/expose/light.yaml
-  _rc_expose_valve_pkg: !include relay-control/expose/valve.yaml
   _rc_external_magic_pkg: !include relay-control/input/external-magic.yaml
   _rc_power_cycle_pkg: !include relay-control/power-cycle.yaml
 
 packages:
   - !include relay-control/core.yaml
 
-  - ${ has_power_name and _rc_power_name_pkg or {} }
-
   - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
-  - ${ _rc_primary_light_pkg if primary_type=='light' else _rc_primary_valve_pkg if primary_type=='valve' else _rc_primary_switch_pkg }
+  - ${ _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg }
 
   - ${ has_indicator_led and _rc_indicator_led_pkg or {} }
   - ${ has_integrated_button and _rc_integrated_button_pkg or {} }
   - ${ has_external_switch_gpio and _rc_external_switch_gpio_pkg or {} }
-  - ${ has_expose_light and _rc_expose_light_pkg or {} }
-  - ${ has_expose_valve and _rc_expose_valve_pkg or {} }
   - ${ has_external_magic and _rc_external_magic_pkg or {} }
   - ${ has_power_cycle and _rc_power_cycle_pkg or {} }

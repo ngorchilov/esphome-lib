@@ -5,17 +5,22 @@
 
 defaults:
   rc: ${ rc | default({}) }
-  rc_primary: ${ rc.get("primary", {}) }
+  rc_entity: ${ rc.get("entity", {}) }
   rc_power: ${ rc.get("power", {}) }
+  entity_power: ${ rc_entity.get("power", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  primary_type: ${ rc_primary.get("type", "switch") }
+  entity_type: ${ rc_entity.get("type", "switch") }
+  entity_name: ${ "none" if rc_entity.get("name", "none") == "None" else rc_entity.get("name", "none") }
+  power_name: ${ entity_power.get("name", "Power") }
+  relay_name: ${ entity_name if entity_type == "switch" else power_name }
+  power_exposed: ${ entity_power.get("exposed", entity_type == "switch") }
 
   relay_pin: ${ rc_power.get("pin", "GPIO0") }
   relay_inverted: ${ rc_power.get("inverted", false) }
   relay_strapping: ${ rc_power.get("strapping", false) }
-  relay_restore_mode: ${ rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF") }
-  relay_internal: ${ rc_power.get("internal", primary_type in ("light", "valve")) }
+  relay_restore_mode: ${ entity_power.get("restore_mode", rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
+  relay_internal: ${ rc_power.get("internal", not power_exposed) }
 
 esphome:
   on_boot:
@@ -25,7 +30,7 @@ esphome:
 
 switch:
   - platform: gpio
-    name: None
+    name: ${relay_name}
     id: ${rc_id}_power_relay
     internal: ${relay_internal}
     pin: !include
