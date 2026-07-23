@@ -268,21 +268,40 @@ and optional feature packages.
 Relay-control concepts:
 
 - POWER is the local physical relay.
-- CONTROL is the logical target for external inputs and optional light facade.
+- CONTROL is the logical target for external inputs and optional entity facades.
 - CONTROL may map to POWER locally, call a detached Home Assistant entity, or remain no-op.
+- PRIMARY is the user-facing entity type selected by `rc.primary.type`.
+
+Supported primary entity types:
+
+- `switch` (default): expose the local power relay as the primary entity.
+- `light`: expose the CONTROL light facade as the primary entity and hide the backing power relay
+  by default.
+- `valve`: expose a binary CONTROL valve facade as the primary entity, report the local power relay
+  as its open/closed state, and hide the backing power relay by default.
+
+Hardware profiles should describe the relay device once and expose the primary entity type as a
+parameter. Add future primary facades such as valves or fans to relay-control itself; do not create
+separate hardware-profile files for each Home Assistant entity type. `rc.power.internal` may
+explicitly override the backing relay visibility when a facade is primary.
 
 Core invariants:
 
 - The local power relay switch is always present.
-- The local power relay name defaults to `None`, making it the device's primary entity. Set
-  `rc.power.name` explicitly when another facade is the primary entity.
+- The local power relay name defaults to `None`.
 - The power relay is always directly controllable, even in detached mode.
 - Indicator LEDs, when present, follow the power relay state for safety.
 - Integrated physical buttons, when present, toggle the power relay.
-- External wall-switch inputs toggle CONTROL.
+- External wall-switch inputs toggle PRIMARY so facade state remains synchronized.
 - The optional light facade targets CONTROL while the power switch remains independent.
 - The optional power-cycle feature exposes a template button backed by an `${rc.id}_power_cycle`
   script. The off-time defaults to `3s`; `rc.power_cycle.delay` overrides it when needed.
+
+Relay-control exposes `${rc.id}_primary_on`, `${rc.id}_primary_off`, and
+`${rc.id}_primary_toggle` scripts for physical inputs. Primary switch commands delegate directly to
+CONTROL; light and valve commands operate their facade, which then delegates the resulting state to
+CONTROL. Device-specific input components should call these PRIMARY scripts rather than bypassing
+the selected facade.
 
 `rc.control.mode` values:
 
@@ -303,6 +322,8 @@ packages:
     vars:
       rc:
         id: r1
+        primary:
+          type: switch
         power:
           pin: GPIO4
           inverted: false
@@ -430,13 +451,13 @@ cd devices
 Run `esphome config` before compile:
 
 ```bash
-esphome config sonoff-basic-r4-switch.yaml
+esphome config sonoff-basic-r4.yaml
 ```
 
 Compile only after config succeeds:
 
 ```bash
-esphome compile sonoff-basic-r4-switch.yaml
+esphome compile sonoff-basic-r4.yaml
 ```
 
 Choose validation targets by impact:

@@ -32,7 +32,7 @@ binary_sensor:
     # momentary: toggle on press
     # rocker: toggle on any state change
     on_press:
-      - script.execute: ${rc_id}_control_toggle
+      - script.execute: ${rc_id}_primary_toggle
 
     on_release:
       - if:
@@ -40,4 +40,4 @@ binary_sensor:
             lambda: |-
               return std::string("${ext_mode}") == "rocker";
           then:
-            - script.execute: ${rc_id}_control_toggle
+            - script.execute: ${rc_id}_primary_toggle

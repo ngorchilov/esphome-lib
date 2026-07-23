@@ -5,14 +5,17 @@
 
 defaults:
   rc: ${ rc | default({}) }
+  rc_primary: ${ rc.get("primary", {}) }
   rc_power: ${ rc.get("power", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
+  primary_type: ${ rc_primary.get("type", "switch") }
 
   relay_pin: ${ rc_power.get("pin", "GPIO0") }
   relay_inverted: ${ rc_power.get("inverted", false) }
   relay_strapping: ${ rc_power.get("strapping", false) }
   relay_restore_mode: ${ rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF") }
+  relay_internal: ${ rc_power.get("internal", primary_type in ("light", "valve")) }
 
 esphome:
   on_boot:
@@ -24,6 +27,7 @@ switch:
   - platform: gpio
     name: None
     id: ${rc_id}_power_relay
+    internal: ${relay_internal}
     pin: !include
       file: ../pin.yaml
       vars:
@@ -77,6 +81,25 @@ script:
           return;
 
   - id: ${rc_id}_control_toggle
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  # Primary entity control (switch, light, valve, or a future facade).
+  - id: ${rc_id}_primary_on
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  - id: ${rc_id}_primary_off
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  - id: ${rc_id}_primary_toggle
     mode: single
     then:
       - lambda: |-

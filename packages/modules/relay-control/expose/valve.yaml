@@ -1,0 +1,27 @@
+# Optional binary valve facade
+# Targets CONTROL and reports the local power relay state.
+
+defaults:
+  rc: ${ rc | default({}) }
+  rc_primary: ${ rc.get("primary", {}) }
+  rc_valve: ${ rc.get("valve", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  primary_type: ${ rc_primary.get("type", "switch") }
+  rc_name: ${ rc_primary.get("name", rc.get("name", "none" if primary_type == "valve" else "Valve")) }
+
+  expose_valve_internal: ${ rc_valve.get("internal", false) }
+
+valve:
+  - platform: template
+    name: ${rc_name}
+    id: ${rc_id}_control_valve
+    internal: ${expose_valve_internal}
+    lambda: |-
+      return id(${rc_id}_power_relay).state ? 1.0f : 0.0f;
+    open_action:
+      - script.execute: ${rc_id}_control_on
+    close_action:
+      - script.execute: ${rc_id}_control_off
+    toggle_action:
+      - script.execute: ${rc_id}_control_toggle

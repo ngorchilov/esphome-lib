@@ -24,4 +24,4 @@ binary_sensor:
             id: ${rc_id}_external_magic_state
             state: !lambda |-
               return !id(${rc_id}_external_magic_state).state;
-        - script.execute: ${rc_id}_control_toggle
+        - script.execute: ${rc_id}_primary_toggle
