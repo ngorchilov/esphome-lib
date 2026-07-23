@@ -86,35 +86,75 @@ tuya:
       datapoint_type: raw
       then:
         - lambda: |-
-            id(phase_a_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
-            id(phase_a_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
-            id(phase_a_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+            if (x.size() != 13) {
+              ESP_LOGW("tuya", "Phase A Data (DP 101) has invalid length %zu; expected 13", x.size());
+              return;
+            }
+            auto read_u32_le = [&x](size_t offset) -> uint32_t {
+              return static_cast<uint32_t>(x[offset])
+                | (static_cast<uint32_t>(x[offset + 1]) << 8)
+                | (static_cast<uint32_t>(x[offset + 2]) << 16)
+                | (static_cast<uint32_t>(x[offset + 3]) << 24);
+            };
+            id(phase_a_voltage).publish_state(read_u32_le(0) * ${voltage_scale});
+            id(phase_a_current).publish_state(static_cast<int32_t>(read_u32_le(4)) * ${current_scale});
+            id(phase_a_power).publish_state(static_cast<int32_t>(read_u32_le(8)) * ${power_scale});
 
     # Phase B raw -> publish
     - sensor_datapoint: 102
       datapoint_type: raw
       then:
         - lambda: |-
-            id(phase_b_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
-            id(phase_b_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
-            id(phase_b_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+            if (x.size() != 13) {
+              ESP_LOGW("tuya", "Phase B Data (DP 102) has invalid length %zu; expected 13", x.size());
+              return;
+            }
+            auto read_u32_le = [&x](size_t offset) -> uint32_t {
+              return static_cast<uint32_t>(x[offset])
+                | (static_cast<uint32_t>(x[offset + 1]) << 8)
+                | (static_cast<uint32_t>(x[offset + 2]) << 16)
+                | (static_cast<uint32_t>(x[offset + 3]) << 24);
+            };
+            id(phase_b_voltage).publish_state(read_u32_le(0) * ${voltage_scale});
+            id(phase_b_current).publish_state(static_cast<int32_t>(read_u32_le(4)) * ${current_scale});
+            id(phase_b_power).publish_state(static_cast<int32_t>(read_u32_le(8)) * ${power_scale});
 
     # Phase C raw -> publish
     - sensor_datapoint: 103
       datapoint_type: raw
       then:
         - lambda: |-
-            id(phase_c_voltage).publish_state((x[0] | (x[1] << 8)) * ${voltage_scale});
-            id(phase_c_current).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${current_scale});
-            id(phase_c_power).publish_state(((uint32_t)x[8] | ((uint32_t)x[9] << 8) | ((uint32_t)x[10] << 16)) * ${power_scale});
+            if (x.size() != 13) {
+              ESP_LOGW("tuya", "Phase C Data (DP 103) has invalid length %zu; expected 13", x.size());
+              return;
+            }
+            auto read_u32_le = [&x](size_t offset) -> uint32_t {
+              return static_cast<uint32_t>(x[offset])
+                | (static_cast<uint32_t>(x[offset + 1]) << 8)
+                | (static_cast<uint32_t>(x[offset + 2]) << 16)
+                | (static_cast<uint32_t>(x[offset + 3]) << 24);
+            };
+            id(phase_c_voltage).publish_state(read_u32_le(0) * ${voltage_scale});
+            id(phase_c_current).publish_state(static_cast<int32_t>(read_u32_le(4)) * ${current_scale});
+            id(phase_c_power).publish_state(static_cast<int32_t>(read_u32_le(8)) * ${power_scale});
 
     # Total raw -> publish
     - sensor_datapoint: 104
       datapoint_type: raw
       then:
         - lambda: |-
-            id(total_current).publish_state(((uint32_t)x[0] | ((uint32_t)x[1] << 8) | ((uint32_t)x[2] << 16)) * ${current_scale});
-            id(total_power).publish_state(((uint32_t)x[4] | ((uint32_t)x[5] << 8) | ((uint32_t)x[6] << 16)) * ${power_scale});
+            if (x.size() != 9) {
+              ESP_LOGW("tuya", "Total Data (DP 104) has invalid length %zu; expected 9", x.size());
+              return;
+            }
+            auto read_u32_le = [&x](size_t offset) -> uint32_t {
+              return static_cast<uint32_t>(x[offset])
+                | (static_cast<uint32_t>(x[offset + 1]) << 8)
+                | (static_cast<uint32_t>(x[offset + 2]) << 16)
+                | (static_cast<uint32_t>(x[offset + 3]) << 24);
+            };
+            id(total_current).publish_state(static_cast<int32_t>(read_u32_le(0)) * ${current_scale});
+            id(total_power).publish_state(static_cast<int32_t>(read_u32_le(4)) * ${power_scale});
             id(grid_frequency).publish_state(x[8] * ${freq_scale});
 
     # Sub-circuit Power
@@ -122,29 +162,44 @@ tuya:
       datapoint_type: raw
       then:
         - lambda: |-
-            for (int i = 0; i < 16; i++) {
-              float val = (
-                ((uint32_t)x[i*5+2])
-                | ((uint32_t)x[i*5+3] << 8)
-                | ((uint32_t)x[i*5+4] << 16)
-              ) * ${power_scale};
-              switch (i) {
-                case 0:  id(circuit_1_power).publish_state(val); break;
-                case 1:  id(circuit_2_power).publish_state(val); break;
-                case 2:  id(circuit_3_power).publish_state(val); break;
-                case 3:  id(circuit_4_power).publish_state(val); break;
-                case 4:  id(circuit_5_power).publish_state(val); break;
-                case 5:  id(circuit_6_power).publish_state(val); break;
-                case 6:  id(circuit_7_power).publish_state(val); break;
-                case 7:  id(circuit_8_power).publish_state(val); break;
-                case 8:  id(circuit_9_power).publish_state(val); break;
-                case 9:  id(circuit_10_power).publish_state(val); break;
-                case 10: id(circuit_11_power).publish_state(val); break;
-                case 11: id(circuit_12_power).publish_state(val); break;
-                case 12: id(circuit_13_power).publish_state(val); break;
-                case 13: id(circuit_14_power).publish_state(val); break;
-                case 14: id(circuit_15_power).publish_state(val); break;
-                case 15: id(circuit_16_power).publish_state(val); break;
+            if (x.empty()) {
+              ESP_LOGW("tuya", "Sub-circuit Power (DP 105) is empty");
+              return;
+            }
+            const size_t count = x[0];
+            const size_t expected_size = 1 + count * 5;
+            if (count > 16 || x.size() != expected_size) {
+              ESP_LOGW("tuya", "Sub-circuit Power (DP 105) has invalid count/length: count=%zu, length=%zu, expected=%zu", count, x.size(), expected_size);
+              return;
+            }
+            for (size_t i = 0; i < count; i++) {
+              const size_t offset = 1 + i * 5;
+              const uint8_t circuit_id = x[offset];
+              const uint32_t raw_value = static_cast<uint32_t>(x[offset + 1])
+                | (static_cast<uint32_t>(x[offset + 2]) << 8)
+                | (static_cast<uint32_t>(x[offset + 3]) << 16)
+                | (static_cast<uint32_t>(x[offset + 4]) << 24);
+              const float value = static_cast<int32_t>(raw_value) * ${power_scale};
+              switch (circuit_id) {
+                case 1:  id(circuit_1_power).publish_state(value); break;
+                case 2:  id(circuit_2_power).publish_state(value); break;
+                case 3:  id(circuit_3_power).publish_state(value); break;
+                case 4:  id(circuit_4_power).publish_state(value); break;
+                case 5:  id(circuit_5_power).publish_state(value); break;
+                case 6:  id(circuit_6_power).publish_state(value); break;
+                case 7:  id(circuit_7_power).publish_state(value); break;
+                case 8:  id(circuit_8_power).publish_state(value); break;
+                case 9:  id(circuit_9_power).publish_state(value); break;
+                case 10: id(circuit_10_power).publish_state(value); break;
+                case 11: id(circuit_11_power).publish_state(value); break;
+                case 12: id(circuit_12_power).publish_state(value); break;
+                case 13: id(circuit_13_power).publish_state(value); break;
+                case 14: id(circuit_14_power).publish_state(value); break;
+                case 15: id(circuit_15_power).publish_state(value); break;
+                case 16: id(circuit_16_power).publish_state(value); break;
+                default:
+                  ESP_LOGW("tuya", "Sub-circuit Power (DP 105) reported invalid circuit ID %u", circuit_id);
+                  break;
               }
             }
 
@@ -153,31 +208,90 @@ tuya:
       datapoint_type: raw
       then:
         - lambda: |-
-            for (int i = 0; i < 16; i++) {
-              float val = (
-                ((uint32_t)x[i*5+2])
-                | ((uint32_t)x[i*5+3] << 8)
-                | ((uint32_t)x[i*5+4] << 16)
-              ) * ${current_scale};
-              switch (i) {
-                case 0:  id(circuit_1_current).publish_state(val); break;
-                case 1:  id(circuit_2_current).publish_state(val); break;
-                case 2:  id(circuit_3_current).publish_state(val); break;
-                case 3:  id(circuit_4_current).publish_state(val); break;
-                case 4:  id(circuit_5_current).publish_state(val); break;
-                case 5:  id(circuit_6_current).publish_state(val); break;
-                case 6:  id(circuit_7_current).publish_state(val); break;
-                case 7:  id(circuit_8_current).publish_state(val); break;
-                case 8:  id(circuit_9_current).publish_state(val); break;
-                case 9:  id(circuit_10_current).publish_state(val); break;
-                case 10: id(circuit_11_current).publish_state(val); break;
-                case 11: id(circuit_12_current).publish_state(val); break;
-                case 12: id(circuit_13_current).publish_state(val); break;
-                case 13: id(circuit_14_current).publish_state(val); break;
-                case 14: id(circuit_15_current).publish_state(val); break;
-                case 15: id(circuit_16_current).publish_state(val); break;
+            if (x.empty()) {
+              ESP_LOGW("tuya", "Sub-circuit Current (DP 106) is empty");
+              return;
+            }
+            const size_t count = x[0];
+            const size_t expected_size = 1 + count * 5;
+            if (count > 16 || x.size() != expected_size) {
+              ESP_LOGW("tuya", "Sub-circuit Current (DP 106) has invalid count/length: count=%zu, length=%zu, expected=%zu", count, x.size(), expected_size);
+              return;
+            }
+            for (size_t i = 0; i < count; i++) {
+              const size_t offset = 1 + i * 5;
+              const uint8_t circuit_id = x[offset];
+              const uint32_t raw_value = static_cast<uint32_t>(x[offset + 1])
+                | (static_cast<uint32_t>(x[offset + 2]) << 8)
+                | (static_cast<uint32_t>(x[offset + 3]) << 16)
+                | (static_cast<uint32_t>(x[offset + 4]) << 24);
+              const float value = raw_value * ${current_scale};
+              switch (circuit_id) {
+                case 1:  id(circuit_1_current).publish_state(value); break;
+                case 2:  id(circuit_2_current).publish_state(value); break;
+                case 3:  id(circuit_3_current).publish_state(value); break;
+                case 4:  id(circuit_4_current).publish_state(value); break;
+                case 5:  id(circuit_5_current).publish_state(value); break;
+                case 6:  id(circuit_6_current).publish_state(value); break;
+                case 7:  id(circuit_7_current).publish_state(value); break;
+                case 8:  id(circuit_8_current).publish_state(value); break;
+                case 9:  id(circuit_9_current).publish_state(value); break;
+                case 10: id(circuit_10_current).publish_state(value); break;
+                case 11: id(circuit_11_current).publish_state(value); break;
+                case 12: id(circuit_12_current).publish_state(value); break;
+                case 13: id(circuit_13_current).publish_state(value); break;
+                case 14: id(circuit_14_current).publish_state(value); break;
+                case 15: id(circuit_15_current).publish_state(value); break;
+                case 16: id(circuit_16_current).publish_state(value); break;
+                default:
+                  ESP_LOGW("tuya", "Sub-circuit Current (DP 106) reported invalid circuit ID %u", circuit_id);
+                  break;
               }
             }
+
+    # Per-circuit phase assignment
+    - sensor_datapoint: 107
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            if (x.empty()) {
+              ESP_LOGW("tuya", "Circuit Phase Assignments (DP 107) is empty");
+              return;
+            }
+            const size_t count = x[0];
+            const size_t expected_size = 1 + count * 2;
+            if (count > 16 || x.size() != expected_size) {
+              ESP_LOGW("tuya", "Circuit Phase Assignments (DP 107) has invalid count/length: count=%zu, length=%zu, expected=%zu", count, x.size(), expected_size);
+              return;
+            }
+            std::string summary;
+            for (size_t i = 0; i < count; i++) {
+              const uint8_t circuit_id = x[1 + i * 2];
+              const uint8_t phase_id = x[2 + i * 2];
+              if (circuit_id < 1 || circuit_id > 16) {
+                ESP_LOGW("tuya", "Circuit Phase Assignments (DP 107) reported invalid circuit ID %u", circuit_id);
+                continue;
+              }
+              const char *phase;
+              switch (phase_id) {
+                case 0: phase = "Auto"; break;
+                case 1: phase = "A"; break;
+                case 2: phase = "B"; break;
+                case 3: phase = "C"; break;
+                default: phase = "Unknown"; break;
+              }
+              if (!summary.empty()) {
+                summary += ", ";
+              }
+              summary += str_sprintf("C%02u=%s", circuit_id, phase);
+              if (phase_id > 3) {
+                summary += str_sprintf("(%u)", phase_id);
+              }
+            }
+            if (summary.empty()) {
+              summary = "None";
+            }
+            ESP_LOGI("tuya", "Circuit Phase Assignments (DP 107): %s", summary.c_str());
 
     # Meter Type (text_sensor)
     - sensor_datapoint: 108
@@ -196,7 +310,71 @@ tuya:
     - sensor_datapoint: 109
       datapoint_type: raw
       then:
-        - lambda: 'ESP_LOGI("tuya", "Solar Configuration Raw (DP 109): %s", format_hex_pretty(x).c_str());'
+        - lambda: |-
+            if (x.empty()) {
+              ESP_LOGW("tuya", "Solar Circuits (DP 109) is empty");
+              return;
+            }
+            const size_t count = x[0];
+            const size_t expected_size = 1 + count * 2;
+            if (count > 16 || x.size() != expected_size) {
+              ESP_LOGW("tuya", "Solar Circuits (DP 109) has invalid count/length: count=%zu, length=%zu, expected=%zu", count, x.size(), expected_size);
+              return;
+            }
+            std::string summary;
+            for (size_t i = 0; i < count; i++) {
+              const uint8_t circuit_id = x[1 + i * 2];
+              const uint8_t solar_flag = x[2 + i * 2];
+              if (circuit_id < 1 || circuit_id > 16) {
+                ESP_LOGW("tuya", "Solar Circuits (DP 109) reported invalid circuit ID %u", circuit_id);
+                continue;
+              }
+              if (solar_flag == 1) {
+                if (!summary.empty()) {
+                  summary += ", ";
+                }
+                summary += str_sprintf("C%02u", circuit_id);
+              } else if (solar_flag != 0) {
+                ESP_LOGW("tuya", "Solar Circuits (DP 109) reported unknown flag %u for circuit %u", solar_flag, circuit_id);
+              }
+            }
+            if (summary.empty()) {
+              summary = "None";
+            }
+            ESP_LOGI("tuya", "Solar Circuits (DP 109): %s", summary.c_str());
+
+    # Per-circuit voltage multiplier
+    - sensor_datapoint: 111
+      datapoint_type: raw
+      then:
+        - lambda: |-
+            if (x.empty()) {
+              ESP_LOGW("tuya", "Voltage Multipliers (DP 111) is empty");
+              return;
+            }
+            const size_t count = x[0];
+            const size_t expected_size = 1 + count * 2;
+            if (count > 16 || x.size() != expected_size) {
+              ESP_LOGW("tuya", "Voltage Multipliers (DP 111) has invalid count/length: count=%zu, length=%zu, expected=%zu", count, x.size(), expected_size);
+              return;
+            }
+            std::string summary;
+            for (size_t i = 0; i < count; i++) {
+              const uint8_t circuit_id = x[1 + i * 2];
+              const uint8_t multiplier = x[2 + i * 2];
+              if (circuit_id < 1 || circuit_id > 16) {
+                ESP_LOGW("tuya", "Voltage Multipliers (DP 111) reported invalid circuit ID %u", circuit_id);
+                continue;
+              }
+              if (!summary.empty()) {
+                summary += ", ";
+              }
+              summary += str_sprintf("C%02u=%u", circuit_id, multiplier);
+            }
+            if (summary.empty()) {
+              summary = "None";
+            }
+            ESP_LOGI("tuya", "Voltage Multipliers (DP 111, raw values): %s", summary.c_str());
 
     # Global solar-accounting mode
     - sensor_datapoint: 112
@@ -216,7 +394,29 @@ tuya:
     - sensor_datapoint: 113
       datapoint_type: raw
       then:
-        - lambda: 'ESP_LOGI("tuya", "CT Insertion Detection Raw (DP 113): %s", format_hex_pretty(x).c_str());'
+        - lambda: |-
+            if (x.size() != 4) {
+              ESP_LOGW("tuya", "Detected CT Inputs (DP 113) has invalid length %zu; expected 4", x.size());
+              return;
+            }
+            const uint32_t mask = static_cast<uint32_t>(x[0])
+              | (static_cast<uint32_t>(x[1]) << 8)
+              | (static_cast<uint32_t>(x[2]) << 16)
+              | (static_cast<uint32_t>(x[3]) << 24);
+            std::string summary;
+            for (uint8_t circuit_id = 1; circuit_id <= 16; circuit_id++) {
+              if ((mask & (1UL << (circuit_id - 1))) == 0) {
+                continue;
+              }
+              if (!summary.empty()) {
+                summary += ", ";
+              }
+              summary += str_sprintf("C%02u", circuit_id);
+            }
+            if (summary.empty()) {
+              summary = "None";
+            }
+            ESP_LOGI("tuya", "Detected CT Inputs (DP 113, mask 0x%08" PRIX32 "): %s", mask, summary.c_str());
 
 text_sensor:
   - platform: template
@@ -226,54 +426,6 @@ text_sensor:
     icon: mdi:meter-electric
 
 button:
-  - platform: template
-    name: Map All Circuits to Phase A
-    internal: true
-    icon: mdi:link
-    on_press:
-      - lambda: |-
-          static const uint8_t raw_data[128] = {
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0
-          };
-          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
-          id(my_meter).set_raw_datapoint_value(107, payload);
-
-  - platform: template
-    name: Disable Solar on All Circuits
-    internal: true
-    icon: mdi:solar-power
-    on_press:
-      - lambda: |-
-          static const uint8_t raw_data[128] = {0};
-          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
-          id(my_meter).set_raw_datapoint_value(109, payload);
-
-  - platform: template
-    name: Clear All Energy Counters
-    internal: true
-    icon: mdi:delete
-    on_press:
-      - lambda: |-
-          static const uint8_t raw_data[128] = {
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0,
-            1,0,0,0,0,0,0,0,  1,0,0,0,0,0,0,0
-          };
-          std::vector<uint8_t> payload(std::begin(raw_data), std::end(raw_data));
-          id(my_meter).set_raw_datapoint_value(110, payload);
-
   - platform: template
     name: Refresh Solar Configuration
     id: refresh_solar_configuration
@@ -328,7 +480,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 0
     icon: mdi:sigma
-    lambda: return id(phase_a_voltage).state * id(phase_a_current).state;
+    lambda: return id(phase_a_voltage).state * fabsf(id(phase_a_current).state);
 
   - platform: template
     name: ${phA_name} Power Factor
@@ -342,9 +494,8 @@ sensor:
       const float V = id(phase_a_voltage).state;
       const float I = id(phase_a_current).state;
       const float P = id(phase_a_power).state; // W
-      if (V <= 0 || I <= 0) return NAN;
-      float pf = P / (V * I);
-      if (pf < 0) pf = 0;
+      if (V <= 0 || I == 0) return NAN;
+      float pf = fabsf(P) / (V * fabsf(I));
       if (pf > 1) pf = 1;
       return pf * 100.0f;
     filters:
@@ -387,7 +538,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 0
     icon: mdi:sigma
-    lambda: return id(phase_b_voltage).state * id(phase_b_current).state;
+    lambda: return id(phase_b_voltage).state * fabsf(id(phase_b_current).state);
 
   - platform: template
     name: ${phB_name} Power Factor
@@ -401,9 +552,8 @@ sensor:
       const float V = id(phase_b_voltage).state;
       const float I = id(phase_b_current).state;
       const float P = id(phase_b_power).state; // W
-      if (V <= 0 || I <= 0) return NAN;
-      float pf = P / (V * I);
-      if (pf < 0) pf = 0;
+      if (V <= 0 || I == 0) return NAN;
+      float pf = fabsf(P) / (V * fabsf(I));
       if (pf > 1) pf = 1;
       return pf * 100.0f;
     filters:
@@ -446,7 +596,7 @@ sensor:
     state_class: measurement
     accuracy_decimals: 0
     icon: mdi:sigma
-    lambda: return id(phase_c_voltage).state * id(phase_c_current).state;
+    lambda: return id(phase_c_voltage).state * fabsf(id(phase_c_current).state);
 
   - platform: template
     name: ${phC_name} Power Factor
@@ -460,9 +610,8 @@ sensor:
       const float V = id(phase_c_voltage).state;
       const float I = id(phase_c_current).state;
       const float P = id(phase_c_power).state; // W
-      if (V <= 0 || I <= 0) return NAN;
-      float pf = P / (V * I);
-      if (pf < 0) pf = 0;
+      if (V <= 0 || I == 0) return NAN;
+      float pf = fabsf(P) / (V * fabsf(I));
       if (pf > 1) pf = 1;
       return pf * 100.0f;
     filters:
@@ -520,8 +669,7 @@ sensor:
       const float S = id(total_va).state;
       const float P = id(total_power).state; // W
       if (S <= 0) return NAN;
-      float pf = P / S;
-      if (pf < 0) pf = 0;
+      float pf = fabsf(P) / S;
       if (pf > 1) pf = 1;
       return pf * 100.0f;
     filters:
