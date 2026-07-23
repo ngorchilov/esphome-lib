@@ -98,13 +98,15 @@ packages:
 
 esphome:
   on_boot:
-    - if:
-        condition:
-          binary_sensor.is_on: power_status
-        then:
-          - light.turn_on: status_led
-        else:
-          - light.turn_off: status_led
+    - priority: -100
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - light.turn_on: status_led
+            else:
+              - light.turn_off: status_led
 
 web_server:
   version: 3
