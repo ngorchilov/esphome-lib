@@ -54,6 +54,13 @@ packages:
   - !include ../packages/boards/tuya/cbu.yaml
   - !include ../packages/modules/tuya-product.yaml
 
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        - delay: 5s
+        - button.press: refresh_ct_detection
+
 # Daily reboot to keep the TuyaMCU communication sane - avoid CRC errors caused by memory leaks or who knows what
 time:
   - id: !extend ha_time
@@ -403,6 +410,22 @@ tuya:
               | (static_cast<uint32_t>(x[1]) << 8)
               | (static_cast<uint32_t>(x[2]) << 16)
               | (static_cast<uint32_t>(x[3]) << 24);
+            id(circuit_1_ct_detected).publish_state((mask & (1UL << 0)) != 0);
+            id(circuit_2_ct_detected).publish_state((mask & (1UL << 1)) != 0);
+            id(circuit_3_ct_detected).publish_state((mask & (1UL << 2)) != 0);
+            id(circuit_4_ct_detected).publish_state((mask & (1UL << 3)) != 0);
+            id(circuit_5_ct_detected).publish_state((mask & (1UL << 4)) != 0);
+            id(circuit_6_ct_detected).publish_state((mask & (1UL << 5)) != 0);
+            id(circuit_7_ct_detected).publish_state((mask & (1UL << 6)) != 0);
+            id(circuit_8_ct_detected).publish_state((mask & (1UL << 7)) != 0);
+            id(circuit_9_ct_detected).publish_state((mask & (1UL << 8)) != 0);
+            id(circuit_10_ct_detected).publish_state((mask & (1UL << 9)) != 0);
+            id(circuit_11_ct_detected).publish_state((mask & (1UL << 10)) != 0);
+            id(circuit_12_ct_detected).publish_state((mask & (1UL << 11)) != 0);
+            id(circuit_13_ct_detected).publish_state((mask & (1UL << 12)) != 0);
+            id(circuit_14_ct_detected).publish_state((mask & (1UL << 13)) != 0);
+            id(circuit_15_ct_detected).publish_state((mask & (1UL << 14)) != 0);
+            id(circuit_16_ct_detected).publish_state((mask & (1UL << 15)) != 0);
             std::string summary;
             for (uint8_t circuit_id = 1; circuit_id <= 16; circuit_id++) {
               if ((mask & (1UL << (circuit_id - 1))) == 0) {
@@ -417,6 +440,119 @@ tuya:
               summary = "None";
             }
             ESP_LOGI("tuya", "Detected CT Inputs (DP 113, mask 0x%08" PRIX32 "): %s", mask, summary.c_str());
+
+binary_sensor:
+  - platform: template
+    name: ${c01_name} CT Detected
+    id: circuit_1_ct_detected
+    internal: ${c01_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c02_name} CT Detected
+    id: circuit_2_ct_detected
+    internal: ${c02_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c03_name} CT Detected
+    id: circuit_3_ct_detected
+    internal: ${c03_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c04_name} CT Detected
+    id: circuit_4_ct_detected
+    internal: ${c04_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c05_name} CT Detected
+    id: circuit_5_ct_detected
+    internal: ${c05_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c06_name} CT Detected
+    id: circuit_6_ct_detected
+    internal: ${c06_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c07_name} CT Detected
+    id: circuit_7_ct_detected
+    internal: ${c07_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c08_name} CT Detected
+    id: circuit_8_ct_detected
+    internal: ${c08_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c09_name} CT Detected
+    id: circuit_9_ct_detected
+    internal: ${c09_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c10_name} CT Detected
+    id: circuit_10_ct_detected
+    internal: ${c10_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c11_name} CT Detected
+    id: circuit_11_ct_detected
+    internal: ${c11_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c12_name} CT Detected
+    id: circuit_12_ct_detected
+    internal: ${c12_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c13_name} CT Detected
+    id: circuit_13_ct_detected
+    internal: ${c13_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c14_name} CT Detected
+    id: circuit_14_ct_detected
+    internal: ${c14_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c15_name} CT Detected
+    id: circuit_15_ct_detected
+    internal: ${c15_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${c16_name} CT Detected
+    id: circuit_16_ct_detected
+    internal: ${c16_internal}
+    entity_category: diagnostic
+    device_class: plug
 
 text_sensor:
   - platform: template
@@ -655,7 +791,10 @@ sensor:
     state_class: measurement
     accuracy_decimals: 0
     icon: mdi:sigma
-    lambda: return id(phase_a_va).state + id(phase_b_va).state + id(phase_c_va).state;
+    lambda: |-
+      return id(phase_a_voltage).state * fabsf(id(phase_a_current).state)
+        + id(phase_b_voltage).state * fabsf(id(phase_b_current).state)
+        + id(phase_c_voltage).state * fabsf(id(phase_c_current).state);
 
   - platform: template
     name: Total Power Factor
@@ -666,7 +805,9 @@ sensor:
     state_class: measurement
     accuracy_decimals: 1
     lambda: |-
-      const float S = id(total_va).state;
+      const float S = id(phase_a_voltage).state * fabsf(id(phase_a_current).state)
+        + id(phase_b_voltage).state * fabsf(id(phase_b_current).state)
+        + id(phase_c_voltage).state * fabsf(id(phase_c_current).state);
       const float P = id(total_power).state; // W
       if (S <= 0) return NAN;
       float pf = fabsf(P) / S;
