@@ -13,6 +13,21 @@ defaults:
   ext_inverted: ${ rc_external_switch.get("inverted", false) }
   ext_strapping: ${ rc_external_switch.get("strapping", false) }
   ext_mode: ${ rc_external_switch.get("mode", "rocker") }
+  ext_startup_delay: ${ rc_external_switch.get("startup_delay", "1s") }
+
+esphome:
+  on_boot:
+    priority: -100
+    then:
+      - delay: ${ext_startup_delay}
+      - lambda: |-
+          id(${rc_id}_external_switch_ready) = true;
+
+globals:
+  - id: ${rc_id}_external_switch_ready
+    type: bool
+    restore_value: false
+    initial_value: 'false'
 
 binary_sensor:
   - platform: gpio
@@ -35,7 +50,8 @@ binary_sensor:
       - if:
           condition:
             lambda: |-
-              if (!x_previous.has_value() || !x.has_value())
+              if (!id(${rc_id}_external_switch_ready) ||
+                  !x_previous.has_value() || !x.has_value())
                 return false;
               return std::string("${ext_mode}") == "rocker" || x.value();
           then:
