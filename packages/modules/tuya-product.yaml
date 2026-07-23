@@ -22,6 +22,7 @@ text_sensor:
       disabled_by_default: true
       icon: mdi:identifier
       on_value:
+        - delay: 1s
         - script.execute: tuya_ready
     mcu_version:
       name: ${tuya_product_version_name}

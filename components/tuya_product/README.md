@@ -59,9 +59,9 @@ packages:
         version_name: Tuya MCU Version
 ```
 
-The module also executes `tuya_ready` once the Product ID is published. Devices can
-extend that script to run actions only after the Tuya MCU has returned a checksum-valid product
-response:
+The module executes `tuya_ready` one second after the Product ID is published. This shared settling
+delay keeps timing out of individual devices. Devices can extend the script to run actions only
+after the Tuya MCU has returned a checksum-valid product response:
 
 ```yaml
 script:
