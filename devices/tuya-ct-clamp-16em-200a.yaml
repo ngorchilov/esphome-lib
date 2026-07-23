@@ -1,11 +1,11 @@
 substitutions:
   name: tuya-ct-clamp-16em-200a
   friendly_name: Tuya CT Clamp 16EM 200A
-  voltage_scale: '0.1' # 0.1 V/count
-  current_scale: '0.001' # 0.001 A/count
-  power_scale: '1' # 1 W/count (was 0.001 kW/count)
-  freq_scale: '1' # 1 Hz/count
-  energy_scale: '0.01' # 0.01 kWh/count (DP 115–132)
+  voltage_scale: 0.1 # 0.1 V/count
+  current_scale: 0.001 # 0.001 A/count
+  power_scale: 1 # 1 W/count (was 0.001 kW/count)
+  freq_scale: 1 # 1 Hz/count
+  energy_scale: 0.01 # 0.01 kWh/count (DP 115–132)
 
   # Display-name substitutions
   phA_name: Phase A
@@ -58,6 +58,7 @@ script:
   - id: !extend tuya_ready
     then:
       - button.press: refresh_solar_configuration
+      - delay: 0.5s # wait a bit before sending the next command to avoid overwhelming the TuyaMCU
       - button.press: refresh_ct_detection
 
 # Daily reboot to keep the TuyaMCU communication sane - avoid CRC errors caused by memory leaks or who knows what
