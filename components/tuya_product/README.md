@@ -59,6 +59,17 @@ packages:
         version_name: Tuya MCU Version
 ```
 
+The module also executes `tuya_ready` once the Product ID is published. Devices can
+extend that script to run actions only after the Tuya MCU has returned a checksum-valid product
+response:
+
+```yaml
+script:
+  - id: !extend tuya_ready
+    then:
+      - button.press: refresh_tuya_configuration
+```
+
 ## Direct component use
 
 The component can also be configured without the shared package:

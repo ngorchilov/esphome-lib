@@ -21,7 +21,14 @@ text_sensor:
       id: ${tuya_product_id}_pid
       disabled_by_default: true
       icon: mdi:identifier
+      on_value:
+        - script.execute: tuya_ready
     mcu_version:
       name: ${tuya_product_version_name}
       id: ${tuya_product_id}_version
       disabled_by_default: true
+
+script:
+  - id: tuya_ready
+    mode: single
+    then: []
