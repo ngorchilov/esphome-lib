@@ -35,6 +35,7 @@ text_sensor:
       name: IP
       id: mcu_ip
       entity_category: diagnostic
+      icon: mdi:ip-network
     ssid:
       name: SSID
       id: mcu_ssid
