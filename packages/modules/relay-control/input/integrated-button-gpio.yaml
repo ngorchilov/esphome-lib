@@ -7,6 +7,7 @@ defaults:
 
   rc_id: ${ rc.get("id", "rc1") }
 
+  button_name: ${ rc_integrated_button.get("name", "Integrated Button") }
   button_pin: ${ rc_integrated_button.get("pin", "GPIO0") }
   button_inverted: ${ rc_integrated_button.get("inverted", true) }
   button_strapping: ${ rc_integrated_button.get("strapping", false) }
@@ -14,7 +15,7 @@ defaults:
 
 binary_sensor:
   - platform: gpio
-    name: ${rc_id} Integrated Button
+    name: ${button_name}
     id: ${rc_id}_integrated_button
     internal: ${button_internal}
     pin: !include

@@ -355,6 +355,8 @@ packages:
 - Generated ids in reusable modules must be deterministic and collision-safe.
 - Multi-instance modules must include an instance prefix such as normalized `rc_id` in every
   generated id.
+- Internal id prefixes must not leak into user-facing entity names. Give entities neutral defaults
+  and expose an explicit module name option when callers may need another label.
 - Shared base-board diagnostics may use stable `mcu_*` ids.
 - Single-instance modules may use simple ids only when the module is clearly not multi-instance.
 - When a device has one obvious primary entity, prefer `name: None` so Home Assistant presents it
