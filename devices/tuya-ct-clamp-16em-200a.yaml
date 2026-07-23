@@ -54,12 +54,43 @@ packages:
   - !include ../packages/boards/tuya/cbu.yaml
   - !include ../packages/modules/tuya-product.yaml
 
+globals:
+  - id: dp114_request_in_progress
+    type: int
+    restore_value: false
+    initial_value: '-1'
+
 script:
   - id: !extend tuya_ready
     then:
       - button.press: refresh_solar_configuration
-      - delay: 0.5s # wait a bit before sending the next command to avoid overwhelming the TuyaMCU
       - button.press: refresh_ct_detection
+
+  - id: request_tuya_meter_configuration
+    mode: queued
+    parameters:
+      command: int
+    then:
+      - lambda: |-
+          if (command < 0 || command > 1) {
+            ESP_LOGE("tuya", "Unsupported DP 114 command: %d", command);
+            id(dp114_request_in_progress) = -1;
+            return;
+          }
+          id(dp114_request_in_progress) = command;
+          const uint8_t expected_dp = command == 0 ? 109 : 113;
+          ESP_LOGI("tuya", "Sending DP 114 command %d; waiting for DP %u", command, expected_dp);
+          id(my_meter).force_set_enum_datapoint_value(114, command);
+      - wait_until:
+          condition:
+            lambda: return id(dp114_request_in_progress) == -1;
+          timeout: 2s
+      - lambda: |-
+          if (id(dp114_request_in_progress) == command) {
+            const uint8_t expected_dp = command == 0 ? 109 : 113;
+            ESP_LOGW("tuya", "DP 114 command %d timed out waiting for DP %u", command, expected_dp);
+            id(dp114_request_in_progress) = -1;
+          }
 
 # Daily reboot to keep the TuyaMCU communication sane - avoid CRC errors caused by memory leaks or who knows what
 time:
@@ -370,6 +401,9 @@ tuya:
               summary = "None";
             }
             ESP_LOGI("tuya", "Solar Circuits (DP 109): %s", summary.c_str());
+            if (id(dp114_request_in_progress) == 0) {
+              id(dp114_request_in_progress) = -1;
+            }
 
     # Per-circuit voltage multiplier
     - sensor_datapoint: 111
@@ -461,6 +495,9 @@ tuya:
               summary = "None";
             }
             ESP_LOGI("tuya", "Detected CT Inputs (DP 113, mask 0x%08" PRIX32 "): %s", mask, summary.c_str());
+            if (id(dp114_request_in_progress) == 1) {
+              id(dp114_request_in_progress) = -1;
+            }
 
 binary_sensor:
   - platform: template
@@ -702,7 +739,9 @@ button:
     entity_category: diagnostic
     icon: mdi:solar-power
     on_press:
-      - lambda: id(my_meter).force_set_enum_datapoint_value(114, 0);
+      - script.execute:
+          id: request_tuya_meter_configuration
+          command: 0
 
   - platform: template
     name: Refresh CT Detection
@@ -710,7 +749,9 @@ button:
     entity_category: diagnostic
     icon: mdi:current-ac
     on_press:
-      - lambda: id(my_meter).force_set_enum_datapoint_value(114, 1);
+      - script.execute:
+          id: request_tuya_meter_configuration
+          command: 1
 
 sensor:
   # Phase A
