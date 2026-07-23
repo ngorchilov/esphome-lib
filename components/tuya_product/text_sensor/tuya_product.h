@@ -14,7 +14,6 @@ class TuyaProductComponent final : public Component {
   void set_uart_parent(uart::UARTComponent *parent) { this->parent_ = parent; }
   void set_product_id_sensor(text_sensor::TextSensor *sensor) { this->product_id_sensor_ = sensor; }
   void set_mcu_version_sensor(text_sensor::TextSensor *sensor) { this->mcu_version_sensor_ = sensor; }
-  void set_pairing_mode_sensor(text_sensor::TextSensor *sensor) { this->pairing_mode_sensor_ = sensor; }
 
   void setup() override;
   void dump_config() override;
@@ -42,7 +41,6 @@ class TuyaProductComponent final : public Component {
   uart::UARTComponent *parent_{nullptr};
   text_sensor::TextSensor *product_id_sensor_{nullptr};
   text_sensor::TextSensor *mcu_version_sensor_{nullptr};
-  text_sensor::TextSensor *pairing_mode_sensor_{nullptr};
   ParserState parser_state_{ParserState::HEADER_FIRST};
   uint8_t command_{0};
   uint8_t checksum_{0};

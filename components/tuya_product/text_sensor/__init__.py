@@ -10,7 +10,6 @@ AUTO_LOAD = ["json"]
 
 CONF_PRODUCT_ID = "product_id"
 CONF_MCU_VERSION = "mcu_version"
-CONF_PAIRING_MODE = "pairing_mode"
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -21,9 +20,6 @@ CONFIG_SCHEMA = (
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
             cv.Optional(CONF_MCU_VERSION): text_sensor.text_sensor_schema(
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            ),
-            cv.Optional(CONF_PAIRING_MODE): text_sensor.text_sensor_schema(
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         }
@@ -39,7 +35,7 @@ async def to_code(config):
     parent = await cg.get_variable(config[CONF_UART_ID])
     cg.add(var.set_uart_parent(parent))
 
-    for key in [CONF_PRODUCT_ID, CONF_MCU_VERSION, CONF_PAIRING_MODE]:
+    for key in [CONF_PRODUCT_ID, CONF_MCU_VERSION]:
         if conf := config.get(key):
             sensor = await text_sensor.new_text_sensor(conf)
             cg.add(getattr(var, f"set_{key}_sensor")(sensor))

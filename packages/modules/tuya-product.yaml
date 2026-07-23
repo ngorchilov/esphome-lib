@@ -6,7 +6,6 @@ defaults:
   tuya_product_id: ${ tuya_product.get("id", "tuya_product_info") }
   tuya_product_pid_name: ${ tuya_product.get("pid_name", "Tuya Product ID") }
   tuya_product_version_name: ${ tuya_product.get("version_name", "Tuya MCU Version") }
-  tuya_product_pairing_name: ${ tuya_product.get("pairing_name", "Tuya Pairing Mode") }
 
 external_components:
   - source: github://ngorchilov/esphome-lib
@@ -26,8 +25,3 @@ text_sensor:
       name: ${tuya_product_version_name}
       id: ${tuya_product_id}_version
       disabled_by_default: true
-    pairing_mode:
-      name: ${tuya_product_pairing_name}
-      id: ${tuya_product_id}_pairing
-      disabled_by_default: true
-      icon: mdi:wifi-cog

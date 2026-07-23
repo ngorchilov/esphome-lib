@@ -22,9 +22,6 @@ void TuyaProductComponent::dump_config() {
   if (this->mcu_version_sensor_ != nullptr) {
     LOG_TEXT_SENSOR("  ", "MCU Version", this->mcu_version_sensor_);
   }
-  if (this->pairing_mode_sensor_ != nullptr) {
-    LOG_TEXT_SENSOR("  ", "Pairing Mode", this->pairing_mode_sensor_);
-  }
 }
 
 void TuyaProductComponent::start_or_reset_(uint8_t byte) {
@@ -114,23 +111,6 @@ void TuyaProductComponent::publish_product_() {
     }
     if (this->mcu_version_sensor_ != nullptr && root["v"].is<const char *>()) {
       this->mcu_version_sensor_->publish_state(root["v"].as<const char *>());
-    }
-    if (this->pairing_mode_sensor_ != nullptr && root["m"].is<int>()) {
-      const int pairing_mode = root["m"].as<int>();
-      switch (pairing_mode) {
-        case 0:
-          this->pairing_mode_sensor_->publish_state("Active");
-          break;
-        case 1:
-          this->pairing_mode_sensor_->publish_state("Passive");
-          break;
-        case 2:
-          this->pairing_mode_sensor_->publish_state("Anti-Misoperation");
-          break;
-        default:
-          this->pairing_mode_sensor_->publish_state("Unknown (" + std::to_string(pairing_mode) + ")");
-          break;
-      }
     }
     return true;
   });

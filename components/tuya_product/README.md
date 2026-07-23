@@ -16,25 +16,18 @@ The component exposes:
 | --- | --- | --- |
 | `p` | Product ID | `tehjajiyfp2phy4d` |
 | `v` | MCU Version | `1.0.14` |
-| `m` | Pairing Mode | `Active` |
-
-Pairing mode values are presented as:
-
-| Value | Published state |
-| --- | --- |
-| `0` | `Active` |
-| `1` | `Passive` |
-| `2` | `Anti-Misoperation` |
-| Any other value | `Unknown (value)` |
 
 The field definitions follow Tuya's
 [MCU Standard Protocol documentation](https://developer.tuya.com/en/docs/mcu-standard-protocol/MCUSDK-wifi-base?id=Kd2bxu84567gk).
+Other fields in the response, including the original Tuya pairing mode, are intentionally ignored
+because they do not configure ESPHome. They remain visible in the raw product JSON printed by the
+built-in Tuya component during startup.
 
 ## Recommended package
 
 Devices in this repository use
-[`packages/modules/tuya-product.yaml`](../../packages/modules/tuya-product.yaml). It creates all
-three sensors as diagnostic entities that are disabled by default:
+[`packages/modules/tuya-product.yaml`](../../packages/modules/tuya-product.yaml). It creates both
+sensors as diagnostic entities that are disabled by default:
 
 ```yaml
 packages:
@@ -64,7 +57,6 @@ packages:
         id: tuya_product_info
         pid_name: Tuya Product ID
         version_name: Tuya MCU Version
-        pairing_name: Tuya Pairing Mode
 ```
 
 ## Direct component use
@@ -97,12 +89,9 @@ text_sensor:
     mcu_version:
       name: Tuya MCU Version
       disabled_by_default: true
-    pairing_mode:
-      name: Tuya Pairing Mode
-      disabled_by_default: true
 ```
 
-Each of `product_id`, `mcu_version`, and `pairing_mode` is optional.
+Both `product_id` and `mcu_version` are optional.
 
 ## How capture works
 
