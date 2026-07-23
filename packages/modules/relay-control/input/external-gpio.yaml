@@ -26,8 +26,8 @@ binary_sensor:
           inverted: ${ext_inverted}
           mode:
             input: true
-            pullup: ${not ext_inverted}
-            pulldown: ${ext_inverted}
+            pullup: ${ext_inverted}
+            pulldown: ${not ext_inverted}
           ignore_strapping_warning: ${ext_strapping}
 
     # momentary: toggle on press
