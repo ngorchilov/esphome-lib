@@ -575,114 +575,114 @@ binary_sensor:
     device_class: plug
 
   - platform: template
-    name: ${c01_name} Solar Configured
+    name: ${c01_name} Solar Mode
     id: circuit_1_solar_configured
-    internal: ${c01_internal}
+    internal: ${ (c01_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c02_name} Solar Configured
+    name: ${c02_name} Solar Mode
     id: circuit_2_solar_configured
-    internal: ${c02_internal}
+    internal: ${ (c02_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c03_name} Solar Configured
+    name: ${c03_name} Solar Mode
     id: circuit_3_solar_configured
-    internal: ${c03_internal}
+    internal: ${ (c03_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c04_name} Solar Configured
+    name: ${c04_name} Solar Mode
     id: circuit_4_solar_configured
-    internal: ${c04_internal}
+    internal: ${ (c04_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c05_name} Solar Configured
+    name: ${c05_name} Solar Mode
     id: circuit_5_solar_configured
-    internal: ${c05_internal}
+    internal: ${ (c05_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c06_name} Solar Configured
+    name: ${c06_name} Solar Mode
     id: circuit_6_solar_configured
-    internal: ${c06_internal}
+    internal: ${ (c06_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c07_name} Solar Configured
+    name: ${c07_name} Solar Mode
     id: circuit_7_solar_configured
-    internal: ${c07_internal}
+    internal: ${ (c07_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c08_name} Solar Configured
+    name: ${c08_name} Solar Mode
     id: circuit_8_solar_configured
-    internal: ${c08_internal}
+    internal: ${ (c08_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c09_name} Solar Configured
+    name: ${c09_name} Solar Mode
     id: circuit_9_solar_configured
-    internal: ${c09_internal}
+    internal: ${ (c09_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c10_name} Solar Configured
+    name: ${c10_name} Solar Mode
     id: circuit_10_solar_configured
-    internal: ${c10_internal}
+    internal: ${ (c10_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c11_name} Solar Configured
+    name: ${c11_name} Solar Mode
     id: circuit_11_solar_configured
-    internal: ${c11_internal}
+    internal: ${ (c11_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c12_name} Solar Configured
+    name: ${c12_name} Solar Mode
     id: circuit_12_solar_configured
-    internal: ${c12_internal}
+    internal: ${ (c12_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c13_name} Solar Configured
+    name: ${c13_name} Solar Mode
     id: circuit_13_solar_configured
-    internal: ${c13_internal}
+    internal: ${ (c13_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c14_name} Solar Configured
+    name: ${c14_name} Solar Mode
     id: circuit_14_solar_configured
-    internal: ${c14_internal}
+    internal: ${ (c14_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c15_name} Solar Configured
+    name: ${c15_name} Solar Mode
     id: circuit_15_solar_configured
-    internal: ${c15_internal}
+    internal: ${ (c15_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
   - platform: template
-    name: ${c16_name} Solar Configured
+    name: ${c16_name} Solar Mode
     id: circuit_16_solar_configured
-    internal: ${c16_internal}
+    internal: ${ (c16_internal == 'true') or (sol_internal == 'true') }
     entity_category: diagnostic
     icon: mdi:solar-power
 
@@ -697,6 +697,7 @@ button:
   - platform: template
     name: Refresh Solar Configuration
     id: refresh_solar_configuration
+    internal: ${sol_internal}
     entity_category: diagnostic
     icon: mdi:solar-power
     on_press:
