@@ -4,6 +4,7 @@
 #include <string>
 
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/tuya/tuya.h"
 #include "esphome/components/uart/uart_component.h"
 #include "esphome/core/component.h"
 
@@ -12,8 +13,12 @@ namespace esphome::tuya_product {
 class TuyaProductComponent final : public Component {
  public:
   void set_uart_parent(uart::UARTComponent *parent) { this->parent_ = parent; }
+  void set_tuya_parent(tuya::Tuya *parent) { this->tuya_parent_ = parent; }
   void set_product_id_sensor(text_sensor::TextSensor *sensor) { this->product_id_sensor_ = sensor; }
   void set_mcu_version_sensor(text_sensor::TextSensor *sensor) { this->mcu_version_sensor_ = sensor; }
+  template<typename F> void add_on_initialized_callback(F &&callback) {
+    this->initialized_callback_.add(std::forward<F>(callback));
+  }
 
   void setup() override;
   void dump_config() override;
@@ -39,8 +44,10 @@ class TuyaProductComponent final : public Component {
   void start_or_reset_(uint8_t byte);
 
   uart::UARTComponent *parent_{nullptr};
+  tuya::Tuya *tuya_parent_{nullptr};
   text_sensor::TextSensor *product_id_sensor_{nullptr};
   text_sensor::TextSensor *mcu_version_sensor_{nullptr};
+  CallbackManager<void()> initialized_callback_;
   ParserState parser_state_{ParserState::HEADER_FIRST};
   uint8_t command_{0};
   uint8_t checksum_{0};

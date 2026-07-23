@@ -59,9 +59,10 @@ packages:
         version_name: Tuya MCU Version
 ```
 
-The module executes `tuya_ready` one second after the Product ID is published. This shared settling
-delay keeps timing out of individual devices. Devices can extend the script to run actions only
-after the Tuya MCU has returned a checksum-valid product response:
+The module executes `tuya_ready` when ESPHome's built-in Tuya component reports that its
+initialization sequence is complete. The product information is still published as soon as its
+checksum-valid response is received, but it does not trigger readiness by itself. Devices can extend
+the script to run actions after the initial datapoint report has been processed:
 
 ```yaml
 script:
@@ -94,6 +95,8 @@ text_sensor:
   - platform: tuya_product
     id: tuya_product_info
     uart_id: tuya_uart
+    on_initialized:
+      - logger.log: Tuya initialization complete
     product_id:
       name: Tuya Product ID
       disabled_by_default: true
@@ -113,6 +116,10 @@ the bytes seen by ESPHome's `tuya` component. It:
 2. Validates the payload length and frame checksum.
 3. Parses the JSON payload and publishes the configured fields.
 4. Stops processing UART data after the first checksum-valid product frame.
+
+Separately, it attaches to the single built-in `tuya` component and exposes `on_initialized`.
+ESPHome invokes this callback after the MCU startup handshake reaches `INIT_DONE`; it does not
+depend on logger level, network availability, or an API client connection.
 
 Capture is independent of the ESPHome logger level. The component does not change logger settings,
 parse log messages, send commands to the MCU, or write Tuya datapoints.

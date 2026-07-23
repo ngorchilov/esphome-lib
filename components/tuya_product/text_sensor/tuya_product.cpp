@@ -8,6 +8,13 @@ namespace esphome::tuya_product {
 static const char *const TAG = "tuya_product.text_sensor";
 
 void TuyaProductComponent::setup() {
+  this->tuya_parent_->add_on_initialized_callback([this]() {
+    this->defer("tuya_initialized", [this]() {
+      ESP_LOGD(TAG, "Tuya initialization complete");
+      this->initialized_callback_.call();
+    });
+  });
+
   this->parent_->add_debug_callback([this](uart::UARTDirection direction, uint8_t byte) {
     if (!this->captured_ && direction == uart::UART_DIRECTION_RX) {
       this->process_byte_(byte);
