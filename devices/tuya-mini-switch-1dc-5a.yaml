@@ -1,3 +1,4 @@
+# AVATTO WiFi Smart Switch (WSM16) DC 5A
 substitutions:
   name: tuya-mini-switch-1dc-5a
   friendly_name: Tuya Mini Switch 1DC 5A
