@@ -11,16 +11,19 @@ substitutions:
 
 packages:
   - !include ../packages/boards/tuya/cb2s.yaml
+  - !include ../packages/modules/tuya-product.yaml
 logger:
   level: DEBUG
 
 uart:
+  id: tuya_uart
   tx_pin: TX1
   rx_pin: RX1
   baud_rate: 9600
 
 tuya:
   id: tuya_component
+  uart_id: tuya_uart
   on_datapoint_update:
     # - sensor_datapoint: 6
     #   datapoint_type: raw

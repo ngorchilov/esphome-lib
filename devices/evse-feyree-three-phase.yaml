@@ -22,11 +22,13 @@ substitutions:
 
 packages:
   - !include ../packages/boards/tuya/wbr3.yaml
+  - !include ../packages/modules/tuya-product.yaml
 
 logger:
   level: INFO
 
 uart:
+  id: tuya_uart
   tx_pin: ${uart_tx_pin}
   rx_pin: ${uart_rx_pin}
   baud_rate: ${uart_baud_rate}
@@ -453,6 +455,7 @@ select:
 # ---------------------
 tuya:
   id: tuya_mcu
+  uart_id: tuya_uart
   time_id: ha_time
   on_datapoint_update:
     - sensor_datapoint: 11

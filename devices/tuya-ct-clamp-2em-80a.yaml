@@ -4,3 +4,4 @@ substitutions:
 packages:
   - !include ../packages/boards/tuya/cb2s.yaml
   - !include ../packages/modules/tuya-ct-clamp-2em.yaml
+  - !include ../packages/modules/tuya-product.yaml

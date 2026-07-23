@@ -19,11 +19,13 @@ substitutions:
 packages:
   # The original WBR3 was replaced with a NodeMCU-32S connected to its 3V3, GND, TX, and RX pads.
   - !include ../packages/boards/espressif/nodemcu-32s.yaml
+  - !include ../packages/modules/tuya-product.yaml
 
 logger:
   level: INFO
 
 uart:
+  id: tuya_uart
   tx_pin: ${uart_tx_pin}
   rx_pin: ${uart_rx_pin}
   baud_rate: ${uart_baud_rate}
@@ -282,6 +284,7 @@ select:
 # ---------------------
 tuya:
   id: tuya_mcu
+  uart_id: tuya_uart
   time_id: ha_time
   on_datapoint_update:
     - sensor_datapoint: 10 # create a human-friendly version of Fault Code as Fault Status

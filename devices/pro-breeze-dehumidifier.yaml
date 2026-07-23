@@ -6,6 +6,7 @@ substitutions:
 
 packages:
   - !include ../packages/boards/espressif/esp07.yaml
+  - !include ../packages/modules/tuya-product.yaml
 
 logger:
   level: INFO
@@ -34,14 +35,14 @@ globals:
     initial_value: '50'
 
 uart:
-  id: pb_uart
+  id: tuya_uart
   baud_rate: 9600
   tx_pin: 1
   rx_pin: 3
 
 tuya:
   id: pb_tuya
-  uart_id: pb_uart
+  uart_id: tuya_uart
   on_datapoint_update:
     - sensor_datapoint: 1
       datapoint_type: bool
