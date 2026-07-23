@@ -30,15 +30,13 @@ binary_sensor:
             pulldown: ${not ext_inverted}
           ignore_strapping_warning: ${ext_strapping}
 
-    # momentary: toggle on press
-    # rocker: toggle on any state change
-    on_press:
-      - script.execute: ${rc_id}_primary_toggle
-
-    on_release:
+    # Ignore the initial GPIO publication so it cannot override restored power state.
+    on_state_change:
       - if:
           condition:
             lambda: |-
-              return std::string("${ext_mode}") == "rocker";
+              if (!x_previous.has_value() || !x.has_value())
+                return false;
+              return std::string("${ext_mode}") == "rocker" || x.value();
           then:
             - script.execute: ${rc_id}_primary_toggle
