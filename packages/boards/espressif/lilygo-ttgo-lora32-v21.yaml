@@ -4,6 +4,7 @@ substitutions:
 
 defaults:
   esp32_classic:
+    minimum_chip_revision: 0.0
     sram1_as_iram: true
 
 packages:

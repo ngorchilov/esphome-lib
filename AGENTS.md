@@ -95,8 +95,9 @@ vars:
 Do not pass these options to C3, C6, S2, S3, or other ESP32 variants. Leave them unset until the
 running device reports its chip revision and confirms that its bootloader supports SRAM1 as IRAM.
 Both options default to disabled. The M5Stack Core ESP32 and Heltec WiFi LoRa 32 V2 board packages
-enable both by default for their known hardware. LilyGO TTGO LoRa32 V2.1 enables only
-`sram1_as_iram`; units may use silicon older than revision 3.1 despite having a compatible bootloader.
+enable both by default for their known hardware. LilyGO TTGO LoRa32 V2.1 explicitly uses
+`minimum_chip_revision: 0.0` while enabling `sram1_as_iram`; units may use older silicon despite
+having a compatible bootloader.
 
 ### Appliance Packages
 
