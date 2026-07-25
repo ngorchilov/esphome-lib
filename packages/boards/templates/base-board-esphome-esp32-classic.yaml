@@ -2,25 +2,26 @@
 # Adds opt-in settings that ESPHome supports only on the original ESP32 variant.
 
 defaults:
-  esp32_classic: ${ esp32_classic | default({}) }
+  esp32_advanced: ${ esp32_advanced | default({}) }
 
-  esp32_classic_has_minimum_chip_revision: ${ "minimum_chip_revision" in esp32_classic }
-  esp32_classic_minimum_chip_revision: ${ esp32_classic.get("minimum_chip_revision", false) }
-  esp32_classic_sram1_as_iram: ${ esp32_classic.get("sram1_as_iram", false) }
+  esp32_advanced_has_minimum_chip_revision: ${ "minimum_chip_revision" in esp32_advanced }
+  esp32_advanced_has_sram1_as_iram: ${ "sram1_as_iram" in esp32_advanced }
+  esp32_advanced_minimum_chip_revision: ${ esp32_advanced.get("minimum_chip_revision", false) }
+  esp32_advanced_sram1_as_iram: ${ esp32_advanced.get("sram1_as_iram", false) }
 
-  _esp32_classic_minimum_chip_revision_pkg:
+  _esp32_advanced_minimum_chip_revision_pkg:
     esp32:
       framework:
         advanced:
-          minimum_chip_revision: ${esp32_classic_minimum_chip_revision}
+          minimum_chip_revision: ${esp32_advanced_minimum_chip_revision}
 
-  _esp32_classic_sram1_as_iram_pkg:
+  _esp32_advanced_sram1_as_iram_pkg:
     esp32:
       framework:
         advanced:
-          sram1_as_iram: ${esp32_classic_sram1_as_iram}
+          sram1_as_iram: ${esp32_advanced_sram1_as_iram}
 
 packages:
   - !include base-board-esphome-esp32.yaml
-  - ${ _esp32_classic_minimum_chip_revision_pkg if esp32_classic_has_minimum_chip_revision else {} }
-  - ${ _esp32_classic_sram1_as_iram_pkg if esp32_classic_sram1_as_iram else {} }
+  - ${ _esp32_advanced_minimum_chip_revision_pkg if esp32_advanced_has_minimum_chip_revision else {} }
+  - ${ _esp32_advanced_sram1_as_iram_pkg if esp32_advanced_has_sram1_as_iram else {} }

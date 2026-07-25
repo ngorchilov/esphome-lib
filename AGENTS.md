@@ -83,21 +83,20 @@ probably belongs in a device file or a functional module instead.
 
 Original ESP32 boards include `base-board-esphome-esp32-classic.yaml` between their concrete board
 package and the shared ESP32-family template. It exposes original-ESP32-only build settings through
-an optional `esp32_classic:` vars object:
+an optional `esp32_advanced:` vars object:
 
 ```yaml
 vars:
-  esp32_classic:
+  esp32_advanced:
     minimum_chip_revision: 3.1
     sram1_as_iram: true
 ```
 
-Do not pass these options to C3, C6, S2, S3, or other ESP32 variants. Leave them unset until the
-running device reports its chip revision and confirms that its bootloader supports SRAM1 as IRAM.
-Both options default to disabled. The M5Stack Core ESP32 and Heltec WiFi LoRa 32 V2 board packages
-enable both by default for their known hardware. LilyGO TTGO LoRa32 V2.1 explicitly uses
-`minimum_chip_revision: 0.0` while enabling `sram1_as_iram`; units may use older silicon despite
-having a compatible bootloader.
+The library provides no defaults for either option. When `esp32_advanced` is absent, it contributes
+no `framework.advanced` configuration. When one key is present, only that key is forwarded; explicit
+values such as `sram1_as_iram: false` are preserved. Set these options only after the running device
+reports its chip revision and confirms that its bootloader supports SRAM1 as IRAM. Do not pass them
+to C3, C6, S2, S3, or other ESP32 variants.
 
 ### Appliance Packages
 

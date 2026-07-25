@@ -2,11 +2,6 @@ substitutions:
   name: m5stack-core-esp32
   friendly_name: M5Stack Core2 ESP32 IoT Development Kit
 
-defaults:
-  esp32_classic:
-    minimum_chip_revision: 3.1
-    sram1_as_iram: true
-
 packages:
   - !include ../templates/base-board-esphome-esp32-classic.yaml
 

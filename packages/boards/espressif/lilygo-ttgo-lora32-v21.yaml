@@ -2,11 +2,6 @@ substitutions:
   name: base-board-lilygo-ttgo-lora32-v21
   friendly_name: Base Board LilyGO TTGO LoRa32 V2.1
 
-defaults:
-  esp32_classic:
-    minimum_chip_revision: 0.0
-    sram1_as_iram: true
-
 packages:
   - !include ../templates/base-board-esphome-esp32-classic.yaml
 
