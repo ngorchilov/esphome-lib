@@ -359,7 +359,7 @@ switch:
 
   # Relay Switch
   - platform: template
-    name: Relay
+    name: None
     id: relay
     restore_mode: DISABLED
     lambda: return id(relay_state);
