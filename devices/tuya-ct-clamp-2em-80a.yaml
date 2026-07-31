@@ -1,7 +1,0 @@
-substitutions:
-  name: tuya-ct-clamp-2em-80a
-  friendly_name: Tuya CT Clamp 2EM 80A
-packages:
-  - !include ../packages/boards/tuya/cb2s.yaml
-  - !include ../packages/modules/tuya-ct-clamp-2em.yaml
-  - !include ../packages/modules/tuya-product.yaml

@@ -1,0 +1,715 @@
+{
+  "modelId": "e1kcg9c4",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "power_a",
+          "description": "",
+          "name": "Active power-A",
+          "typeSpec": {
+            "type": "value",
+            "max": 600000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "W"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "direction_a",
+          "description": "",
+          "name": "Current_Flow_A",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "FORWARD",
+              "REVERSE"
+            ]
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "ro",
+          "code": "tbd",
+          "description": "",
+          "name": "TBD",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "direction_b",
+          "description": "",
+          "name": "Current_FLow_B",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "FORWARD",
+              "REVERSE"
+            ]
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "power_b",
+          "description": "",
+          "name": "Active power-B",
+          "typeSpec": {
+            "type": "value",
+            "max": 600000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "W"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "ro",
+          "code": "energy_forword_a",
+          "description": "",
+          "name": "Forward Energy-A",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "ro",
+          "code": "energy_reverse_a",
+          "description": "",
+          "name": "Reverse Energy-A",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "energy_forword_b",
+          "description": "",
+          "name": "Forward Energy-B",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "ro",
+          "code": "energy_reserse_b",
+          "description": "",
+          "name": "Reverse Energy-B",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "power_factor",
+          "description": "",
+          "name": "Power factor-A",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "ro",
+          "code": "freq",
+          "description": "",
+          "name": "Frequency",
+          "typeSpec": {
+            "type": "value",
+            "max": 10000,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "Hz"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "ro",
+          "code": "voltage_a",
+          "description": "",
+          "name": "Voltage",
+          "typeSpec": {
+            "type": "value",
+            "max": 28000,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": "V"
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "ro",
+          "code": "current_a",
+          "description": "",
+          "name": "Current-A",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000000,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "mA"
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "ro",
+          "code": "current_b",
+          "description": "",
+          "name": "Current-B",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000000,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "mA"
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "ro",
+          "code": "total_power",
+          "description": "",
+          "name": "Total Power",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": -99999999,
+            "scale": 1,
+            "step": 1,
+            "unit": "W"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "rw",
+          "code": "voltage_coef",
+          "description": "",
+          "name": "Voltage calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "rw",
+          "code": "current_a_calibration",
+          "description": "",
+          "name": "Current calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "rw",
+          "code": "power_a_calibration",
+          "description": "",
+          "name": "Active power calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 119,
+          "accessMode": "rw",
+          "code": "energy_a_calibration_fwd",
+          "description": "",
+          "name": "Forward energy calibration ",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 120,
+          "accessMode": "wr",
+          "code": "coef_a_reset",
+          "description": "",
+          "name": "coef_a_reset",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "ro",
+          "code": "power_factor_b",
+          "description": "",
+          "name": "Power factor-B",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 122,
+          "accessMode": "rw",
+          "code": "freq_calibration",
+          "description": "",
+          "name": "Freq calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 123,
+          "accessMode": "rw",
+          "code": "current_b_calibration",
+          "description": "",
+          "name": "Current calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 124,
+          "accessMode": "rw",
+          "code": "power_b_calibration",
+          "description": "",
+          "name": "Active power calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 125,
+          "accessMode": "rw",
+          "code": "energy_b_calibration_fwd",
+          "description": "",
+          "name": "Forward energy calibration ",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 126,
+          "accessMode": "wr",
+          "code": "coef_b_reset",
+          "description": "",
+          "name": "coef_b_reset",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 127,
+          "accessMode": "rw",
+          "code": "energy_a_calibration_rev",
+          "description": "",
+          "name": "Reverse energy calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 128,
+          "accessMode": "rw",
+          "code": "energy_b_calibration_rev",
+          "description": "",
+          "name": "Reverse energy calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 1200,
+            "min": 800,
+            "scale": 3,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 129,
+          "accessMode": "rw",
+          "code": "report_rate_control",
+          "description": "",
+          "name": "Report rate setting",
+          "typeSpec": {
+            "type": "value",
+            "max": 60,
+            "min": 3,
+            "scale": 0,
+            "step": 1,
+            "unit": "s"
+          }
+        },
+        {
+          "abilityId": 130,
+          "accessMode": "ro",
+          "code": "forward_energy_total",
+          "description": "",
+          "name": "Total forward energy",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 131,
+          "accessMode": "ro",
+          "code": "reverse_energy_total",
+          "description": "",
+          "name": "Total reverse energy ",
+          "typeSpec": {
+            "type": "value",
+            "max": 99999999,
+            "min": 0,
+            "scale": 2,
+            "step": 1,
+            "unit": "KWH"
+          }
+        },
+        {
+          "abilityId": 132,
+          "accessMode": "rw",
+          "code": "buz_enable",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "buz_enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 133,
+          "accessMode": "rw",
+          "code": "ov_enable",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "ov_enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 134,
+          "accessMode": "rw",
+          "code": "uv_enable",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "uv_enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 135,
+          "accessMode": "rw",
+          "code": "oc_enable",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "oc_enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 136,
+          "accessMode": "rw",
+          "code": "op_enable",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "op_enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 137,
+          "accessMode": "rw",
+          "code": "ov_threshold",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Overvoltage Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 2600,
+            "min": 800,
+            "scale": 1,
+            "step": 10,
+            "unit": "v"
+          }
+        },
+        {
+          "abilityId": 138,
+          "accessMode": "rw",
+          "code": "uv_threshold",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Undervoltage Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 2600,
+            "min": 800,
+            "scale": 1,
+            "step": 10,
+            "unit": "v"
+          }
+        },
+        {
+          "abilityId": 139,
+          "accessMode": "rw",
+          "code": "oc_threshold",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Channel A Overcurrent Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 150000,
+            "min": 0,
+            "scale": 3,
+            "step": 500,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 140,
+          "accessMode": "rw",
+          "code": "op_threshold",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Channel A Overpower Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 600000,
+            "min": 1,
+            "scale": 1,
+            "step": 100,
+            "unit": "w"
+          }
+        },
+        {
+          "abilityId": 141,
+          "accessMode": "ro",
+          "code": "ov_status",
+          "description": "",
+          "name": "ov_status",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 142,
+          "accessMode": "ro",
+          "code": "uv_status",
+          "description": "",
+          "name": "uv_status",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 143,
+          "accessMode": "ro",
+          "code": "oc_status",
+          "description": "",
+          "name": "oc_status",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 144,
+          "accessMode": "ro",
+          "code": "op_status",
+          "description": "",
+          "name": "op_status",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 145,
+          "accessMode": "rw",
+          "code": "oc_threshold_b",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Channel B Overcurrent Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 150000,
+            "min": 0,
+            "scale": 3,
+            "step": 500,
+            "unit": "A"
+          }
+        },
+        {
+          "abilityId": 146,
+          "accessMode": "rw",
+          "code": "op_threshold_b",
+          "description": "",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Channel B Overpower Alarm",
+          "typeSpec": {
+            "type": "value",
+            "max": 600000,
+            "min": 1,
+            "scale": 1,
+            "step": 100,
+            "unit": "w"
+          }
+        },
+        {
+          "abilityId": 147,
+          "accessMode": "ro",
+          "code": "oc_status_b",
+          "description": "",
+          "name": "oc_status_b",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 148,
+          "accessMode": "ro",
+          "code": "op_status_b",
+          "description": "",
+          "name": "op_status_b",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 149,
+          "accessMode": "rw",
+          "code": "oc_enable_b",
+          "description": "",
+          "name": "oc_enable_b",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 150,
+          "accessMode": "rw",
+          "code": "op_enable_b",
+          "description": "",
+          "name": "op_enable_b",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}

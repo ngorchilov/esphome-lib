@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-t1m
+  friendly_name: Base Board T1-M
+
+packages:
+  - !include ../templates/base-board-libretiny-beken.yaml
+
+bk72xx:
+  board: t1-m
