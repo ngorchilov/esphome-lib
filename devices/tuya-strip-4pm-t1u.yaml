@@ -1,0 +1,196 @@
+substitutions:
+  name: tuya-strip-4pm-t1u
+  friendly_name: Tuya Strip 4PM (T1-U)
+
+  led_pin: GPIO23
+  led_inverted: 'false'
+
+  button_pin: GPIO22
+  button_pullup: 'true'
+  button_inverted: 'true'
+
+  relay1_pin: GPIO26
+  relay1_inverted: 'false'
+  relay1_id: socket_1
+  relay1_name: Socket 1
+
+  relay2_pin: GPIO9
+  relay2_inverted: 'false'
+  relay2_id: socket_2
+  relay2_name: Socket 2
+
+  relay3_pin: GPIO24
+  relay3_inverted: 'false'
+  relay3_id: socket_3
+  relay3_name: Socket 3
+
+  relay4_pin: GPIO21
+  relay4_inverted: 'false'
+  relay4_id: socket_4
+  relay4_name: Socket 4
+
+  relay5_pin: GPIO6
+  relay5_inverted: 'false'
+  relay5_id: relay_usb
+  relay5_name: Relay USB
+
+packages:
+  - !include ../packages/boards/tuya/t1u.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay1_id}
+        entity:
+          type: switch
+          name: ${relay1_name}
+        power:
+          pin: ${relay1_pin}
+          inverted: ${relay1_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay1_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay2_id}
+        entity:
+          type: switch
+          name: ${relay2_name}
+        power:
+          pin: ${relay2_pin}
+          inverted: ${relay2_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay2_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay3_id}
+        entity:
+          type: switch
+          name: ${relay3_name}
+        power:
+          pin: ${relay3_pin}
+          inverted: ${relay3_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay3_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay4_id}
+        entity:
+          type: switch
+          name: ${relay4_name}
+        power:
+          pin: ${relay4_pin}
+          inverted: ${relay4_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay4_name}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: ${relay5_id}
+        entity:
+          type: switch
+          name: ${relay5_name}
+        power:
+          pin: ${relay5_pin}
+          inverted: ${relay5_inverted}
+        control:
+          mode: local
+        power_cycle:
+          enabled: true
+          name: Reboot ${relay5_name}
+  - !include ../packages/modules/energy-monitoring-bl0942.yaml
+
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - light.turn_on: status_led
+            else:
+              - light.turn_off: status_led
+
+output:
+  - platform: gpio
+    id: led_output
+    pin: ${led_pin}
+    inverted: ${led_inverted}
+
+light:
+  - platform: binary
+    id: status_led
+    output: led_output
+
+binary_sensor:
+  - platform: template
+    id: power_status
+    name: Power Status
+    lambda: |-
+      return id(${relay1_id}_power_relay).state || id(${relay2_id}_power_relay).state ||
+             id(${relay3_id}_power_relay).state || id(${relay4_id}_power_relay).state ||
+             id(${relay5_id}_power_relay).state;
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - light.turn_on: status_led
+            else:
+              - light.turn_off: status_led
+
+  - platform: gpio
+    name: Button
+    pin:
+      number: ${button_pin}
+      mode:
+        input: true
+        pullup: ${button_pullup}
+      inverted: ${button_inverted}
+    on_press:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: power_status
+            then:
+              - switch.turn_off: ${relay1_id}_power_relay
+              - switch.turn_off: ${relay2_id}_power_relay
+              - switch.turn_off: ${relay3_id}_power_relay
+              - switch.turn_off: ${relay4_id}_power_relay
+              - switch.turn_off: ${relay5_id}_power_relay
+            else:
+              - switch.turn_on: ${relay1_id}_power_relay
+              - switch.turn_on: ${relay2_id}_power_relay
+              - switch.turn_on: ${relay3_id}_power_relay
+              - switch.turn_on: ${relay4_id}_power_relay
+              - switch.turn_on: ${relay5_id}_power_relay
+
+button:
+  - platform: template
+    name: Reboot All Relays
+    on_press:
+      - script.execute: ${relay1_id}_power_cycle
+      - script.execute: ${relay2_id}_power_cycle
+      - script.execute: ${relay3_id}_power_cycle
+      - script.execute: ${relay4_id}_power_cycle
+      - script.execute: ${relay5_id}_power_cycle
