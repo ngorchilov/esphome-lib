@@ -6,8 +6,8 @@ substitutions:
   uart_rx_pin: GPIO10
   uart_baud_rate: 9600
 
-  channel_a_name: Channel A
-  channel_b_name: Channel B
+  channel_a_name: ${ (ct_clamp | default({})).get("channels", {}).get("a_name", "Channel A") }
+  channel_b_name: ${ (ct_clamp | default({})).get("channels", {}).get("b_name", "Channel B") }
 
   power_scale: 0.1 # DP 101, 105, 115
   energy_scale: 0.01 # DP 106, 107, 108, 109, 130, 131
