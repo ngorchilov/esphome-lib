@@ -12,14 +12,12 @@ substitutions:
 packages:
   - !include ../packages/boards/tuya/cb2s.yaml
   - !include ../packages/modules/tuya-product.yaml
-logger:
-  level: DEBUG
 
 uart:
   id: tuya_uart
   tx_pin: TX1
   rx_pin: RX1
-  baud_rate: 9600
+  baud_rate: ${ tuya_uart_baud_rate | default(115200) }
 
 tuya:
   id: tuya_component
