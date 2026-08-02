@@ -1,25 +1,35 @@
 substitutions:
-  name: tuya-dry-relay-2dc-10a
-  friendly_name: Tuya Dry Relay 2DC 10A
+  name: tuya-dry-relay-4dc-10a
+  friendly_name: Tuya Dry Relay 4DC 10A
 
-  relay1_pin: GPIO14
+  relay1_pin: GPIO24
   relay1_inverted: 'false'
-  button1_pin: GPIO9
+  button1_pin: GPIO8
   button1_inverted: 'true'
 
   relay2_pin: GPIO6
   relay2_inverted: 'false'
-  button2_pin: GPIO24
+  button2_pin: GPIO9
   button2_inverted: 'true'
 
-  master_switch_pin: GPIO8
+  relay3_pin: GPIO26
+  relay3_inverted: 'false'
+  button3_pin: GPIO10
+  button3_inverted: 'true'
+
+  relay4_pin: GPIO14
+  relay4_inverted: 'false'
+  button4_pin: GPIO11
+  button4_inverted: 'true'
+
+  master_switch_pin: GPIO7
   master_switch_inverted: 'true'
   master_switch_pullup: 'true'
 
-  status_led_pin: GPIO26
+  status_led_pin: GPIO22
   status_led_inverted: 'true'
 
-  rf433_pin: GPIO7
+  rf433_pin: GPIO20
   rf433_inverted: 'false'
 
 packages:
@@ -56,6 +66,38 @@ packages:
           name: Button 2
           pin: ${button2_pin}
           inverted: ${button2_inverted}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay_3
+        entity: '${ relay_3_entity | default({"type": "switch", "name": "Relay 3"}) }'
+        power:
+          pin: ${relay3_pin}
+          inverted: ${relay3_inverted}
+        control:
+          mode: local
+        integrated_button:
+          enabled: true
+          name: Button 3
+          pin: ${button3_pin}
+          inverted: ${button3_inverted}
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: relay_4
+        entity: '${ relay_4_entity | default({"type": "switch", "name": "Relay 4"}) }'
+        power:
+          pin: ${relay4_pin}
+          inverted: ${relay4_inverted}
+        control:
+          mode: local
+        integrated_button:
+          enabled: true
+          name: Button 4
+          pin: ${button4_pin}
+          inverted: ${button4_inverted}
 
 binary_sensor:
   - platform: gpio
@@ -71,13 +113,18 @@ binary_sensor:
       - if:
           condition:
             lambda: |-
-              return id(relay_1_power_relay).state || id(relay_2_power_relay).state;
+              return id(relay_1_power_relay).state || id(relay_2_power_relay).state ||
+                     id(relay_3_power_relay).state || id(relay_4_power_relay).state;
           then:
             - script.execute: relay_1_power_off
             - script.execute: relay_2_power_off
+            - script.execute: relay_3_power_off
+            - script.execute: relay_4_power_off
           else:
             - script.execute: relay_1_power_on
             - script.execute: relay_2_power_on
+            - script.execute: relay_3_power_on
+            - script.execute: relay_4_power_on
 
 status_led:
   pin:
