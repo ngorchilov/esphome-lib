@@ -1,0 +1,9 @@
+defaults:
+  fan433_board: ${ fan433_board | default({}) }
+  fan433_board_radio: ${ fan433_board.get("radio", "sx127x") }
+
+  _fan433_board_sx127x_pkg: !include ../../packages/boards/espressif/lilygo-ttgo-lora32-v21.yaml
+  _fan433_board_cc1101_pkg: !include ../../packages/boards/espressif/esp32dev.yaml
+
+packages:
+  - ${ _fan433_board_sx127x_pkg if fan433_board_radio == 'sx127x' else _fan433_board_cc1101_pkg }

@@ -91,7 +91,10 @@ substitutions:
             "condition": {"lambda": "return id(fan433_ready);"},
             "then": [
               {"lambda": code | join("\n")},
-              {"script.execute": {"id": "fan433_transmit_queue"}}
+              {"if": {
+                "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
+                "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
+              }}
             ]
           }
         }]
@@ -141,7 +144,10 @@ substitutions:
         "entity_category": "config",
         "on_press": [
           {"lambda": code | join("\n")},
-          {"script.execute": {"id": "fan433_transmit_queue"}}
+          {"if": {
+            "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
+            "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
+          }}
         ]
       }) %>
     <% endfor %>
@@ -172,7 +178,7 @@ substitutions:
     minimum_chip_revision: 3.1
     sram1_as_iram: true
 
-  # SX127x pins: LILYGO T3 V1.6.1 / LoRa32 V2.1.x
+  # SX127x pins: LilyGO TTGO LoRa32 V2.1
   clk_pin_sx127x:
     number: GPIO5
     ignore_strapping_warning: true
@@ -254,6 +260,20 @@ substitutions:
         - cc1101.begin_rx:
             id: rf_radio
 
+  fan433_tx_complete_actions:
+    - lambda: |-
+        auto &queue = id(fan433_command_queue);
+        if (!queue.empty()) {
+          queue.erase(queue.begin());
+        }
+    - delay: ${fan_command_pause}
+    - lambda: id(fan433_transmit_active) = false;
+    - if:
+        condition:
+          lambda: return !id(fan433_command_queue).empty();
+        then:
+          - script.execute: fan433_transmit_queue
+
   # RX mode hooks per backend
   rx_enter_action_sx127x:
     sx127x.set_mode_rx:
@@ -263,8 +283,10 @@ substitutions:
 
 packages:
   - !include
-    file: ../packages/boards/espressif/esp32dev.yaml
+    file: fan-control-433/board.yaml
     vars:
+      fan433_board:
+        radio: ${radio}
       esp32_advanced: ${ framework_advanced_${radio} }
   # Inject either sx127x: or cc1101: at top level.
   - ${ components_${radio} }
@@ -291,11 +313,12 @@ remote_transmitter:
   id: rf_tx
   pin: ${tx_pin_${radio}}
   carrier_duty_percent: 100%
-  non_blocking: false
+  non_blocking: true
   # ESP-IDF requires at least 64 RMT symbols on ESP32.
   rmt_symbols: 64
   on_transmit: ${tx_hooks_${radio}.on_transmit}
-  on_complete: ${tx_hooks_${radio}.on_complete}
+  on_complete:
+    then: ${ tx_hooks_${radio}.on_complete.then + fan433_tx_complete_actions }
 
 remote_receiver:
   id: rf_rx
@@ -450,6 +473,10 @@ globals:
     type: std::vector<uint32_t>
     restore_value: no
     initial_value: 'std::vector<uint32_t>{}'
+  - id: fan433_transmit_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
   - id: rf_learn_active
     type: bool
     restore_value: no
@@ -504,11 +531,12 @@ script:
   - id: fan433_transmit_queue
     mode: single
     then:
-      - while:
+      - if:
           condition:
-            lambda: return !id(fan433_command_queue).empty();
+            lambda: return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);
           then:
             - lambda: |-
+                id(fan433_transmit_active) = true;
                 const uint32_t queued = id(fan433_command_queue).front();
                 ESP_LOGI("fan433", "transmit command=0x%02X address=0x%04X repeat=%u",
                          static_cast<unsigned>(queued & 0xFF),
@@ -562,5 +590,3 @@ script:
                 repeat:
                   times: ${fan_repeat_count}
                   wait_time: ${fan_gap_us}us
-            - lambda: id(fan433_command_queue).erase(id(fan433_command_queue).begin());
-            - delay: ${fan_command_pause}
