@@ -1,6 +1,0 @@
-sx127x:
-  - id: lora_radio
-    spi_id: lora_spi
-    cs_pin: GPIO18
-    rst_pin: ${lora_radio_reset_pin}
-    dio0_pin: GPIO26

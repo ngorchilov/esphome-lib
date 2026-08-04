@@ -105,27 +105,46 @@ may select a concrete board package and compose integrated peripherals whose wir
 board. Use an appliance when it removes physical pin knowledge from device files and presents a
 smaller capability-oriented API; do not use one merely to regroup a few component declarations.
 
-`packages/appliances/lora-receiver.yaml` supports the Heltec WiFi LoRa 32 V2 and LilyGO TTGO LoRa32
-V2.1 profiles. Its public API is:
+`packages/appliances/radio-transceiver.yaml` is the shared radio hardware appliance. It supports:
+
+- `heltec`: Heltec WiFi LoRa 32 V2 with its integrated SX127x radio and OLED
+- `lilygo`: LilyGO TTGO LoRa32 V2.1 with its integrated SX127x radio and OLED
+- `esp32dev_cc1101`: ESP32 DevKit with the library's standard external CC1101 wiring
+
+Its public API separates the physical profile from the ESPHome driver:
 
 ```yaml
 packages:
   - !include
-    file: ../packages/appliances/lora-receiver.yaml
+    file: ../packages/appliances/radio-transceiver.yaml
     vars:
-      lora:
-        board: lilygo # heltec | lilygo
-        radio:
-          driver: sx127x # sx127x | wmbus
+      radio:
+        profile: lilygo # heltec | lilygo | esp32dev_cc1101
+        driver: raw # sx127x | wmbus | raw
+        frequency: 433.92MHz
         display:
           enabled: true
+        raw:
+          transmitter:
+            enabled: true
+          receiver:
+            enabled: false
 ```
 
-The appliance owns the board target, radio and display buses, integrated GPIO wiring, OLED font,
-and status LED. Applications extend `lora_radio` and `lora_display` with protocol callbacks and
-presentation logic. Stable infrastructure ids include `lora_spi`, `lora_i2c`, `lora_oled_font`,
-and `lora_status_led`. Keep external component declarations and driver-specific toolchain workarounds
-in the consuming device when they are not intrinsic to the physical board.
+The `sx127x` and `wmbus` drivers are supported by both integrated-radio profiles. Raw TX and RX are
+supported by `lilygo` and `esp32dev_cc1101`. Heltec routes SX127x DIO2 to input-only GPIO34, so its
+`raw` driver supports RX only; enabling its raw transmitter intentionally fails validation.
+`esp32dev_cc1101` is a raw-radio profile and has no integrated display. Unsupported profile/driver
+combinations must fail configuration rather than silently selecting another hardware target.
+
+The appliance owns the board target, SPI bus, transceiver wiring, optional raw transmitter/receiver,
+integrated OLED wiring, font, and status LED. Applications own protocol settings, decoding,
+automations, and user-facing entities. Stable infrastructure ids include `radio_spi`,
+`radio_transceiver`, `radio_transmitter`, `radio_receiver`, `radio_i2c`, `radio_oled_font`,
+`radio_display`, and `radio_status_led`. Raw-radio consumers may use the `radio_enter_tx`,
+`radio_enter_rx`, `radio_enter_idle`, and `radio_after_transmit` scripts instead of knowing the
+underlying radio component. Keep external component declarations and protocol-specific toolchain
+workarounds in the consuming device when they are not intrinsic to the physical hardware.
 
 ### Functional Modules
 
@@ -139,7 +158,7 @@ Important modules:
 - `relay-control.yaml` is the public relay-control assembler and composes smaller relay-control packages.
 - `energy-monitoring-bl0937.yaml` and `energy-monitoring-bl0942.yaml` expose reusable energy monitor setups.
 - `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
-- `lora/radio.yaml` and `lora/display.yaml` provide the capability layers used by the LoRa receiver appliance.
+- `radio/driver.yaml` and `radio/display.yaml` provide the capability layers used by the radio appliance.
 - `wmbus/qwater-meter.yaml` exposes one complete QWater meter entity profile per include.
 
 Prefer a module over copy/paste device logic when the behavior is reusable. Prefer device-local YAML
@@ -150,7 +169,7 @@ when the behavior is unique, experimental, or depends on one physical product.
 `packages/modules/wmbus/qwater-meter.yaml` is a multi-instance profile for QWater meters. It creates
 the meter component plus its RSSI, current volume in cubic metres, derived consumption in litres,
 end-of-month, end-of-year, and corresponding date entities. The receiver must already provide a
-`wmbus_radio`; the LoRa receiver appliance exposes it as `lora_radio`.
+`wmbus_radio`; the radio appliance exposes it as `radio_transceiver`.
 
 ```yaml
 packages:
@@ -164,10 +183,10 @@ packages:
 ```
 
 `meter.id` prefixes every generated id and must be unique. `meter.radio_id` defaults to
-`lora_radio`. Including the profile multiple times automatically registers the QWater driver, so a
-separate `wmbus_common.drivers` entry is unnecessary unless additional uninstantiated drivers are
-required. QWater date fields are `PointInTime` values, which the current adapter does not expose to
-`wmbus_meter` text sensors. The profile therefore publishes its date template sensors from the
+`radio_transceiver`. Including the profile multiple times automatically registers the QWater driver,
+so a separate `wmbus_common.drivers` entry is unnecessary unless additional uninstantiated drivers
+are required. QWater date fields are `PointInTime` values, which the current adapter does not expose
+to `wmbus_meter` text sensors. The profile therefore publishes its date template sensors from the
 meter's `on_telegram` callback and marks them with the native `date` device class. Last Update uses
 the adapter's UTC timestamp field and native `timestamp` device class; the meter clock remains text
 because its reported wall-clock value has no timezone.

@@ -1,0 +1,54 @@
+# Radio Transceiver (virtual appliance)
+# Selects a physical radio assembly and composes its shared hardware capabilities.
+
+defaults:
+  radio: ${ radio | default({}) }
+  radio_display: ${ radio.get("display", {}) }
+  radio_raw: ${ radio.get("raw", {}) }
+  radio_raw_transceiver: ${ radio_raw.get("transceiver", {}) }
+  radio_raw_transmitter: ${ radio_raw.get("transmitter", {}) }
+  radio_raw_receiver: ${ radio_raw.get("receiver", {}) }
+
+  radio_profile: ${ radio.get("profile", "heltec") } # heltec | lilygo | esp32dev_cc1101
+  radio_driver: ${ radio.get("driver", "sx127x") } # sx127x | wmbus | raw
+  radio_frequency: ${ radio.get("frequency", "433.92MHz") }
+  radio_display_enabled: ${ radio_display.get("enabled", true) }
+  radio_raw_transmitter_enabled: ${ radio_raw_transmitter.get("enabled", true) }
+  radio_raw_receiver_enabled: ${ radio_raw_receiver.get("enabled", false) }
+  radio_raw_non_blocking: ${ radio_raw_transmitter.get("non_blocking", false) }
+  radio_raw_after_transmit: ${ radio_raw_transmitter.get("after_transmit", "idle" if radio_profile == "esp32dev_cc1101" else "standby") }
+  radio_raw_tx_on_complete: ${ radio_raw_transmitter.get("on_complete", []) }
+  esp32_advanced: ${ radio.get("esp32_advanced", {}) }
+
+  radio_profile_supported: ${ radio_profile == "heltec" or radio_profile == "lilygo" or radio_profile == "esp32dev_cc1101" }
+  radio_driver_supported: ${ (radio_profile == "heltec" or radio_profile == "lilygo") and (radio_driver == "sx127x" or radio_driver == "wmbus" or radio_driver == "raw") or radio_profile == "esp32dev_cc1101" and radio_driver == "raw" }
+  radio_transceiver_type: ${ "cc1101" if radio_profile == "esp32dev_cc1101" else "sx127x" }
+
+  radio_spi_clk_pin: '${ "INVALID_RADIO_PROFILE_OR_DRIVER" if not radio_profile_supported or not radio_driver_supported else "GPIO18" if radio_profile == "esp32dev_cc1101" else {"number": "GPIO5", "ignore_strapping_warning": true} }'
+  radio_spi_mosi_pin: ${ "GPIO23" if radio_profile == "esp32dev_cc1101" else "GPIO27" }
+  radio_spi_miso_pin: GPIO19
+  radio_cs_pin: '${ {"number": "GPIO5", "ignore_strapping_warning": true} if radio_profile == "esp32dev_cc1101" else "GPIO18" }'
+  radio_reset_pin: ${ "GPIO14" if radio_profile == "heltec" else "GPIO23" }
+  radio_irq_pin: ${ "GPIO35" if radio_profile == "heltec" else "GPIO33" }
+  radio_dio0_pin: GPIO26
+  radio_raw_tx_pin: '${ {"number": "GPIO26"} if radio_profile == "esp32dev_cc1101" else {"number": "RAW_TX_UNSUPPORTED_ON_HELTEC"} if radio_profile == "heltec" else {"number": "GPIO32", "allow_other_uses": true} if radio_raw_receiver_enabled else {"number": "GPIO32"} }'
+  radio_raw_rx_pin: '${ {"number": "GPIO25"} if radio_profile == "esp32dev_cc1101" else {"number": "GPIO34"} if radio_profile == "heltec" else {"number": "GPIO32", "allow_other_uses": true} if radio_raw_transmitter_enabled else {"number": "GPIO32"} }'
+
+  radio_i2c_sda_pin: ${ "GPIO4" if radio_profile == "heltec" else "GPIO21" }
+  radio_i2c_scl_pin: ${ "GPIO15" if radio_profile == "heltec" else "GPIO22" }
+  radio_i2c_scl_strapping: ${ radio_profile == "heltec" }
+
+  _radio_board_heltec_pkg: !include ../boards/espressif/heltec-wifi-lora-32-v2.yaml
+  _radio_board_lilygo_pkg: !include ../boards/espressif/lilygo-ttgo-lora32-v21.yaml
+  _radio_board_cc1101_pkg: !include ../boards/espressif/esp32dev.yaml
+  _radio_heltec_outputs_pkg: !include radio-transceiver/heltec-outputs.yaml
+  _radio_status_led_pkg: !include radio-transceiver/status-led.yaml
+  _radio_driver_pkg: !include ../modules/radio/driver.yaml
+  _radio_display_pkg: !include ../modules/radio/display.yaml
+
+packages:
+  - ${ _radio_board_heltec_pkg if radio_profile == 'heltec' else _radio_board_lilygo_pkg if radio_profile == 'lilygo' else _radio_board_cc1101_pkg }
+  - ${ _radio_heltec_outputs_pkg if radio_profile == 'heltec' else {} }
+  - ${ _radio_status_led_pkg if radio_profile != 'esp32dev_cc1101' else {} }
+  - ${ _radio_driver_pkg }
+  - ${ _radio_display_pkg if radio_display_enabled and radio_profile != 'esp32dev_cc1101' else {} }

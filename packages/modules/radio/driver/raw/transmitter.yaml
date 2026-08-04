@@ -1,0 +1,14 @@
+defaults:
+  _radio_raw_tx_complete_actions:
+    - script.execute: radio_after_transmit
+
+remote_transmitter:
+  - id: radio_transmitter
+    pin: ${radio_raw_tx_pin}
+    carrier_duty_percent: 100%
+    non_blocking: ${radio_raw_non_blocking}
+    rmt_symbols: 64
+    on_transmit:
+      - script.execute: radio_enter_tx
+    on_complete:
+      then: ${ _radio_raw_tx_complete_actions + radio_raw_tx_on_complete }

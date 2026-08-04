@@ -1,0 +1,5 @@
+spi:
+  - id: radio_spi
+    clk_pin: ${radio_spi_clk_pin}
+    mosi_pin: ${radio_spi_mosi_pin}
+    miso_pin: ${radio_spi_miso_pin}

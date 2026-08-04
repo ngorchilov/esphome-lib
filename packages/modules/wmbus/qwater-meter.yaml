@@ -5,7 +5,7 @@ defaults:
   qwater_id: ${ meter.get("id", "water_meter") }
   qwater_name: ${ meter.get("name", "Water") }
   qwater_meter_id: ${ meter.get("meter_id", "") }
-  qwater_radio_id: ${ meter.get("radio_id", "lora_radio") }
+  qwater_radio_id: ${ meter.get("radio_id", "radio_transceiver") }
 
 wmbus_meter:
   - id: ${qwater_id}

@@ -12,12 +12,11 @@ substitutions:
 
 packages:
   - !include
-    file: ../packages/appliances/lora-receiver.yaml
+    file: ../packages/appliances/radio-transceiver.yaml
     vars:
-      lora:
-        board: ${board_profile}
-        radio:
-          driver: sx127x
+      radio:
+        profile: ${board_profile}
+        driver: sx127x
         display:
           enabled: true
 
@@ -30,7 +29,7 @@ logger:
   level: INFO
 
 sx127x:
-  - id: !extend lora_radio
+  - id: !extend radio_transceiver
     auto_cal: true
     frequency: ${weather_station_frequency}
     modulation: FSK
@@ -213,7 +212,7 @@ globals:
     initial_value: '0'
 
 display:
-  - id: !extend lora_display
+  - id: !extend radio_display
     lambda: |-
       id(oled_update_count) += 1;
 
@@ -245,20 +244,20 @@ display:
       char valid_age[8];
       format_age(id(vevor_last_valid_seen_ms), valid_age, sizeof(valid_age));
 
-      it.print(0, 0, id(lora_oled_font), "${friendly_name}");
+      it.print(0, 0, id(radio_oled_font), "${friendly_name}");
 
       if (!id(temperature).has_state() || !id(humidity).has_state()) {
-          it.print(0, 13, id(lora_oled_font), "Waiting data");
-          it.printf(0, 26, id(lora_oled_font), "RF: %s ago", packet_age);
-          it.printf(0, 39, id(lora_oled_font), "OK:%lu Bad:%lu", (unsigned long) valid, (unsigned long) bad);
-          it.printf(0, 52, id(lora_oled_font), "Alive:%lu", (unsigned long) (id(oled_update_count) % 1000));
+          it.print(0, 13, id(radio_oled_font), "Waiting data");
+          it.printf(0, 26, id(radio_oled_font), "RF: %s ago", packet_age);
+          it.printf(0, 39, id(radio_oled_font), "OK:%lu Bad:%lu", (unsigned long) valid, (unsigned long) bad);
+          it.printf(0, 52, id(radio_oled_font), "Alive:%lu", (unsigned long) (id(oled_update_count) % 1000));
           return;
       }
 
-      it.printf(0, 13, id(lora_oled_font), "T:%.1fC H:%.0f%%", id(temperature).state, id(humidity).state);
-      it.printf(0, 26, id(lora_oled_font), "W:%.1f G:%.1f", id(wind_speed).state, id(wind_gust).state);
-      it.printf(0, 39, id(lora_oled_font), "D:%.0f R:%.0f UV:%.0f", id(wind_dir).state, id(rain).state, id(uv_index).state);
-      it.printf(0, 52, id(lora_oled_font), "OK:%lu Bad:%lu %s", (unsigned long) valid, (unsigned long) bad, valid_age);
+      it.printf(0, 13, id(radio_oled_font), "T:%.1fC H:%.0f%%", id(temperature).state, id(humidity).state);
+      it.printf(0, 26, id(radio_oled_font), "W:%.1f G:%.1f", id(wind_speed).state, id(wind_gust).state);
+      it.printf(0, 39, id(radio_oled_font), "D:%.0f R:%.0f UV:%.0f", id(wind_dir).state, id(rain).state, id(uv_index).state);
+      it.printf(0, 52, id(radio_oled_font), "OK:%lu Bad:%lu %s", (unsigned long) valid, (unsigned long) bad, valid_age);
 
 sensor:
   - platform: template

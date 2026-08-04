@@ -1,0 +1,11 @@
+# Radio driver capability
+
+defaults:
+  _radio_bus_pkg: !include bus.yaml
+  _radio_driver_sx127x_pkg: !include driver/sx127x.yaml
+  _radio_driver_wmbus_pkg: !include driver/wmbus.yaml
+  _radio_driver_raw_pkg: !include driver/raw.yaml
+
+packages:
+  - ${ _radio_bus_pkg }
+  - ${ _radio_driver_wmbus_pkg if radio_driver == 'wmbus' else _radio_driver_raw_pkg if radio_driver == 'raw' else _radio_driver_sx127x_pkg }

@@ -1,0 +1,8 @@
+wmbus_radio:
+  - id: radio_transceiver
+    radio_id: radio_transceiver_hardware
+    spi_id: radio_spi
+    radio_type: SX1276
+    cs_pin: ${radio_cs_pin}
+    reset_pin: ${radio_reset_pin}
+    irq_pin: ${radio_irq_pin}

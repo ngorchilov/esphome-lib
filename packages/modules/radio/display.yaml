@@ -1,22 +1,22 @@
 # Integrated OLED display capability
 
 i2c:
-  - id: lora_i2c
-    sda: ${lora_i2c_sda_pin}
+  - id: radio_i2c
+    sda: ${radio_i2c_sda_pin}
     scl:
-      number: ${lora_i2c_scl_pin}
-      ignore_strapping_warning: ${lora_i2c_scl_strapping}
+      number: ${radio_i2c_scl_pin}
+      ignore_strapping_warning: ${radio_i2c_scl_strapping}
     scan: true
 
 font:
   - file: 'gfonts://Roboto Mono'
-    id: lora_oled_font
+    id: radio_oled_font
     size: 11
     glyphs: ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
 
 display:
   - platform: ssd1306_i2c
-    id: lora_display
-    i2c_id: lora_i2c
+    id: radio_display
+    i2c_id: radio_i2c
     model: SSD1306_128X64
     update_interval: 1s

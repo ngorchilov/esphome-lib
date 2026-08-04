@@ -1,0 +1,41 @@
+defaults:
+  _radio_after_standby_actions:
+    - sx127x.set_mode_standby:
+        id: radio_transceiver
+  _radio_after_rx_actions:
+    - sx127x.set_mode_rx:
+        id: radio_transceiver
+
+sx127x:
+  - id: radio_transceiver
+    spi_id: radio_spi
+    cs_pin: ${radio_cs_pin}
+    rst_pin: ${radio_reset_pin}
+    frequency: ${radio_frequency}
+    modulation: ${ radio_raw_transceiver.get("modulation", "OOK") }
+    bandwidth: ${ radio_raw_transceiver.get("bandwidth", "125_0kHz") }
+    bitsync: ${ radio_raw_transceiver.get("bitsync", false) }
+    packet_mode: ${ radio_raw_transceiver.get("packet_mode", false) }
+    rx_start: ${ radio_raw_transceiver.get("rx_start", false) }
+    pa_pin: ${ radio_raw_transceiver.get("pa_pin", "BOOST") }
+    pa_power: ${ radio_raw_transceiver.get("pa_power", 17) }
+
+script:
+  - id: radio_enter_tx
+    mode: single
+    then:
+      - sx127x.set_mode_tx:
+          id: radio_transceiver
+  - id: radio_enter_rx
+    mode: single
+    then:
+      - sx127x.set_mode_rx:
+          id: radio_transceiver
+  - id: radio_enter_idle
+    mode: single
+    then:
+      - sx127x.set_mode_standby:
+          id: radio_transceiver
+  - id: radio_after_transmit
+    mode: single
+    then: ${ _radio_after_rx_actions if radio_raw_after_transmit == 'rx' else _radio_after_standby_actions }

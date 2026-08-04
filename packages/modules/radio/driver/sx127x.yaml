@@ -1,0 +1,6 @@
+sx127x:
+  - id: radio_transceiver
+    spi_id: radio_spi
+    cs_pin: ${radio_cs_pin}
+    rst_pin: ${radio_reset_pin}
+    dio0_pin: ${radio_dio0_pin}

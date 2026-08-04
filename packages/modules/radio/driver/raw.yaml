@@ -1,0 +1,10 @@
+defaults:
+  _radio_raw_sx127x_pkg: !include raw/sx127x.yaml
+  _radio_raw_cc1101_pkg: !include raw/cc1101.yaml
+  _radio_raw_transmitter_pkg: !include raw/transmitter.yaml
+  _radio_raw_receiver_pkg: !include raw/receiver.yaml
+
+packages:
+  - ${ _radio_raw_cc1101_pkg if radio_transceiver_type == 'cc1101' else _radio_raw_sx127x_pkg }
+  - ${ _radio_raw_transmitter_pkg if radio_raw_transmitter_enabled else {} }
+  - ${ _radio_raw_receiver_pkg if radio_raw_receiver_enabled else {} }

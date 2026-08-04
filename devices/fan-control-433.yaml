@@ -3,8 +3,9 @@ substitutions:
   name: fan-control-433
   friendly_name: Fan Control 433
 
-  # RF backend selection: sx127x or cc1101
-  radio: sx127x
+  # RF hardware profile: lilygo or esp32dev_cc1101
+  radio_profile: ${ (fan433 | default({})).get("radio", {}).get("profile", "lilygo") }
+  radio: ${ "cc1101" if radio_profile == "esp32dev_cc1101" else "sx127x" }
   rf_frequency: 433.92MHz
 
   # Fan protocol timings and commands
@@ -177,88 +178,16 @@ substitutions:
   framework_advanced_cc1101:
     minimum_chip_revision: 3.1
     sram1_as_iram: true
+  radio_esp32_advanced: ${ framework_advanced_${radio} }
+  radio_after_transmit: ${ "rx" if radio == "cc1101" else "standby" }
 
-  # SX127x pins: LilyGO TTGO LoRa32 V2.1
-  clk_pin_sx127x:
-    number: GPIO5
-    ignore_strapping_warning: true
-  mosi_pin_sx127x: GPIO27
-  miso_pin_sx127x: GPIO19
-  cs_pin_sx127x: GPIO18
-  rst_pin_sx127x: GPIO23
-  tx_pin_sx127x:
-    number: GPIO32 # SX1278 DIO2, raw TX data in OOK continuous mode
-    allow_other_uses: true
-  rx_pin_sx127x:
-    number: GPIO32 # SX1278 DIO2, raw RX data out OOK continuous mode
-    allow_other_uses: true
-
-  # CC1101 pins: ESP32-WROOM-32 DevKit, VSPI + GDO0/GDO2
-  clk_pin_cc1101: GPIO18 # CC1101 pin 5: SCK (white)
-  mosi_pin_cc1101: GPIO23 # CC1101 pin 6: MOSI (yellow)
-  miso_pin_cc1101: GPIO19 # CC1101 pin 7: MISO (blue)
-  cs_pin_cc1101:
-    number: GPIO5 # CC1101 pin 4: CSN (green)
-    ignore_strapping_warning: true
-  gdo0_pin_cc1101: GPIO26 # CC1101 pin 3: GDO0, TX data in (brown)
-  gdo2_pin_cc1101: GPIO25 # CC1101 pin 8: GDO2, RX data out (orange)
-  tx_pin_cc1101:
-    number: ${gdo0_pin_cc1101} # CC1101 GDO0, TX data in
-  rx_pin_cc1101:
-    number: ${gdo2_pin_cc1101} # CC1101 GDO2, RX data out
-
-  # Radio component fragments
-  components_sx127x:
-    sx127x:
-      id: rf_radio
-      cs_pin: ${cs_pin_sx127x}
-      rst_pin: ${rst_pin_sx127x}
-      bandwidth: 50_0kHz
-      frequency: ${rf_frequency}
-      modulation: OOK
-      bitsync: false
-      packet_mode: false
-      rx_start: false
-      pa_pin: BOOST
-      pa_power: 17
-
-  components_cc1101:
-    cc1101:
-      id: rf_radio
-      cs_pin: ${cs_pin_cc1101}
-      frequency: ${rf_frequency}
-      modulation_type: ASK/OOK
-      packet_mode: false
-      output_power: 10
-
-  # TX mode hooks per backend
-  tx_hooks_sx127x:
-    on_transmit:
-      then:
-        - sx127x.set_mode_tx:
-    on_complete:
-      then:
-        - sx127x.set_mode_standby:
-
-  tx_hooks_cc1101:
-    on_transmit:
-      then:
-        - logger.log:
-            level: DEBUG
-            format: 'fan433: CC1101 begin_tx'
-        - cc1101.begin_tx:
-            id: rf_radio
-        - logger.log:
-            level: DEBUG
-            format: 'fan433: RMT transmit started'
-    on_complete:
-      then:
-        - logger.log:
-            level: DEBUG
-            format: 'fan433: RF transmit complete'
-        # Return the CC1101 to RX/idle-ready mode after transmission.
-        - cc1101.begin_rx:
-            id: rf_radio
+  radio_transceiver_options_sx127x:
+    bandwidth: 50_0kHz
+    pa_pin: BOOST
+    pa_power: 17
+  radio_transceiver_options_cc1101:
+    output_power: 10
+  radio_transceiver_options: ${ radio_transceiver_options_${radio} }
 
   fan433_tx_complete_actions:
     - lambda: |-
@@ -274,22 +203,26 @@ substitutions:
         then:
           - script.execute: fan433_transmit_queue
 
-  # RX mode hooks per backend
-  rx_enter_action_sx127x:
-    sx127x.set_mode_rx:
-  rx_enter_action_cc1101:
-    cc1101.begin_rx:
-      id: rf_radio
-
 packages:
   - !include
-    file: fan-control-433/board.yaml
+    file: ../packages/appliances/radio-transceiver.yaml
     vars:
-      fan433_board:
-        radio: ${radio}
-      esp32_advanced: ${ framework_advanced_${radio} }
-  # Inject either sx127x: or cc1101: at top level.
-  - ${ components_${radio} }
+      radio:
+        profile: ${radio_profile}
+        driver: raw
+        frequency: ${rf_frequency}
+        esp32_advanced: ${radio_esp32_advanced}
+        display:
+          enabled: false
+        raw:
+          transceiver: ${radio_transceiver_options}
+          transmitter:
+            enabled: true
+            non_blocking: true
+            after_transmit: ${radio_after_transmit}
+            on_complete: ${fan433_tx_complete_actions}
+          receiver:
+            enabled: true
   # Generate one fan entity and synchronization button per RF address.
   - fan: ${ fan433_entities }
     button: ${ fan433_sync_buttons }
@@ -304,161 +237,144 @@ esphome:
 logger:
   level: DEBUG
 
-spi:
-  clk_pin: ${clk_pin_${radio}}
-  mosi_pin: ${mosi_pin_${radio}}
-  miso_pin: ${miso_pin_${radio}}
-
-remote_transmitter:
-  id: rf_tx
-  pin: ${tx_pin_${radio}}
-  carrier_duty_percent: 100%
-  non_blocking: true
-  # ESP-IDF requires at least 64 RMT symbols on ESP32.
-  rmt_symbols: 64
-  on_transmit: ${tx_hooks_${radio}.on_transmit}
-  on_complete:
-    then: ${ tx_hooks_${radio}.on_complete.then + fan433_tx_complete_actions }
-
 remote_receiver:
-  id: rf_rx
-  pin: ${rx_pin_${radio}}
-  # Keep ESPHome's built-in raw dumper disabled; otherwise normal RF noise
-  # spams the logs even when learn mode is not active. Our on_raw lambda below
-  # decides what to log/publish during the explicit learn window.
-  dump: []
-  tolerance: 35%
-  filter: 200us
-  idle: 9000us
-  on_raw:
-    then:
-      - lambda: |-
-          const uint32_t now = millis();
-          if (!id(rf_learn_active)) {
-            return;
-          }
+  - id: !extend radio_receiver
+    # Keep ESPHome's built-in raw dumper disabled; otherwise normal RF noise
+    # spams the logs even when learn mode is not active. Our on_raw lambda below
+    # decides what to log/publish during the explicit learn window.
+    dump: []
+    tolerance: 35%
+    filter: 200us
+    idle: 9000us
+    on_raw:
+      then:
+        - lambda: |-
+            const uint32_t now = millis();
+            if (!id(rf_learn_active)) {
+              return;
+            }
 
-          if (static_cast<int32_t>(now - id(rf_learn_until_ms)) > 0) {
+            if (static_cast<int32_t>(now - id(rf_learn_until_ms)) > 0) {
+              id(rf_learn_active) = false;
+              id(rf_last_status).publish_state("Learn timeout");
+              ESP_LOGI("fan433", "RF learn timeout");
+              return;
+            }
+
+            ESP_LOGV("fan433", "RF raw received: pulses=%u", static_cast<unsigned>(x.size()));
+
+            std::string raw;
+            raw.reserve(220);
+            const size_t shown = std::min<size_t>(x.size(), 48);
+            for (size_t i = 0; i < shown; i++) {
+              char value[18];
+              snprintf(value, sizeof(value), "%ld", static_cast<long>(x[i]));
+              if (!raw.empty()) {
+                raw += ", ";
+              }
+              raw += value;
+            }
+            if (x.size() > shown) {
+              raw += ", ...";
+            }
+            id(rf_last_raw).publish_state(raw);
+
+            auto near_us = [](int32_t value, uint16_t target, uint16_t tolerance) -> bool {
+              const int32_t abs_value = value < 0 ? -value : value;
+              return abs_value >= static_cast<int32_t>(target - tolerance) &&
+                     abs_value <= static_cast<int32_t>(target + tolerance);
+            };
+
+            auto command_name = [](uint8_t cmd) -> const char * {
+              switch (cmd) {
+                case ${fan_cmd_on}: return "ON";
+                case ${fan_cmd_off}: return "OFF";
+                case ${fan_cmd_out_plus}: return "OUT+";
+                case ${fan_cmd_out_minus}: return "OUT-";
+                case ${fan_cmd_in_plus}: return "IN+";
+                case ${fan_cmd_in_minus}: return "IN-";
+                default: return "unknown";
+              }
+            };
+
+            bool found = false;
+            uint32_t found_frame = 0;
+            uint16_t found_address = 0;
+            uint8_t found_command = 0;
+            size_t found_offset = 0;
+
+            // Try to decode this family protocol anywhere in the raw capture:
+            // 32 bits, MSB first, 0=short/long, 1=long/short, then cmd + ~cmd.
+            for (size_t start = 0; start + 63 < x.size() && !found; start++) {
+              uint32_t frame = 0;
+              bool ok = true;
+
+              for (int bit = 0; bit < 32; bit++) {
+                const int32_t high = static_cast<int32_t>(x[start + bit * 2]);
+                const int32_t low = static_cast<int32_t>(x[start + bit * 2 + 1]);
+
+                if (high <= 0 || low >= 0) {
+                  ok = false;
+                  break;
+                }
+
+                frame <<= 1;
+                if (near_us(high, ${fan_short_us}, 250) && near_us(low, ${fan_long_us}, 350)) {
+                  // bit 0
+                } else if (near_us(high, ${fan_long_us}, 350) && near_us(low, ${fan_short_us}, 250)) {
+                  frame |= 1;
+                } else {
+                  ok = false;
+                  break;
+                }
+              }
+
+              if (!ok) {
+                continue;
+              }
+
+              const uint8_t cmd = static_cast<uint8_t>((frame >> 8) & 0xFF);
+              const uint8_t inv = static_cast<uint8_t>(frame & 0xFF);
+              if (static_cast<uint8_t>(cmd ^ inv) != 0xFF) {
+                continue;
+              }
+
+              found = true;
+              found_frame = frame;
+              found_address = static_cast<uint16_t>((frame >> 16) & 0xFFFF);
+              found_command = cmd;
+              found_offset = start;
+            }
+
+            if (!found) {
+              ESP_LOGV("fan433", "RF raw received but no valid fan-family frame decoded");
+              return;
+            }
+
+            char frame_text[80];
+            snprintf(frame_text, sizeof(frame_text), "0x%08lX", static_cast<unsigned long>(found_frame));
+            id(rf_last_frame).publish_state(frame_text);
+
+            char address_text[80];
+            snprintf(address_text, sizeof(address_text), "0x%04X", static_cast<unsigned>(found_address));
+            id(rf_last_address).publish_state(address_text);
+
+            char command_text[80];
+            snprintf(command_text, sizeof(command_text), "0x%02X %s", static_cast<unsigned>(found_command), command_name(found_command));
+            id(rf_last_command).publish_state(command_text);
+
+            char status_text[120];
+            snprintf(status_text, sizeof(status_text), "Decoded fan frame at pulse %u", static_cast<unsigned>(found_offset));
+            id(rf_last_status).publish_state(status_text);
             id(rf_learn_active) = false;
-            id(rf_last_status).publish_state("Learn timeout");
-            ESP_LOGI("fan433", "RF learn timeout");
-            return;
-          }
 
-          ESP_LOGV("fan433", "RF raw received: pulses=%u", static_cast<unsigned>(x.size()));
-
-          std::string raw;
-          raw.reserve(220);
-          const size_t shown = std::min<size_t>(x.size(), 48);
-          for (size_t i = 0; i < shown; i++) {
-            char value[18];
-            snprintf(value, sizeof(value), "%ld", static_cast<long>(x[i]));
-            if (!raw.empty()) {
-              raw += ", ";
-            }
-            raw += value;
-          }
-          if (x.size() > shown) {
-            raw += ", ...";
-          }
-          id(rf_last_raw).publish_state(raw);
-
-          auto near_us = [](int32_t value, uint16_t target, uint16_t tolerance) -> bool {
-            const int32_t abs_value = value < 0 ? -value : value;
-            return abs_value >= static_cast<int32_t>(target - tolerance) &&
-                   abs_value <= static_cast<int32_t>(target + tolerance);
-          };
-
-          auto command_name = [](uint8_t cmd) -> const char * {
-            switch (cmd) {
-              case ${fan_cmd_on}: return "ON";
-              case ${fan_cmd_off}: return "OFF";
-              case ${fan_cmd_out_plus}: return "OUT+";
-              case ${fan_cmd_out_minus}: return "OUT-";
-              case ${fan_cmd_in_plus}: return "IN+";
-              case ${fan_cmd_in_minus}: return "IN-";
-              default: return "unknown";
-            }
-          };
-
-          bool found = false;
-          uint32_t found_frame = 0;
-          uint16_t found_address = 0;
-          uint8_t found_command = 0;
-          size_t found_offset = 0;
-
-          // Try to decode this family protocol anywhere in the raw capture:
-          // 32 bits, MSB first, 0=short/long, 1=long/short, then cmd + ~cmd.
-          for (size_t start = 0; start + 63 < x.size() && !found; start++) {
-            uint32_t frame = 0;
-            bool ok = true;
-
-            for (int bit = 0; bit < 32; bit++) {
-              const int32_t high = static_cast<int32_t>(x[start + bit * 2]);
-              const int32_t low = static_cast<int32_t>(x[start + bit * 2 + 1]);
-
-              if (high <= 0 || low >= 0) {
-                ok = false;
-                break;
-              }
-
-              frame <<= 1;
-              if (near_us(high, ${fan_short_us}, 250) && near_us(low, ${fan_long_us}, 350)) {
-                // bit 0
-              } else if (near_us(high, ${fan_long_us}, 350) && near_us(low, ${fan_short_us}, 250)) {
-                frame |= 1;
-              } else {
-                ok = false;
-                break;
-              }
-            }
-
-            if (!ok) {
-              continue;
-            }
-
-            const uint8_t cmd = static_cast<uint8_t>((frame >> 8) & 0xFF);
-            const uint8_t inv = static_cast<uint8_t>(frame & 0xFF);
-            if (static_cast<uint8_t>(cmd ^ inv) != 0xFF) {
-              continue;
-            }
-
-            found = true;
-            found_frame = frame;
-            found_address = static_cast<uint16_t>((frame >> 16) & 0xFFFF);
-            found_command = cmd;
-            found_offset = start;
-          }
-
-          if (!found) {
-            ESP_LOGV("fan433", "RF raw received but no valid fan-family frame decoded");
-            return;
-          }
-
-          char frame_text[80];
-          snprintf(frame_text, sizeof(frame_text), "0x%08lX", static_cast<unsigned long>(found_frame));
-          id(rf_last_frame).publish_state(frame_text);
-
-          char address_text[80];
-          snprintf(address_text, sizeof(address_text), "0x%04X", static_cast<unsigned>(found_address));
-          id(rf_last_address).publish_state(address_text);
-
-          char command_text[80];
-          snprintf(command_text, sizeof(command_text), "0x%02X %s", static_cast<unsigned>(found_command), command_name(found_command));
-          id(rf_last_command).publish_state(command_text);
-
-          char status_text[120];
-          snprintf(status_text, sizeof(status_text), "Decoded fan frame at pulse %u", static_cast<unsigned>(found_offset));
-          id(rf_last_status).publish_state(status_text);
-          id(rf_learn_active) = false;
-
-          ESP_LOGV("fan433", "learned frame=0x%08lX address=0x%04X command=0x%02X (%s) offset=%u pulses=%u",
-                   static_cast<unsigned long>(found_frame),
-                   static_cast<unsigned>(found_address),
-                   static_cast<unsigned>(found_command),
-                   command_name(found_command),
-                   static_cast<unsigned>(found_offset),
-                   static_cast<unsigned>(x.size()));
+            ESP_LOGV("fan433", "learned frame=0x%08lX address=0x%04X command=0x%02X (%s) offset=%u pulses=%u",
+                     static_cast<unsigned long>(found_frame),
+                     static_cast<unsigned>(found_address),
+                     static_cast<unsigned>(found_command),
+                     command_name(found_command),
+                     static_cast<unsigned>(found_offset),
+                     static_cast<unsigned>(x.size()));
 
 globals:
   - id: fan433_ready
@@ -525,7 +441,7 @@ button:
           id(rf_last_address).publish_state("Unknown");
           id(rf_last_command).publish_state("Unknown");
           id(rf_last_raw).publish_state("Unknown");
-      - ${rx_enter_action_${radio}}
+      - script.execute: radio_enter_rx
 
 script:
   - id: fan433_transmit_queue
@@ -543,7 +459,7 @@ script:
                          static_cast<unsigned>((queued >> 8) & 0xFFFF),
                          static_cast<unsigned>(${fan_repeat_count}));
             - remote_transmitter.transmit_raw:
-                transmitter_id: rf_tx
+                transmitter_id: radio_transmitter
                 code: !lambda |-
                   // -----------------------------------------------------------
                   // Decoded bathroom fan RF protocol.

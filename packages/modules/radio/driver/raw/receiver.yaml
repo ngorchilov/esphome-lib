@@ -1,0 +1,4 @@
+remote_receiver:
+  - id: radio_receiver
+    pin: ${radio_raw_rx_pin}
+    dump: []

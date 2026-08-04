@@ -1,0 +1,4 @@
+output:
+  - platform: gpio
+    id: radio_status_led
+    pin: GPIO25
