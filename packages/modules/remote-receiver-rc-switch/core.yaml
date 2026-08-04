@@ -1,0 +1,23 @@
+defaults:
+  receiver: ${ receiver | default({}) }
+  receiver_id: ${ receiver.get("id", "rc_switch_receiver") }
+  receiver_pin: ${ receiver.get("pin", "GPIO0") }
+  receiver_inverted: ${ receiver.get("inverted", false) }
+  receiver_buffer_size: ${ receiver.get("buffer_size", "4kb") }
+  receiver_filter: ${ receiver.get("filter", "150us") }
+  receiver_idle: ${ receiver.get("idle", "4ms") }
+
+remote_receiver:
+  id: ${receiver_id}
+  pin: !include
+    file: ../pin.yaml
+    vars:
+      pin:
+        number: ${receiver_pin}
+        inverted: ${receiver_inverted}
+        mode:
+          input: true
+  buffer_size: ${receiver_buffer_size}
+  filter: ${receiver_filter}
+  idle: ${receiver_idle}
+  dump: rc_switch

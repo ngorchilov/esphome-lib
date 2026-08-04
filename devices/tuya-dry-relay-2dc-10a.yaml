@@ -25,6 +25,17 @@ substitutions:
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml
   - !include
+    file: ../packages/modules/remote-receiver-rc-switch.yaml
+    vars:
+      receiver:
+        enabled: ${ (rf433 | default({})).get("enabled", false) }
+        id: rf433_receiver
+        pin: ${rf433_pin}
+        inverted: ${rf433_inverted}
+        buffer_size: ${ (rf433 | default({})).get("buffer_size", "4kb") }
+        filter: ${ (rf433 | default({})).get("filter", "150us") }
+        idle: ${ (rf433 | default({})).get("idle", "4ms") }
+  - !include
     file: ../packages/modules/relay-control.yaml
     vars:
       rc:
@@ -83,12 +94,3 @@ status_led:
   pin:
     number: ${status_led_pin}
     inverted: ${status_led_inverted}
-
-remote_receiver:
-  id: rf433_receiver
-  pin:
-    number: ${rf433_pin}
-    inverted: ${rf433_inverted}
-    mode:
-      input: true
-  dump: rc_switch
