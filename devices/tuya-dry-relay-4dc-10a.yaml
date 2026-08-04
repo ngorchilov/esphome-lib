@@ -32,6 +32,15 @@ substitutions:
   rf433_pin: GPIO20
   rf433_inverted: 'false'
 
+  relay_1_enabled: ${ 1 in (enabled_channels | default([1, 2, 3, 4])) }
+  relay_2_enabled: ${ 2 in (enabled_channels | default([1, 2, 3, 4])) }
+  relay_3_enabled: ${ 3 in (enabled_channels | default([1, 2, 3, 4])) }
+  relay_4_enabled: ${ 4 in (enabled_channels | default([1, 2, 3, 4])) }
+  relay_1_enabled_cpp: ${ "true" if relay_1_enabled else "false" }
+  relay_2_enabled_cpp: ${ "true" if relay_2_enabled else "false" }
+  relay_3_enabled_cpp: ${ "true" if relay_3_enabled else "false" }
+  relay_4_enabled_cpp: ${ "true" if relay_4_enabled else "false" }
+
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml
   - !include
@@ -39,14 +48,15 @@ packages:
     vars:
       rc:
         id: relay_1
-        entity: '${ relay_1_entity | default({"type": "switch", "name": "Relay 1"}) }'
+        entity: '${ relay_1_entity | default({"type": "switch", "name": "Relay 1"}) if relay_1_enabled else {"type": "switch", "name": "none", "power": {"exposed": false}} }'
         power:
           pin: ${relay1_pin}
           inverted: ${relay1_inverted}
+          restore_mode: ${ "RESTORE_DEFAULT_OFF" if relay_1_enabled else "ALWAYS_OFF" }
         control:
           mode: local
         integrated_button:
-          enabled: true
+          enabled: ${relay_1_enabled}
           name: Button 1
           pin: ${button1_pin}
           inverted: ${button1_inverted}
@@ -55,14 +65,15 @@ packages:
     vars:
       rc:
         id: relay_2
-        entity: '${ relay_2_entity | default({"type": "switch", "name": "Relay 2"}) }'
+        entity: '${ relay_2_entity | default({"type": "switch", "name": "Relay 2"}) if relay_2_enabled else {"type": "switch", "name": "none", "power": {"exposed": false}} }'
         power:
           pin: ${relay2_pin}
           inverted: ${relay2_inverted}
+          restore_mode: ${ "RESTORE_DEFAULT_OFF" if relay_2_enabled else "ALWAYS_OFF" }
         control:
           mode: local
         integrated_button:
-          enabled: true
+          enabled: ${relay_2_enabled}
           name: Button 2
           pin: ${button2_pin}
           inverted: ${button2_inverted}
@@ -71,14 +82,15 @@ packages:
     vars:
       rc:
         id: relay_3
-        entity: '${ relay_3_entity | default({"type": "switch", "name": "Relay 3"}) }'
+        entity: '${ relay_3_entity | default({"type": "switch", "name": "Relay 3"}) if relay_3_enabled else {"type": "switch", "name": "none", "power": {"exposed": false}} }'
         power:
           pin: ${relay3_pin}
           inverted: ${relay3_inverted}
+          restore_mode: ${ "RESTORE_DEFAULT_OFF" if relay_3_enabled else "ALWAYS_OFF" }
         control:
           mode: local
         integrated_button:
-          enabled: true
+          enabled: ${relay_3_enabled}
           name: Button 3
           pin: ${button3_pin}
           inverted: ${button3_inverted}
@@ -87,14 +99,15 @@ packages:
     vars:
       rc:
         id: relay_4
-        entity: '${ relay_4_entity | default({"type": "switch", "name": "Relay 4"}) }'
+        entity: '${ relay_4_entity | default({"type": "switch", "name": "Relay 4"}) if relay_4_enabled else {"type": "switch", "name": "none", "power": {"exposed": false}} }'
         power:
           pin: ${relay4_pin}
           inverted: ${relay4_inverted}
+          restore_mode: ${ "RESTORE_DEFAULT_OFF" if relay_4_enabled else "ALWAYS_OFF" }
         control:
           mode: local
         integrated_button:
-          enabled: true
+          enabled: ${relay_4_enabled}
           name: Button 4
           pin: ${button4_pin}
           inverted: ${button4_inverted}
@@ -113,18 +126,52 @@ binary_sensor:
       - if:
           condition:
             lambda: |-
-              return id(relay_1_power_relay).state || id(relay_2_power_relay).state ||
-                     id(relay_3_power_relay).state || id(relay_4_power_relay).state;
+              return (${relay_1_enabled_cpp} && id(relay_1_power_relay).state) ||
+                     (${relay_2_enabled_cpp} && id(relay_2_power_relay).state) ||
+                     (${relay_3_enabled_cpp} && id(relay_3_power_relay).state) ||
+                     (${relay_4_enabled_cpp} && id(relay_4_power_relay).state);
           then:
-            - script.execute: relay_1_power_off
-            - script.execute: relay_2_power_off
-            - script.execute: relay_3_power_off
-            - script.execute: relay_4_power_off
+            - if:
+                condition:
+                  lambda: return ${relay_1_enabled_cpp};
+                then:
+                  - script.execute: relay_1_power_off
+            - if:
+                condition:
+                  lambda: return ${relay_2_enabled_cpp};
+                then:
+                  - script.execute: relay_2_power_off
+            - if:
+                condition:
+                  lambda: return ${relay_3_enabled_cpp};
+                then:
+                  - script.execute: relay_3_power_off
+            - if:
+                condition:
+                  lambda: return ${relay_4_enabled_cpp};
+                then:
+                  - script.execute: relay_4_power_off
           else:
-            - script.execute: relay_1_power_on
-            - script.execute: relay_2_power_on
-            - script.execute: relay_3_power_on
-            - script.execute: relay_4_power_on
+            - if:
+                condition:
+                  lambda: return ${relay_1_enabled_cpp};
+                then:
+                  - script.execute: relay_1_power_on
+            - if:
+                condition:
+                  lambda: return ${relay_2_enabled_cpp};
+                then:
+                  - script.execute: relay_2_power_on
+            - if:
+                condition:
+                  lambda: return ${relay_3_enabled_cpp};
+                then:
+                  - script.execute: relay_3_power_on
+            - if:
+                condition:
+                  lambda: return ${relay_4_enabled_cpp};
+                then:
+                  - script.execute: relay_4_power_on
 
 status_led:
   pin:
