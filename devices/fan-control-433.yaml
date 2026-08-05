@@ -31,7 +31,7 @@ substitutions:
   fan_sync_endpoint: min # min | max
   fan_sync_saturation_count: 6
 
-  # Package API: fan433.fans accepts RF addresses or address/name/id mappings.
+  # Package API: fan433.fans defines physical fans; fan433.combined optionally groups them.
   fan433_instances: |-
     <% set fans = (fan433 | default({})).get("fans", []) %>
     <% set result = [] %>
@@ -93,7 +93,7 @@ substitutions:
             "then": [
               {"lambda": code | join("\n")},
               {"if": {
-                "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
+                "condition": {"lambda": "return !id(fan433_batch_active) && !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
                 "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
               }}
             ]
@@ -101,6 +101,58 @@ substitutions:
         }]
       }) %>
     <% endfor %>
+    ${ result }
+
+  # Optional combined fan: shared power/speed with a fixed direction per member.
+  fan433_aggregate_entities: |-
+    <% set aggregate = (fan433 | default({})).get("combined", {}) %>
+    <% set members = aggregate.get("members", []) %>
+    <% set result = [] %>
+    <% if members | length > 0 %>
+      <% set aggregate_id = aggregate.get("id", "combined_fan") %>
+      <% set aggregate_name = aggregate.get("name", "None") %>
+      <% set code = [] %>
+      <% do code.append("const bool target_on = id(" ~ aggregate_id ~ ").state;") %>
+      <% do code.append("const int target_speed = std::max(1, std::min(" ~ fan_speed_count ~ ", id(" ~ aggregate_id ~ ").speed));") %>
+      <% do code.append("id(fan433_batch_active) = true;") %>
+      <% for member in members %>
+        <% set address = member.get("address") %>
+        <% set member_id = namespace(value=member.get("id", "fan_%04x" | format(address))) %>
+        <% for fan in fan433_instances %>
+          <% if fan["address"] == address %>
+            <% set member_id.value = fan["id"] %>
+          <% endif %>
+        <% endfor %>
+        <% set member_direction = fan_direction_out if member.get("direction", "out") == "out" else fan_direction_in %>
+        <% do code.append("{") %>
+        <% do code.append("  auto call = id(" ~ member_id.value ~ ").make_call();") %>
+        <% do code.append("  call.set_state(target_on);") %>
+        <% do code.append("  call.set_speed(target_speed);") %>
+        <% do code.append("  call.set_direction(fan::FanDirection::" ~ member_direction ~ ");") %>
+        <% do code.append("  call.perform();") %>
+        <% do code.append("}") %>
+      <% endfor %>
+      <% do code.append("id(fan433_batch_active) = false;") %>
+      <% do result.append({
+        "platform": "template",
+        "name": aggregate_name,
+        "id": aggregate_id,
+        "speed_count": fan_speed_count,
+        "restore_mode": fan_restore_mode,
+        "on_state": [{
+          "if": {
+            "condition": {"lambda": "return id(fan433_ready);"},
+            "then": [
+              {"lambda": code | join("\n")},
+              {"if": {
+                "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
+                "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
+              }}
+            ]
+          }
+        }]
+      }) %>
+    <% endif %>
     ${ result }
 
   fan433_sync_buttons: |-
@@ -224,7 +276,7 @@ packages:
           receiver:
             enabled: true
   # Generate one fan entity and synchronization button per RF address.
-  - fan: ${ fan433_entities }
+  - fan: ${ fan433_entities + fan433_aggregate_entities }
     button: ${ fan433_sync_buttons }
 
 esphome:
@@ -390,6 +442,10 @@ globals:
     restore_value: no
     initial_value: 'std::vector<uint32_t>{}'
   - id: fan433_transmit_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: fan433_batch_active
     type: bool
     restore_value: no
     initial_value: 'false'
