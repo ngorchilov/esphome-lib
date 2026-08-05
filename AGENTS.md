@@ -280,8 +280,9 @@ packages:
           power_pin: GPIO5
 ```
 
-The networking module uses conditional package inclusion. Preserve the existing include style unless
-you have validated a different approach with concrete devices.
+The networking module selects `networking/${networking_mode}.yaml` through one deferred include.
+Keep that include lazy: preloading all network variants would resolve Wi-Fi secrets even for
+Ethernet-only devices. Validate changes with concrete Wi-Fi and Ethernet configurations.
 
 ## Relay-Control Framework
 

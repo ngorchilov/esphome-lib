@@ -2,13 +2,8 @@ defaults:
   networking: ${ networking | default({}) }
   networking_mode: ${ networking.get("mode", "wifi") } # wifi | ethernet | none
 
-  # Network package refs
-  net_wifi_module: !include networking/wifi.yaml
-  net_eth_module: !include networking/ethernet.yaml
-
 packages:
-  - ${ (networking_mode == 'wifi') and net_wifi_module or {} }
-  - ${ (networking_mode == 'ethernet') and net_eth_module or {} }
+  - !include networking/${networking_mode}.yaml
 
 api:
   id: hapi
