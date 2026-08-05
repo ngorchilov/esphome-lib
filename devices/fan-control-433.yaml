@@ -207,11 +207,11 @@ packages:
   - !include
     file: ../packages/appliances/radio-transceiver.yaml
     vars:
+      esp32_advanced: ${radio_esp32_advanced}
       radio:
         profile: ${radio_profile}
         driver: raw
         frequency: ${rf_frequency}
-        esp32_advanced: ${radio_esp32_advanced}
         display:
           enabled: false
         raw:

@@ -18,7 +18,6 @@ defaults:
   radio_raw_non_blocking: ${ radio_raw_transmitter.get("non_blocking", false) }
   radio_raw_after_transmit: ${ radio_raw_transmitter.get("after_transmit", "idle" if radio_profile == "esp32dev_cc1101" else "standby") }
   radio_raw_tx_on_complete: ${ radio_raw_transmitter.get("on_complete", []) }
-  esp32_advanced: ${ radio.get("esp32_advanced", {}) }
 
   radio_profile_supported: ${ radio_profile == "heltec" or radio_profile == "lilygo" or radio_profile == "esp32dev_cc1101" }
   radio_driver_supported: ${ (radio_profile == "heltec" or radio_profile == "lilygo") and (radio_driver == "sx127x" or radio_driver == "wmbus" or radio_driver == "raw") or radio_profile == "esp32dev_cc1101" and radio_driver == "raw" }

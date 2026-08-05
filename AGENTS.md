@@ -146,6 +146,10 @@ automations, and user-facing entities. Stable infrastructure ids include `radio_
 underlying radio component. Keep external component declarations and protocol-specific toolchain
 workarounds in the consuming device when they are not intrinsic to the physical hardware.
 
+`esp32_advanced` remains the standard top-level board var when including this appliance; do not nest
+it under `radio`. The appliance must leave it unmodified so the selected original-ESP32 board can
+distinguish an omitted object from explicitly provided framework settings.
+
 ### Functional Modules
 
 `packages/modules/*.yaml` files add reusable behavior. Modules should be designed around explicit
