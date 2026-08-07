@@ -17,6 +17,7 @@ Unlike a single-threshold detector, it:
 - provides `magic_switch.mask` so relay changes cannot feed back as wall-switch events;
 - logs calibration, accepted pulse lengths, filtered-event counters, and unusual below-threshold
   pulses that can reveal a missed quick wall-switch movement.
+- can opt into an IRAM-safe ESP-IDF GPIO interrupt service so flash writes cannot defer pulse edges.
 
 ```yaml
 external_components:
@@ -26,6 +27,7 @@ external_components:
 magic_switch:
   id: wall_switch
   pin: GPIO5
+  iram_safe_interrupt: true
   min_pulse: 1ms
   max_pulse: 120ms
   adaptive_min_pulse: 750us
@@ -60,6 +62,14 @@ sensitivity and the chance of classifying mains noise as a switch event.
 
 The relay mask is deliberately separate from `debounce`: call `magic_switch.mask` on every local or
 remote relay state change. `mask` extends an existing mask and never shortens the startup interval.
+
+`iram_safe_interrupt` is an ESP32 ESP-IDF-only workaround for ESPHome installing its shared GPIO
+interrupt service without `ESP_INTR_FLAG_IRAM`. When enabled, the component wraps
+`gpio_install_isr_service` at link time and adds the IRAM flag. This affects every GPIO interrupt
+handler in the firmware, so enable it only after verifying that all of those handlers and their
+complete call paths are IRAM-safe. The BASICR4 profile has been checked with the final linked ELF.
+Because the GPIO interrupt service is global, enabling the option on any instance enables it for the
+whole firmware.
 
 No algorithm observing only `GPIO5` can perfectly distinguish a real wall-switch transition from a
 mains disturbance with the same waveform. The upper bound and recovery check reduce that risk, but

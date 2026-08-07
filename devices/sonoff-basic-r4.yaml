@@ -42,6 +42,7 @@ switch:
 
 magic_switch:
   id: sbr4_magic_switch
+  iram_safe_interrupt: true
   pin:
     number: GPIO5
     inverted: false

@@ -5,6 +5,17 @@
 
 #include <cinttypes>
 
+#if defined(USE_ESP32_FRAMEWORK_ESP_IDF) && defined(USE_MAGIC_SWITCH_IRAM_SAFE_INTERRUPT)
+#include "esp_err.h"
+#include "esp_intr_alloc.h"
+
+extern "C" esp_err_t __real_gpio_install_isr_service(int intr_alloc_flags);
+
+extern "C" esp_err_t __wrap_gpio_install_isr_service(int intr_alloc_flags) {
+  return __real_gpio_install_isr_service(intr_alloc_flags | ESP_INTR_FLAG_IRAM);
+}
+#endif
+
 namespace esphome::magic_switch {
 
 static const char *const TAG = "magic_switch";
@@ -119,6 +130,11 @@ void MagicSwitch::loop() {
 void MagicSwitch::dump_config() {
   ESP_LOGCONFIG(TAG, "Magic Switch:");
   LOG_PIN("  Pin: ", this->pin_);
+#ifdef USE_MAGIC_SWITCH_IRAM_SAFE_INTERRUPT
+  ESP_LOGCONFIG(TAG, "  IRAM-safe GPIO interrupt service: YES");
+#else
+  ESP_LOGCONFIG(TAG, "  IRAM-safe GPIO interrupt service: NO");
+#endif
   ESP_LOGCONFIG(TAG,
                 "  Pulse range: %" PRIu32 "us to %" PRIu32 "us\n"
                 "  Adaptive off-phase threshold: at least %" PRIu32 "us, normal + %" PRIu32 "us\n"

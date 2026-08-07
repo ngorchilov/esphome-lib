@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation, pins
-from esphome.const import CONF_DURATION, CONF_ID, CONF_PIN
+from esphome.const import CONF_DURATION, CONF_ID, CONF_PIN, Framework
 
 
 MULTI_CONF = True
@@ -16,6 +16,7 @@ MagicSwitchMaskAction = magic_switch_ns.class_(
 CONF_ADAPTIVE_MARGIN = "adaptive_margin"
 CONF_ADAPTIVE_MIN_PULSE = "adaptive_min_pulse"
 CONF_DEBOUNCE = "debounce"
+CONF_IRAM_SAFE_INTERRUPT = "iram_safe_interrupt"
 CONF_MAX_PULSE = "max_pulse"
 CONF_MIN_PULSE = "min_pulse"
 CONF_ON_SWITCH = "on_switch"
@@ -39,6 +40,15 @@ def _validate_timing(config):
     return config
 
 
+def _validate_iram_safe_interrupt(config):
+    if not config[CONF_IRAM_SAFE_INTERRUPT]:
+        return config
+
+    cv.only_on_esp32(config)
+    cv.only_with_framework(Framework.ESP_IDF)(config)
+    return config
+
+
 CONFIG_SCHEMA = cv.All(
     cv.COMPONENT_SCHEMA.extend(
         {
@@ -46,6 +56,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(CONF_PIN): pins.internal_gpio_input_pullup_pin_schema,
             cv.Optional(CONF_MIN_PULSE, default="1ms"): cv.positive_time_period_microseconds,
             cv.Optional(CONF_MAX_PULSE, default="120ms"): cv.positive_time_period_microseconds,
+            cv.Optional(CONF_IRAM_SAFE_INTERRUPT, default=False): cv.boolean,
             cv.Optional(
                 CONF_ADAPTIVE_MIN_PULSE, default="750us"
             ): cv.positive_time_period_microseconds,
@@ -71,10 +82,15 @@ CONFIG_SCHEMA = cv.All(
         }
     ),
     _validate_timing,
+    _validate_iram_safe_interrupt,
 )
 
 
 async def to_code(config):
+    if config[CONF_IRAM_SAFE_INTERRUPT]:
+        cg.add_build_flag("-DUSE_MAGIC_SWITCH_IRAM_SAFE_INTERRUPT")
+        cg.add_build_flag("-Wl,--wrap=gpio_install_isr_service")
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
