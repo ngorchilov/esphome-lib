@@ -19,12 +19,3 @@ packages:
           power_pin: GPIO5
           power_strapping: true
           phy_addr: 1
-
-esphome:
-  project:
-    name: M5Stack.PoESP32
-    version: 1.0.0
-
-dashboard_import:
-  package_import_url: github://ngorchilov/esphome-lib/devices/m5stack-poesp32.yaml
-  import_full_config: false

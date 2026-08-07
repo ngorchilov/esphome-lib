@@ -52,8 +52,3 @@ magic_switch:
           switch.is_off: sbr4_magic_switch_dnd
         then:
           - script.execute: sbr4_primary_toggle
-
-esphome:
-  project:
-    name: SONOFF.BASICR4
-    version: 1.0.0

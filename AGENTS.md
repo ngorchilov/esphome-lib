@@ -40,8 +40,10 @@ devices/<device>.yaml
 - include exactly one board package, directly or through an appliance package
 - include reusable modules when possible
 - contain device-specific behavior only when it truly belongs to that one device
+- omit `esphome.project` and `dashboard_import` from reusable hardware profiles; complete product
+  definitions may provide that metadata
 
-Do not casually change project metadata, names, pins, restore modes, or entity names in device files.
+Do not casually change names, pins, restore modes, or entity names in device files.
 Values like `none`, `None`, quoted booleans, commented pin options, or unusual defaults may be
 intentional for a specific device or for Home Assistant entity behavior.
 
