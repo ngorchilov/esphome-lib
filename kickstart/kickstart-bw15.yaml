@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-bw15
   friendly_name: Kickstart BW15
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/tuya/bw15.yaml

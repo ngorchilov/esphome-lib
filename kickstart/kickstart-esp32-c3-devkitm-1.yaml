@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-esp32-c3-devkitm-1
   friendly_name: Kickstart ESP32-C3-DevKitM-1
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml

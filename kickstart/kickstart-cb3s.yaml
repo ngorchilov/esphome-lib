@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-cb3s
   friendly_name: Kickstart CB3S
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml

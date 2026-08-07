@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-t34
   friendly_name: Kickstart T34
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/tuya/t34.yaml

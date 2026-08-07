@@ -54,7 +54,6 @@ intentional for a specific device or for Home Assistant entity behavior.
 - map one-to-one to a concrete package under `packages/boards/`
 - include that board package and no application-specific components
 - use a generic kickstart identity
-- explicitly enable the fallback Wi-Fi AP for first-boot recovery and OTA handoff
 
 Name firmware files `kickstart-<board-package>.yaml`. Add aliases only when an established
 flashing workflow needs them.
@@ -261,8 +260,7 @@ Responsibilities:
 - include Ethernet support when `networking.mode: ethernet`
 - expose API, OTA, and mDNS defaults
 - use `pin.yaml` for Ethernet pin-number fields
-- keep the fallback Wi-Fi AP and captive portal disabled unless a device explicitly sets
-  `wifi_ap_enabled: true` under `substitutions:`
+- disable API and Wi-Fi connection-loss reboots by default with `reboot_timeout: 0s`
 
 Device-specific networking overrides should travel through the board package include so the base-board
 layer and nested networking package see the same package context:

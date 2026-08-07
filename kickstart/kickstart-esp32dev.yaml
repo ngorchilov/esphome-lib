@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-esp32dev
   friendly_name: Kickstart ESP32 Dev Module
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/espressif/esp32dev.yaml

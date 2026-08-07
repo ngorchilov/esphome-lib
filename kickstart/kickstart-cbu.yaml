@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-cbu
   friendly_name: Kickstart CBU
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/tuya/cbu.yaml

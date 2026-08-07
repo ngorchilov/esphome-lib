@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-wbr3
   friendly_name: Kickstart WBR3
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/tuya/wbr3.yaml

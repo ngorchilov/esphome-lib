@@ -1,12 +1,15 @@
 defaults:
   networking: ${ networking | default({}) }
   networking_mode: ${ networking.get("mode", "wifi") } # wifi | ethernet | none
+  networking_api: ${ networking.get("api", {}) }
+  api_reboot_timeout: ${ networking_api.get("reboot_timeout", "0s") }
 
 packages:
   - !include networking/${networking_mode}.yaml
 
 api:
   id: hapi
+  reboot_timeout: ${api_reboot_timeout}
 
 ota:
   - platform: esphome

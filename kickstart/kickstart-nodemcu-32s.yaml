@@ -1,7 +1,5 @@
 substitutions:
   name: kickstart-nodemcu-32s
   friendly_name: Kickstart NodeMCU-32S
-  wifi_ap_enabled: true
-
 packages:
   - !include ../packages/boards/espressif/nodemcu-32s.yaml
