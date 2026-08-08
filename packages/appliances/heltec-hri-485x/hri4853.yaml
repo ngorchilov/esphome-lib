@@ -13,6 +13,8 @@ packages:
   - !include
     file: ../../boards/espressif/nodemcu-32s.yaml
     vars:
+      esp32_advanced:
+        sram1_as_iram: true
       networking:
         mode: ${hri485x_networking_mode}
         api: ${hri485x_networking_api}

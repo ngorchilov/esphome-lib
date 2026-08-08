@@ -60,6 +60,9 @@ The public ESPHome device profile documents the classic-ESP32 UART, MAX3485 powe
 Ethernet mapping. The status LED and button mapping preserve the known configuration used by this
 library.
 
+The `hri4853` profile enables `esp32.framework.advanced.sram1_as_iram` because running hardware
+reports that its bootloader supports SRAM1 as IRAM. It does not set `minimum_chip_revision`.
+
 `MAX3485 Power` reports the transceiver's logical power state: `ON` drives the active-low GPIO16 low.
 This polarity is verified from observed HRI-4853 hardware behavior; Heltec's public manual does not
 publish the internal GPIO map or polarity. Its default `RESTORE_DEFAULT_ON` mode restores the last

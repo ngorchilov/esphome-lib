@@ -93,11 +93,11 @@ vars:
     sram1_as_iram: true
 ```
 
-The library provides no defaults for either option. When `esp32_advanced` is absent, it contributes
-no `framework.advanced` configuration. When one key is present, only that key is forwarded; explicit
-values such as `sram1_as_iram: false` are preserved. Set these options only after the running device
-reports its chip revision and confirms that its bootloader supports SRAM1 as IRAM. Do not pass them
-to C3, C6, S2, S3, or other ESP32 variants.
+The shared classic-ESP32 template provides no defaults for either option. When `esp32_advanced` is
+absent, it contributes no `framework.advanced` configuration. When one key is present, only that key
+is forwarded; explicit values such as `sram1_as_iram: false` are preserved. Concrete hardware
+profiles may set an option after running hardware reports the required chip revision or bootloader
+support. Do not pass these options to C3, C6, S2, S3, or other ESP32 variants.
 
 ### Appliance Packages
 
