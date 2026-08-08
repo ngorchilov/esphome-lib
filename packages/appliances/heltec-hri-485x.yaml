@@ -3,7 +3,7 @@
 
 defaults:
   hri485x: ${ hri485x | default({}) }
-  hri485x_profile: ${ hri485x.get("profile", "hri4853-esp32") }
+  hri485x_profile: ${ hri485x.get("profile", "hri4853") }
 
 packages:
   - !include

@@ -1,4 +1,4 @@
-# Heltec HRI-4853, original ESP32 hardware generation.
+# Heltec HRI-4853.
 
 defaults:
   hri485x: ${ hri485x | default({}) }

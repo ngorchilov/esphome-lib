@@ -9,7 +9,7 @@ packages:
     file: ../packages/appliances/heltec-hri-485x.yaml
     vars:
       hri485x:
-        profile: hri4853-esp32
+        profile: hri4853
         networking:
           mode: ethernet
         rs485:
@@ -35,7 +35,7 @@ modbus:
 | HRI-4851 | ESP32-C3-FN4 | Yes | SX1262 custom LoRa | Not yet mapped |
 | HRI-4851L | ESP32-C3-FN4 | Yes | SX1262 LoRaWAN | Not yet mapped |
 | HRI-4852 | ESP32-D0WDQ6 | No | SX1262 plus Ethernet/LTE gateway | Not yet mapped |
-| HRI-4853 | ESP32-D0WDQ6 | Yes | Ethernet/LTE | `hri4853-esp32` |
+| HRI-4853 | ESP32-D0WDQ6 | Yes | Ethernet/LTE | `hri4853` |
 
 HRI-4852 is not an RS485 endpoint: Heltec documents its header as power-only and states that it
 cannot communicate directly with an RS485 device. Do not treat every HRI-485X model as an RS485 UART
