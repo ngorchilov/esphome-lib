@@ -1,0 +1,37 @@
+# Shared HRI-485X RS485 transport.
+# The hardware profile supplies fixed pins; the family API supplies UART framing.
+
+defaults:
+  rs485: ${ rs485 | default({}) }
+  rs485_power: ${ rs485.get("power", {}) }
+
+  rs485_id: ${ rs485.get("id", "hri485x_rs485_uart") }
+  rs485_tx_pin: ${ rs485.get("tx_pin", "HRI485X_RS485_TX_PIN_REQUIRED") }
+  rs485_rx_pin: ${ rs485.get("rx_pin", "HRI485X_RS485_RX_PIN_REQUIRED") }
+  rs485_baud_rate: ${ rs485.get("baud_rate", 9600) }
+  rs485_data_bits: ${ rs485.get("data_bits", 8) }
+  rs485_parity: ${ rs485.get("parity", "NONE") }
+  rs485_stop_bits: ${ rs485.get("stop_bits", 1) }
+
+  rs485_power_id: ${ rs485_power.get("id", "hri485x_rs485_power") }
+  rs485_power_name: ${ rs485_power.get("name", "MAX3485 Power") }
+  rs485_power_pin: ${ rs485_power.get("pin", "HRI485X_RS485_POWER_PIN_REQUIRED") }
+  rs485_power_inverted: ${ rs485_power.get("inverted", false) }
+  rs485_power_restore_mode: ${ rs485_power.get("restore_mode", "RESTORE_DEFAULT_ON") }
+
+uart:
+  - id: ${rs485_id}
+    tx_pin: ${rs485_tx_pin}
+    rx_pin: ${rs485_rx_pin}
+    baud_rate: ${rs485_baud_rate}
+    data_bits: ${rs485_data_bits}
+    parity: ${rs485_parity}
+    stop_bits: ${rs485_stop_bits}
+
+switch:
+  - platform: gpio
+    name: ${rs485_power_name}
+    id: ${rs485_power_id}
+    pin: ${rs485_power_pin}
+    inverted: ${rs485_power_inverted}
+    restore_mode: ${rs485_power_restore_mode}

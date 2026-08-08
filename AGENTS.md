@@ -151,6 +151,13 @@ workarounds in the consuming device when they are not intrinsic to the physical 
 it under `radio`. The appliance must leave it unmodified so the selected original-ESP32 board can
 distinguish an omitted object from explicitly provided framework settings.
 
+`packages/appliances/heltec-hri-485x.yaml` is the HRI-485X family selector. Model profiles under
+`packages/appliances/heltec-hri-485x/` own MCU, network, radio, and fixed GPIO facts. The family API
+uses one `hri485x:` object; `hri485x.rs485` configures UART framing while the selected profile owns
+the pins. The stable UART id is `hri485x_rs485_uart`. The appliance must not create a Modbus hub:
+consuming products own `modbus`, controllers, polling, registers, and entities. Add profiles only
+from a verified complete pin map, and never fall back to another HRI model for an unsupported profile.
+
 ### Functional Modules
 
 `packages/modules/*.yaml` files add reusable behavior. Modules should be designed around explicit

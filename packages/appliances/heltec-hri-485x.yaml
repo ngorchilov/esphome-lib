@@ -1,0 +1,12 @@
+# Heltec HRI-485X family appliance.
+# Selects a verified hardware profile while keeping one family-level API.
+
+defaults:
+  hri485x: ${ hri485x | default({}) }
+  hri485x_profile: ${ hri485x.get("profile", "hri4853-esp32") }
+
+packages:
+  - !include
+    file: heltec-hri-485x/${hri485x_profile}.yaml
+    vars:
+      hri485x: ${hri485x}

@@ -1,83 +1,12 @@
 substitutions:
   name: heltec-hri-485x
   friendly_name: Heltec HRI-485X
-  # wifi | ethernet
-  networking_mode: wifi
 
 packages:
   - !include
-    file: ../packages/boards/espressif/nodemcu-32s.yaml
+    file: ../packages/appliances/heltec-hri-485x.yaml
     vars:
-      networking:
-        mode: ${networking_mode}
-        ethernet:
-          type: RTL8201
-          mdc_pin: GPIO23
-          mdc_strapping: false
-          mdio_pin: GPIO18
-          mdio_strapping: false
-          clk_pin: GPIO17
-          clk_strapping: false
-          clk_mode: CLK_OUT
-          phy_addr: 0
+      hri485x: ${ hri485x | default({}) }
 
-# Enable logging
 logger:
   level: DEBUG
-  baud_rate: 0
-
-# Mode LED: GPIO2, inverted, strapped
-status_led:
-  pin:
-    number: GPIO2
-    inverted: true
-    ignore_strapping_warning: true
-
-# Enable Home Assistant API
-api:
-  on_client_connected:
-    - switch.turn_on: NetLED
-  on_client_disconnected:
-    - delay: 1s
-    - if:
-        condition:
-          not:
-            api.connected:
-        then:
-          - switch.turn_off: NetLED
-
-uart:
-  - id: mod_bus
-    tx_pin: GPIO33
-    rx_pin: GPIO37
-    baud_rate: 9600
-    data_bits: 8
-    parity: NONE
-    stop_bits: 1
-
-modbus:
-  - uart_id: mod_bus
-    id: modbus1
-
-switch:
-  # GPIO16 assumed to power / enable the MAX3485 RS485 transceiver.
-  - platform: gpio
-    pin: GPIO16
-    id: ModbusOnOff
-    name: MAX3485 Power
-
-  # Net LED: GPIO3, inverted.
-  - platform: gpio
-    pin: GPIO3
-    id: NetLED
-    inverted: true
-
-binary_sensor:
-  - platform: gpio
-    name: Button
-    pin:
-      number: GPIO32
-      mode:
-        input: true
-        pullup: true
-      inverted: true

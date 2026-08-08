@@ -1,0 +1,86 @@
+# Heltec HRI-4853, original ESP32 hardware generation.
+
+defaults:
+  hri485x: ${ hri485x | default({}) }
+  hri485x_networking: ${ hri485x.get("networking", {}) }
+  hri485x_rs485: ${ hri485x.get("rs485", {}) }
+
+  hri485x_networking_mode: ${ hri485x_networking.get("mode", "wifi") }
+  hri485x_networking_api: ${ hri485x_networking.get("api", {}) }
+  hri485x_networking_wifi: ${ hri485x_networking.get("wifi", {}) }
+
+packages:
+  - !include
+    file: ../../boards/espressif/nodemcu-32s.yaml
+    vars:
+      networking:
+        mode: ${hri485x_networking_mode}
+        api: ${hri485x_networking_api}
+        wifi: ${hri485x_networking_wifi}
+        ethernet:
+          type: RTL8201
+          mdc_pin: GPIO23
+          mdc_strapping: false
+          mdio_pin: GPIO18
+          mdio_strapping: false
+          clk_pin: GPIO17
+          clk_strapping: false
+          clk_mode: CLK_OUT
+          phy_addr: 0
+  - !include
+    file: rs485.yaml
+    vars:
+      rs485:
+        id: hri485x_rs485_uart
+        tx_pin: GPIO33
+        rx_pin: GPIO37
+        baud_rate: ${ hri485x_rs485.get("baud_rate", 9600) }
+        data_bits: ${ hri485x_rs485.get("data_bits", 8) }
+        parity: ${ hri485x_rs485.get("parity", "NONE") }
+        stop_bits: ${ hri485x_rs485.get("stop_bits", 1) }
+        power:
+          id: hri485x_rs485_power
+          name: ${ hri485x_rs485.get("power", {}).get("name", "MAX3485 Power") }
+          pin: GPIO16
+          # Active-low on tested HRI-4853 hardware; Heltec's public manual omits this polarity.
+          inverted: true
+          restore_mode: ${ hri485x_rs485.get("power", {}).get("restore_mode", "RESTORE_DEFAULT_ON") }
+
+# GPIO3 is used by the network LED instead of the serial logger.
+logger:
+  baud_rate: 0
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: true
+    ignore_strapping_warning: true
+
+api:
+  on_client_connected:
+    - switch.turn_on: hri485x_network_led
+  on_client_disconnected:
+    - delay: 1s
+    - if:
+        condition:
+          not:
+            api.connected:
+        then:
+          - switch.turn_off: hri485x_network_led
+
+switch:
+  - platform: gpio
+    id: hri485x_network_led
+    pin: GPIO3
+    inverted: true
+
+binary_sensor:
+  - platform: gpio
+    name: Button
+    id: hri485x_button
+    pin:
+      number: GPIO32
+      mode:
+        input: true
+        pullup: true
+      inverted: true
