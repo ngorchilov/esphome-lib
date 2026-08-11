@@ -24,10 +24,15 @@ packages:
   - !include ../packages/boards/tuya/wbr3.yaml
   - !include ../packages/modules/tuya-product.yaml
 
+external_components:
+  - source: github://ngorchilov/esphome-lib
+    components: [rtl8720c_uart]
+    refresh: 1d
+
 logger:
   level: INFO
 
-uart:
+rtl8720c_uart:
   id: tuya_uart
   tx_pin: ${uart_tx_pin}
   rx_pin: ${uart_rx_pin}
