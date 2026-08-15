@@ -1,0 +1,34 @@
+substitutions:
+  name: sonoff-mini-r4
+  friendly_name: Sonoff MINIR4
+
+packages:
+  - !include ../packages/boards/espressif/esp32dev.yaml
+  - !include
+    file: ../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: smr4
+        entity: ${ entity | default({}) }
+        power:
+          pin: GPIO26
+          inverted: false
+          strapping: false
+        control:
+          mode: local
+        indicator_led:
+          enabled: true
+          pin: GPIO19
+          inverted: true
+          strapping: false
+        integrated_button:
+          enabled: true
+          pin: GPIO0
+          inverted: true
+          strapping: true
+        external_switch:
+          enabled: true
+          pin: GPIO27
+          inverted: true
+          strapping: false
+          mode: rocker
