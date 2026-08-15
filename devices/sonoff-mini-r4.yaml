@@ -3,7 +3,13 @@ substitutions:
   friendly_name: Sonoff MINIR4
 
 packages:
-  - !include ../packages/boards/espressif/esp32dev.yaml
+  - !include
+    file: ../packages/boards/espressif/esp32dev.yaml
+    vars:
+      esp32_advanced:
+        minimum_chip_revision: 3.1
+        sram1_as_iram: true
+
   - !include
     file: ../packages/modules/relay-control.yaml
     vars:
