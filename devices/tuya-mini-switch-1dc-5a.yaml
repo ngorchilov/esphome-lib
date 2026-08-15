@@ -13,7 +13,7 @@ packages:
         entity: ${ entity | default({}) }
         power:
           pin: GPIO20
-          inverted: true # Hardware-verified; the captured rl1_lv value is incorrect.
+          inverted: false # Hardware-verified: logical ON energizes COM -> NO.
         control:
           mode: local
         indicator_led:
