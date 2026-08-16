@@ -52,6 +52,7 @@ magic_switch:
     ignore_strapping_warning: false
   min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("min_pulse", "1ms") }
   max_pulse: ${ (entity | default({})).get("magic_switch", {}).get("max_pulse", "120ms") }
+  detect_missing_pulses: ${ (entity | default({})).get("magic_switch", {}).get("detect_missing_pulses", false) }
   adaptive_min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_min_pulse", "750us") }
   adaptive_margin: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_margin", "200us") }
   phase_tolerance: ${ (entity | default({})).get("magic_switch", {}).get("phase_tolerance", "1ms") }

@@ -18,6 +18,9 @@ class MagicSwitch final : public Component {
   void set_pin(InternalGPIOPin *pin) { this->pin_ = pin; }
   void set_min_pulse_us(uint32_t value) { this->min_pulse_us_ = value; }
   void set_max_pulse_us(uint32_t value) { this->max_pulse_us_ = value; }
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  void set_detect_missing_pulses(bool value) { this->detect_missing_pulses_ = value; }
+#endif
   void set_adaptive_min_pulse_us(uint32_t value) { this->adaptive_min_pulse_us_ = value; }
   void set_adaptive_margin_us(uint32_t value) { this->adaptive_margin_us_ = value; }
   void set_phase_tolerance_us(uint32_t value) { this->phase_tolerance_us_ = value; }
@@ -62,6 +65,9 @@ class MagicSwitch final : public Component {
   uint32_t startup_mask_us_{2000000};
   uint32_t debounce_us_{250000};
   uint8_t recovery_pulses_{2};
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  bool detect_missing_pulses_{false};
+#endif
 
   // Access these ISR fields only from the ISR or while holding InterruptLock.
   volatile bool last_state_{false};
@@ -83,6 +89,10 @@ class MagicSwitch final : public Component {
   volatile bool event_adaptive_{false};
   volatile uint32_t event_pulse_us_{0};
   volatile uint32_t accepted_count_{0};
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  volatile uint8_t candidate_missing_pulses_{0};
+  volatile uint8_t event_missing_pulses_{0};
+#endif
 
   volatile FilterReason last_filter_reason_{FilterReason::NONE};
   volatile uint32_t last_filtered_pulse_us_{0};

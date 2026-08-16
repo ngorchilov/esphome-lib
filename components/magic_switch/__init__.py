@@ -16,6 +16,7 @@ MagicSwitchMaskAction = magic_switch_ns.class_(
 CONF_ADAPTIVE_MARGIN = "adaptive_margin"
 CONF_ADAPTIVE_MIN_PULSE = "adaptive_min_pulse"
 CONF_DEBOUNCE = "debounce"
+CONF_DETECT_MISSING_PULSES = "detect_missing_pulses"
 CONF_IRAM_SAFE_INTERRUPT = "iram_safe_interrupt"
 CONF_MAX_PULSE = "max_pulse"
 CONF_MIN_PULSE = "min_pulse"
@@ -56,6 +57,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(CONF_PIN): pins.internal_gpio_input_pullup_pin_schema,
             cv.Optional(CONF_MIN_PULSE, default="1ms"): cv.positive_time_period_microseconds,
             cv.Optional(CONF_MAX_PULSE, default="120ms"): cv.positive_time_period_microseconds,
+            cv.Optional(CONF_DETECT_MISSING_PULSES, default=False): cv.boolean,
             cv.Optional(CONF_IRAM_SAFE_INTERRUPT, default=False): cv.boolean,
             cv.Optional(
                 CONF_ADAPTIVE_MIN_PULSE, default="750us"
@@ -90,6 +92,8 @@ async def to_code(config):
     if config[CONF_IRAM_SAFE_INTERRUPT]:
         cg.add_build_flag("-DUSE_MAGIC_SWITCH_IRAM_SAFE_INTERRUPT")
         cg.add_build_flag("-Wl,--wrap=gpio_install_isr_service")
+    if config[CONF_DETECT_MISSING_PULSES]:
+        cg.add_define("USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION")
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
@@ -98,6 +102,8 @@ async def to_code(config):
     cg.add(var.set_pin(pin))
     cg.add(var.set_min_pulse_us(config[CONF_MIN_PULSE]))
     cg.add(var.set_max_pulse_us(config[CONF_MAX_PULSE]))
+    if config[CONF_DETECT_MISSING_PULSES]:
+        cg.add(var.set_detect_missing_pulses(True))
     cg.add(var.set_adaptive_min_pulse_us(config[CONF_ADAPTIVE_MIN_PULSE]))
     cg.add(var.set_adaptive_margin_us(config[CONF_ADAPTIVE_MARGIN]))
     cg.add(var.set_phase_tolerance_us(config[CONF_PHASE_TOLERANCE]))

@@ -37,6 +37,9 @@ void MagicSwitch::loop() {
   const uint32_t now_us = micros();
   bool event_ready = false;
   bool event_adaptive = false;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  uint8_t event_missing_pulses = 0;
+#endif
   bool calibration_finished = false;
   uint32_t event_pulse_us = 0;
   uint32_t event_count = 0;
@@ -64,6 +67,9 @@ void MagicSwitch::loop() {
     if (this->candidate_pending_ && static_cast<int32_t>(now_us - this->candidate_deadline_us_) >= 0) {
       this->candidate_pending_ = false;
       this->recovery_count_ = 0;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+      this->candidate_missing_pulses_ = 0;
+#endif
       this->recovery_timeout_count_++;
       this->record_filtered_(FilterReason::RECOVERY_TIMEOUT, this->candidate_pulse_us_);
     }
@@ -71,6 +77,9 @@ void MagicSwitch::loop() {
     if (this->event_ready_) {
       event_ready = true;
       event_adaptive = this->event_adaptive_;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+      event_missing_pulses = this->event_missing_pulses_;
+#endif
       event_pulse_us = this->event_pulse_us_;
       event_count = this->accepted_count_;
       this->event_ready_ = false;
@@ -93,8 +102,18 @@ void MagicSwitch::loop() {
   }
 
   if (event_ready) {
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+    if (event_missing_pulses != 0) {
+      ESP_LOGI(TAG, "Wall-switch event #%" PRIu32 ": %u missing zero-cross pulse%s, gap=%" PRIu32 "us",
+               event_count, event_missing_pulses, event_missing_pulses == 1 ? "" : "s", event_pulse_us);
+    } else {
+      ESP_LOGI(TAG, "Wall-switch event #%" PRIu32 ": pulse=%" PRIu32 "us (%s threshold)", event_count,
+               event_pulse_us, event_adaptive ? "adaptive off-phase" : "fixed");
+    }
+#else
     ESP_LOGI(TAG, "Wall-switch event #%" PRIu32 ": pulse=%" PRIu32 "us (%s threshold)", event_count,
              event_pulse_us, event_adaptive ? "adaptive off-phase" : "fixed");
+#endif
     this->switch_trigger_.trigger(event_pulse_us);
   }
 
@@ -145,6 +164,9 @@ void MagicSwitch::dump_config() {
                 this->min_pulse_us_, this->max_pulse_us_, this->adaptive_min_pulse_us_, this->adaptive_margin_us_,
                 this->phase_tolerance_us_, this->recovery_pulses_, this->recovery_timeout_us_ / 1000UL,
                 this->startup_mask_us_ / 1000UL, this->debounce_us_ / 1000UL);
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  ESP_LOGCONFIG(TAG, "  Missing-pulse detection: %s", YESNO(this->detect_missing_pulses_));
+#endif
 }
 
 void MagicSwitch::mask(uint32_t duration_ms) {
@@ -160,6 +182,9 @@ void MagicSwitch::mask(uint32_t duration_ms) {
   }
   this->candidate_pending_ = false;
   this->recovery_count_ = 0;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  this->candidate_missing_pulses_ = 0;
+#endif
   this->event_ready_ = false;
   this->rise_valid_ = false;
 }
@@ -180,6 +205,32 @@ void IRAM_ATTR HOT MagicSwitch::edge_intr(MagicSwitch *component) {
 }
 
 void IRAM_ATTR MagicSwitch::handle_rising_(uint32_t now) {
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  if (this->detect_missing_pulses_ && !this->calibrating_ && this->last_regular_rise_us_ != 0 &&
+      !this->candidate_pending_) {
+    const uint32_t period = this->zero_cross_period_us_;
+    const uint32_t gap = now - this->last_regular_rise_us_;
+    const uint32_t cycles = (gap + period / 2UL) / period;
+    const uint32_t expected = period * cycles;
+    const uint32_t error = gap > expected ? gap - expected : expected - gap;
+    // A fast rocker transition can suppress one or two complete zero-cross pulses. Longer gaps are
+    // deliberately not treated as switch input because they are more likely to be a supply outage.
+    if (cycles >= 2 && cycles <= 3 && error <= this->phase_tolerance_us_) {
+      if (this->is_masked_(now)) {
+        this->masked_count_++;
+        this->record_filtered_(FilterReason::MASKED, gap);
+      } else {
+        this->candidate_pulse_us_ = gap;
+        this->candidate_missing_pulses_ = cycles - 1;
+        this->event_adaptive_ = false;
+        this->candidate_pending_ = true;
+        this->candidate_deadline_us_ = now + this->recovery_timeout_us_;
+        this->recovery_count_ = 0;
+      }
+    }
+  }
+#endif
+
   this->rise_us_ = now;
   this->rise_valid_ = true;
   this->rise_on_phase_ = this->is_on_phase_(now);
@@ -201,6 +252,9 @@ void IRAM_ATTR MagicSwitch::handle_falling_(uint32_t now) {
   if (width > this->max_pulse_us_) {
     this->candidate_pending_ = false;
     this->recovery_count_ = 0;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+    this->candidate_missing_pulses_ = 0;
+#endif
     this->last_regular_rise_us_ = 0;
     this->too_long_count_++;
     this->record_filtered_(FilterReason::TOO_LONG, width);
@@ -218,6 +272,9 @@ void IRAM_ATTR MagicSwitch::handle_falling_(uint32_t now) {
     if (!this->candidate_pending_) {
       this->candidate_pulse_us_ = width;
       this->event_adaptive_ = !on_phase && threshold < this->min_pulse_us_;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+      this->candidate_missing_pulses_ = 0;
+#endif
     } else if (width > this->candidate_pulse_us_) {
       this->candidate_pulse_us_ = width;
     }
@@ -256,6 +313,10 @@ void IRAM_ATTR MagicSwitch::handle_falling_(uint32_t now) {
   this->candidate_pending_ = false;
   this->recovery_count_ = 0;
   this->event_pulse_us_ = this->candidate_pulse_us_;
+#ifdef USE_MAGIC_SWITCH_MISSING_PULSE_DETECTION
+  this->event_missing_pulses_ = this->candidate_missing_pulses_;
+  this->candidate_missing_pulses_ = 0;
+#endif
   this->event_ready_ = true;
   this->accepted_count_++;
   this->mask_until_us_ = now + this->debounce_us_;

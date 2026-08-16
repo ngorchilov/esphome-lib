@@ -30,6 +30,7 @@ magic_switch:
   iram_safe_interrupt: true
   min_pulse: 1ms
   max_pulse: 120ms
+  detect_missing_pulses: false
   adaptive_min_pulse: 750us
   adaptive_margin: 200us
   phase_tolerance: 1ms
@@ -59,6 +60,11 @@ switch:
 `min_pulse` remains the principal stability control. The adaptive threshold is only used for an
 off-phase pulse and never goes below `adaptive_min_pulse`. Lowering either value increases
 sensitivity and the chance of classifying mains noise as a switch event.
+
+Set `detect_missing_pulses: true` to also treat one or two absent zero-cross pulses as a candidate.
+The gap must be phase-aligned at two or three times the learned mains period, outside all masks, and
+followed by the same configured recovery pulses as a wide-pulse candidate. This is opt-in because a
+real mains disturbance and a switch transition can produce the same observable waveform.
 
 The relay mask is deliberately separate from `debounce`: call `magic_switch.mask` on every local or
 remote relay state change. `mask` extends an existing mask and never shortens the startup interval.
