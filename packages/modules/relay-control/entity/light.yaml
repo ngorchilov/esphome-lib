@@ -15,6 +15,7 @@ defaults:
   entity_id: ${ rc_entity.get("id", default_entity_id) }
   entity_internal: ${ rc_entity.get("internal", rc.get("default_internal", false)) }
   entity_disabled_by_default: ${ rc_entity.get("disabled_by_default", rc.get("default_disabled_by_default", false)) }
+  entity_icon: ${ rc_entity.get("icon", "") }
   entity_restore_mode: ${ rc_entity.get("restore_mode", rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
   control_mode: ${ entity_control.get("mode", rc_control.get("mode", "local")) }
 
@@ -38,6 +39,7 @@ light:
     id: ${entity_id}
     internal: ${entity_internal}
     disabled_by_default: ${entity_disabled_by_default}
+    icon: ${entity_icon}
     output: ${rc_id}_control_output
     restore_mode: ${entity_restore_mode}
 

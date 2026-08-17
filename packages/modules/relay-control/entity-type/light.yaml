@@ -1,0 +1,6 @@
+defaults:
+  _rc_light_pkg: !include ../entity/light.yaml
+  _rc_light_direct_pkg: !include ../entity/light-direct.yaml
+
+packages:
+  - ${ _rc_light_direct_pkg if direct_local_light else _rc_light_pkg }

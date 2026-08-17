@@ -360,6 +360,9 @@ Supported `rc.entity.type` values:
 - `valve`: retain an output-backed POWER switch as the state and restoration owner, then expose a
   binary CONTROL valve facade that reports that POWER state as open or closed.
 
+Unsupported entity types and control modes must fail configuration. Do not add fallback branches
+that silently turn misspelled enum values into another behavior.
+
 Valve entities accept an optional `rc.entity.device_class` (`water`, `gas`, or empty). Do not assign
 a generic valve device class when the physical medium is unknown.
 
@@ -382,9 +385,11 @@ files:
 Omitting `entity` produces the default unnamed switch. Valve entities hide their backing power
 switch by default. Local light entities do not create a backing switch unless it is needed;
 `rc.entity.power.exposed: true` creates and exposes one separately, and `rc.entity.power.name` sets
-its name. `rc.entity.enabled: false` suppresses the facade, state owner, control scripts, and optional
-features while retaining the selected provider's physical output. `rc.power.output_id` optionally
-overrides the physical output id, which otherwise defaults to `${rc.id}_power_output`.
+its name. `rc.entity.icon` applies to the selected switch, light, or valve facade; a separately
+exposed backing power switch uses `rc.entity.power.icon`. `rc.entity.enabled: false` suppresses the
+facade, state owner, control scripts, and optional features while retaining the selected provider's
+physical output. `rc.power.output_id` optionally overrides the physical output id, which otherwise
+defaults to `${rc.id}_power_output`.
 
 The default `rc.power.provider: gpio` creates that output from `rc.power.pin`. Appliance packages may
 instead use `rc.power.provider: external`; the appliance must create the binary output itself and
@@ -400,6 +405,8 @@ Core invariants:
   its owner type. Device packages must not inspect `${rc.id}_power_relay` directly.
 - `${rc.id}_power_on`, `${rc.id}_power_off`, and `${rc.id}_power_toggle` are the stable commands for
   operating POWER. Device packages must use these scripts instead of addressing the owner directly.
+- Valve facades publish OPEN or CLOSED from the POWER state hooks so startup consumers never observe
+  ESPHome's temporary default valve state.
 - A POWER switch defaults to `None` when it is the primary switch entity. POWER remains independently
   controllable through its stable scripts even when CONTROL is detached.
 - Indicator LEDs, when present, follow POWER state for safety.

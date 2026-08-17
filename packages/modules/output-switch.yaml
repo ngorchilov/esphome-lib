@@ -7,5 +7,6 @@ switch:
     id: ${ output_switch.get("id") }
     internal: ${ output_switch.get("internal", false) }
     disabled_by_default: ${ output_switch.get("disabled_by_default", false) }
+    icon: ${ output_switch.get("icon", "") }
     output: ${ output_switch.get("output_id") }
     restore_mode: ${ output_switch.get("restore_mode", "ALWAYS_OFF") }

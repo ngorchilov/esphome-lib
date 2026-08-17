@@ -12,7 +12,12 @@ defaults:
   rc_external_magic: ${ rc.get("external_magic", {}) }
   rc_power_cycle: ${ rc.get("power_cycle", {}) }
 
-  entity_type: ${ rc_entity.get("type", "switch") }
+  valid_entity_types:
+    switch: switch
+    light: light
+    valve: valve
+  requested_entity_type: ${ rc_entity.get("type", "switch") }
+  entity_type: ${ valid_entity_types.get(requested_entity_type, "invalid-" ~ requested_entity_type) }
   entity_enabled: ${ rc_entity.get("enabled", rc.get("default_enabled", true)) }
   entity_control: ${ rc_entity.get("control", {}) }
   entity_power: ${ rc_entity.get("power", {}) }
@@ -21,7 +26,12 @@ defaults:
   # Control:
   # - local: external control toggles the local relay
   # - detached: external control toggles a HA entity (relay remains always controllable via Power switch)
-  control_mode: ${ entity_control.get("mode", rc_control.get("mode", "local")) }
+  valid_control_modes:
+    local: local
+    detached: detached
+    none: none
+  requested_control_mode: ${ entity_control.get("mode", rc_control.get("mode", "local")) }
+  control_mode: ${ valid_control_modes.get(requested_control_mode, "invalid-" ~ requested_control_mode) }
 
   # A local light can own the GPIO output directly. Valves, switches, detached
   # lights, and separately exposed power controls retain a stateful switch.
@@ -37,15 +47,11 @@ defaults:
   has_external_magic: ${ rc_external_magic.get("enabled", false) }
   has_power_cycle: ${ rc_power_cycle.get("enabled", false) }
 
-  _rc_target_local_pkg: !include relay-control/control-target/local.yaml
-  _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
+  _rc_target_pkg: !include relay-control/control-target/${control_mode}.yaml
   _rc_core_pkg: !include relay-control/core.yaml
   _rc_power_output_gpio_pkg: !include relay-control/power-output-gpio.yaml
   _rc_power_switch_pkg: !include relay-control/power-switch.yaml
-  _rc_entity_switch_pkg: !include relay-control/entity/switch.yaml
-  _rc_entity_light_pkg: !include relay-control/entity/light.yaml
-  _rc_entity_light_direct_pkg: !include relay-control/entity/light-direct.yaml
-  _rc_entity_valve_pkg: !include relay-control/entity/valve.yaml
+  _rc_entity_pkg: !include relay-control/entity-type/${entity_type}.yaml
   _rc_indicator_led_pkg: !include relay-control/indicator-led.yaml
   _rc_integrated_button_pkg: !include relay-control/input/integrated-button-gpio.yaml
   _rc_external_switch_gpio_pkg: !include relay-control/input/external-gpio.yaml
@@ -59,8 +65,8 @@ packages:
   - ${ entity_enabled and _rc_core_pkg or {} }
 
   - ${ entity_enabled and has_power_switch and _rc_power_switch_pkg or {} }
-  - ${ entity_enabled and (_rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {}) or {} }
-  - ${ entity_enabled and (_rc_entity_light_direct_pkg if direct_local_light else _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg) or {} }
+  - ${ entity_enabled and _rc_target_pkg or {} }
+  - ${ entity_enabled and _rc_entity_pkg or {} }
 
   - ${ entity_enabled and has_indicator_led and _rc_indicator_led_pkg or {} }
   - ${ entity_enabled and has_integrated_button and _rc_integrated_button_pkg or {} }

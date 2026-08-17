@@ -97,7 +97,7 @@ Every relay always creates a physical binary output. Its `output_id` defaults to
 
 - `enabled`: create the facade; defaults to `true`
 - `type`: `switch` (default), `light`, or `valve`
-- `id`, `name`, `internal`, and `disabled_by_default`: entity identity and visibility
+- `id`, `name`, `icon`, `internal`, and `disabled_by_default`: entity identity and visibility
 - `restore_mode`: restored power-state policy; defaults to `RESTORE_DEFAULT_OFF`
 - `device_class`: optional `water` or `gas` class for valve entities
 

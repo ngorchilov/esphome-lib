@@ -11,6 +11,7 @@ defaults:
   entity_id: ${ rc_entity.get("id", default_entity_id) }
   entity_internal: ${ rc_entity.get("internal", rc.get("default_internal", false)) }
   entity_disabled_by_default: ${ rc_entity.get("disabled_by_default", rc.get("default_disabled_by_default", false)) }
+  entity_icon: ${ rc_entity.get("icon", "") }
   entity_device_class: ${ rc_entity.get("device_class", "") }
 
 valve:
@@ -19,6 +20,7 @@ valve:
     id: ${entity_id}
     internal: ${entity_internal}
     disabled_by_default: ${entity_disabled_by_default}
+    icon: ${entity_icon}
     device_class: ${entity_device_class}
     lambda: |-
       return id(${rc_id}_power_state).state ? 1.0f : 0.0f;
@@ -30,6 +32,18 @@ valve:
       - script.execute: ${rc_id}_control_toggle
 
 script:
+  - id: !extend ${rc_id}_after_power_on
+    then:
+      - valve.template.publish:
+          id: ${entity_id}
+          state: OPEN
+
+  - id: !extend ${rc_id}_after_power_off
+    then:
+      - valve.template.publish:
+          id: ${entity_id}
+          state: CLOSED
+
   - id: !extend ${rc_id}_primary_on
     then:
       - valve.open: ${entity_id}

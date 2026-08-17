@@ -13,13 +13,16 @@ defaults:
   entity_name: ${ "none" if rc_entity.get("name", default_entity_name) == "None" else rc_entity.get("name", default_entity_name) }
   entity_internal: ${ rc_entity.get("internal", rc.get("default_internal", false)) }
   entity_disabled_by_default: ${ rc_entity.get("disabled_by_default", rc.get("default_disabled_by_default", false)) }
+  entity_icon: ${ rc_entity.get("icon", "") }
   power_name: ${ entity_power.get("name", "Power") }
+  power_icon: ${ entity_power.get("icon", "") }
   power_exposed: ${ entity_power.get("exposed", entity_type == "switch") }
   power_output_id: ${ rc_power.get("output_id", rc_id ~ "_power_output") }
   relay_name: ${ entity_name if entity_type == "switch" else power_name }
   relay_id: ${ rc_entity.get("id", default_entity_id) if entity_type == "switch" else entity_power.get("id", rc_id ~ "_power_relay") }
   relay_internal: ${ rc_power.get("internal", (entity_internal if entity_type == "switch" else false) or not power_exposed) }
   relay_disabled_by_default: ${ entity_disabled_by_default if entity_type == "switch" else entity_power.get("disabled_by_default", false) }
+  relay_icon: ${ entity_icon if entity_type == "switch" else power_icon }
   relay_restore_mode: ${ entity_power.get("restore_mode", rc_entity.get("restore_mode", rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF"))) }
 
 packages:
@@ -31,6 +34,7 @@ packages:
         id: ${relay_id}
         internal: ${relay_internal}
         disabled_by_default: ${relay_disabled_by_default}
+        icon: ${relay_icon}
         output_id: ${power_output_id}
         restore_mode: ${relay_restore_mode}
 
