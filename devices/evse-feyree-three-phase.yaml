@@ -29,9 +29,6 @@ external_components:
     components: [rtl8720c_uart]
     refresh: 1d
 
-logger:
-  level: INFO
-
 rtl8720c_uart:
   id: tuya_uart
   tx_pin: ${uart_tx_pin}
