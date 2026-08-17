@@ -3,34 +3,34 @@ substitutions:
   friendly_name: Tuya Strip 4PM (T1-U)
 
   led_pin: GPIO23
-  led_inverted: 'false'
+  led_inverted: false
 
   button_pin: GPIO22
-  button_pullup: 'true'
-  button_inverted: 'true'
+  button_pullup: true
+  button_inverted: true
 
   relay1_pin: GPIO26
-  relay1_inverted: 'false'
+  relay1_inverted: false
   relay1_id: socket_1
   relay1_name: Socket 1
 
   relay2_pin: GPIO9
-  relay2_inverted: 'false'
+  relay2_inverted: false
   relay2_id: socket_2
   relay2_name: Socket 2
 
   relay3_pin: GPIO24
-  relay3_inverted: 'false'
+  relay3_inverted: false
   relay3_id: socket_3
   relay3_name: Socket 3
 
   relay4_pin: GPIO21
-  relay4_inverted: 'false'
+  relay4_inverted: false
   relay4_id: socket_4
   relay4_name: Socket 4
 
   relay5_pin: GPIO6
-  relay5_inverted: 'false'
+  relay5_inverted: false
   relay5_id: relay_usb
   relay5_name: Relay USB
 

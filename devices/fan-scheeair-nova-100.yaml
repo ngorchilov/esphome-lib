@@ -109,7 +109,7 @@ sensor:
     name: Temperature
     id: temperature
     sensor_datapoint: 21
-    unit_of_measurement: '°C'
+    unit_of_measurement: °C
     accuracy_decimals: 0
     device_class: temperature
     state_class: measurement
@@ -132,7 +132,7 @@ sensor:
   - platform: template
     name: Dew Point
     id: dew_point
-    unit_of_measurement: '°C'
+    unit_of_measurement: °C
     device_class: temperature
     state_class: measurement
     update_interval: never

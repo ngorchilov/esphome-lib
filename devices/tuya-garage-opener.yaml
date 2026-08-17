@@ -7,7 +7,7 @@ substitutions:
   magnetic_pin: GPIO26
   magnetic_contact_delay: 0.5s # delay for magnetic sensor stabilization
   pulse_duration: 0.2s
-  door_travel_time: '30' # Default time in seconds. Can be overwritten by the users via number component bellow
+  door_travel_time: 30 # Default time in seconds. Can be overwritten by the users via number component bellow
 
 packages:
   - !include ../packages/boards/tuya/cbu.yaml

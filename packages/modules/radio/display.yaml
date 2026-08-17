@@ -9,7 +9,7 @@ i2c:
     scan: true
 
 font:
-  - file: 'gfonts://Roboto Mono'
+  - file: gfonts://Roboto Mono
     id: radio_oled_font
     size: 11
     glyphs: ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'

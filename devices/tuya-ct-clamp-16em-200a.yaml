@@ -28,27 +28,27 @@ substitutions:
   c15_name: C15
   c16_name: C16
 
-  # Visibility toggles (use 'true' or 'false')
-  phA_internal: 'false'
-  phB_internal: 'false'
-  phC_internal: 'false'
-  c01_internal: 'false'
-  c02_internal: 'false'
-  c03_internal: 'false'
-  c04_internal: 'false'
-  c05_internal: 'false'
-  c06_internal: 'false'
-  c07_internal: 'false'
-  c08_internal: 'false'
-  c09_internal: 'false'
-  c10_internal: 'false'
-  c11_internal: 'false'
-  c12_internal: 'false'
-  c13_internal: 'false'
-  c14_internal: 'false'
-  c15_internal: 'false'
-  c16_internal: 'false'
-  sol_internal: 'false'
+  # Visibility toggles (use true or false)
+  phA_internal: false
+  phB_internal: false
+  phC_internal: false
+  c01_internal: false
+  c02_internal: false
+  c03_internal: false
+  c04_internal: false
+  c05_internal: false
+  c06_internal: false
+  c07_internal: false
+  c08_internal: false
+  c09_internal: false
+  c10_internal: false
+  c11_internal: false
+  c12_internal: false
+  c13_internal: false
+  c14_internal: false
+  c15_internal: false
+  c16_internal: false
+  sol_internal: false
 
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
@@ -100,7 +100,7 @@ time:
         minutes: 30
         hours: 3
         then:
-          - logger.log: 'Scheduled daily reboot triggered'
+          - logger.log: Scheduled daily reboot triggered
           - button.press: mcu_restart
 
 logger:
@@ -932,7 +932,7 @@ sensor:
   - platform: template
     name: Total Current
     id: total_current
-    internal: 'false'
+    internal: false
     unit_of_measurement: A
     device_class: current
     state_class: measurement
@@ -941,7 +941,7 @@ sensor:
   - platform: template
     name: Total Power
     id: total_power
-    internal: 'false'
+    internal: false
     unit_of_measurement: W
     device_class: power
     state_class: measurement
@@ -950,7 +950,7 @@ sensor:
   - platform: template
     name: Grid Frequency
     id: grid_frequency
-    internal: 'false'
+    internal: false
     unit_of_measurement: Hz
     device_class: frequency
     state_class: measurement
@@ -960,7 +960,7 @@ sensor:
   - platform: template
     name: Total Apparent Power
     id: total_va
-    internal: 'false'
+    internal: false
     unit_of_measurement: VA
     device_class: apparent_power
     state_class: measurement
@@ -974,7 +974,7 @@ sensor:
   - platform: template
     name: Total Power Factor
     id: total_pf
-    internal: 'false'
+    internal: false
     unit_of_measurement: '%'
     device_class: power_factor
     state_class: measurement
@@ -1475,7 +1475,7 @@ sensor:
   # Totals from Tuya (DP 131, 132)
   - platform: tuya
     name: Total Consumed Energy
-    internal: 'false'
+    internal: false
     sensor_datapoint: 131
     unit_of_measurement: kWh
     device_class: energy

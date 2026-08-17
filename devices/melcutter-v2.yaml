@@ -132,7 +132,7 @@ interval:
           then:
             - logger.log:
                 level: WARN
-                format: 'Remote temperature refresh timed out, clearing Mitsubishi CN105 override'
+                format: Remote temperature refresh timed out, clearing Mitsubishi CN105 override
             - climate.mitsubishi_cn105.clear_remote_temperature:
                 id: hp
             - lambda: |-
@@ -170,4 +170,4 @@ interval:
           else:
             - logger.log:
                 level: VERBOSE
-                format: 'Remote temperature sensor entity ID is empty, skipping query'
+                format: Remote temperature sensor entity ID is empty, skipping query

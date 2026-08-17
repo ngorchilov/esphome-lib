@@ -49,7 +49,7 @@ font:
   - file: gfonts://Inter@700
     id: font_large
     size: 56
-  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+  - file: https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf
     id: mdi_weather_large
     size: 82
     glyphs:
@@ -69,7 +69,7 @@ font:
       - "\U000F059E" # weather-windy-variant
       - "\U000F067E" # weather-lightning-rainy
       - "\U000F067F" # weather-snowy-rainy
-  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+  - file: https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf
     id: mdi_weather_small
     size: 36
     glyphs:
@@ -89,7 +89,7 @@ font:
       - "\U000F059E" # weather-windy-variant
       - "\U000F067E" # weather-lightning-rainy
       - "\U000F067F" # weather-snowy-rainy
-  - file: 'https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf'
+  - file: https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/fonts/materialdesignicons-webfont.ttf
     id: mdi_detail
     size: 28
     glyphs:
@@ -100,14 +100,14 @@ font:
     id: font_wind_arrow
     size: 22
     glyphs:
-      - '↑'
-      - '↗'
-      - '→'
-      - '↘'
-      - '↓'
-      - '↙'
-      - '←'
-      - '↖'
+      - ↑
+      - ↗
+      - →
+      - ↘
+      - ↓
+      - ↙
+      - ←
+      - ↖
 
 globals:
   - id: forecast_day
@@ -273,7 +273,7 @@ display:
 script:
   - id: draw_base
     parameters:
-      screen: 'display::Display*'
+      screen: display::Display*
     then:
       - lambda: |-
           auto valid = [](float v) -> bool {
@@ -371,7 +371,7 @@ script:
 
   - id: draw_forecast
     parameters:
-      screen: 'display::Display*'
+      screen: display::Display*
       x: int
       label: string
       condition: string

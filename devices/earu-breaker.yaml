@@ -325,7 +325,7 @@ switch:
           then:
             - logger.log:
                 level: WARN
-                format: 'Maintenance mode enabled'
+                format: Maintenance mode enabled
     turn_off_action:
       - if:
           condition:
@@ -351,11 +351,11 @@ switch:
             - lambda: id(fault).publish_state("None");
             - logger.log:
                 level: WARN
-                format: 'Maintenance mode disabled'
+                format: Maintenance mode disabled
           else:
             - logger.log:
                 level: WARN
-                format: 'Fault conditions are still met. Maintenance mode disable denied'
+                format: Fault conditions are still met. Maintenance mode disable denied
 
   # Relay Switch
   - platform: template
@@ -376,7 +376,7 @@ switch:
           else:
             - logger.log:
                 level: WARN
-                format: 'Tripping conditions are met. Relay turn on denied'
+                format: Tripping conditions are met. Relay turn on denied
     turn_off_action:
       - switch.turn_off: hbridge_relay
       - globals.set:
@@ -418,7 +418,7 @@ sensor:
                 id(fault).publish_state(message);
             - logger.log:
                 level: ERROR
-                format: 'TRIPPING! Temperature %.1f > %.1f'
+                format: TRIPPING! Temperature %.1f > %.1f
                 args: ['id(raw_temperature)', 'id(max_temperature).state']
 
   # realtime energy meter sensors (BL0942)
@@ -451,7 +451,7 @@ sensor:
                         id(fault).publish_state(message);
                     - logger.log:
                         level: ERROR
-                        format: 'TRIPPING! Voltage %.1f > %.1f'
+                        format: TRIPPING! Voltage %.1f > %.1f
                         args: ['id(raw_voltage)', 'id(max_voltage).state']
               - if:
                   condition:
@@ -464,7 +464,7 @@ sensor:
                         id(fault).publish_state(message);
                     - logger.log:
                         level: ERROR
-                        format: 'TRIPPING! Voltage %.1f < %.1f'
+                        format: TRIPPING! Voltage %.1f < %.1f
                         args: ['id(raw_voltage)', 'id(min_voltage).state']
       filters:
         - throttle_average: ${external_update_interval}
@@ -490,7 +490,7 @@ sensor:
                   id(fault).publish_state(message);
               - logger.log:
                   level: ERROR
-                  format: 'TRIPPING! Current %.1f > %.1f'
+                  format: TRIPPING! Current %.1f > %.1f
                   args: ['id(raw_current)', 'id(max_current).state']
       filters:
         - throttle_average: ${external_update_interval}

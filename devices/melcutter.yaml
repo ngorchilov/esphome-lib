@@ -230,4 +230,4 @@ interval:
           else:
             - logger.log:
                 level: VERBOSE
-                format: 'Remote temperature sensor entity ID is empty, skipping query'
+                format: Remote temperature sensor entity ID is empty, skipping query

@@ -43,7 +43,7 @@ globals:
 # Keep your known GPIOs exactly as-is, then add six template switches for valves.
 switch:
   - platform: gpio
-    name: '1. Status LED'
+    name: 1. Status LED
     id: status_led
     pin:
       number: P28
@@ -52,7 +52,7 @@ switch:
     icon: mdi:led-on
 
   - platform: gpio
-    name: '2. Buzzer'
+    name: 2. Buzzer
     id: buzzer
     pin: P14
     restore_mode: RESTORE_DEFAULT_OFF
@@ -65,18 +65,18 @@ switch:
 
   - platform: gpio
     id: pin_p15
-    name: 'P15 (Selector Step ⁄ CLOCK)'
+    name: P15 (Selector Step ⁄ CLOCK)
     pin: P15
 
   - platform: gpio
     id: pin_p17
-    name: 'P17 (Commit ⁄ LATCH)'
+    name: P17 (Commit ⁄ LATCH)
     pin: P17
 
   # ---- Per-valve UI toggles (optimistic) ----
   - platform: template
     id: valve1
-    name: 'Valve 1'
+    name: Valve 1
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -91,7 +91,7 @@ switch:
 
   - platform: template
     id: valve2
-    name: 'Valve 2'
+    name: Valve 2
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -106,7 +106,7 @@ switch:
 
   - platform: template
     id: valve3
-    name: 'Valve 3'
+    name: Valve 3
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -121,7 +121,7 @@ switch:
 
   - platform: template
     id: valve4
-    name: 'Valve 4'
+    name: Valve 4
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -136,7 +136,7 @@ switch:
 
   - platform: template
     id: valve5
-    name: 'Valve 5'
+    name: Valve 5
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -151,7 +151,7 @@ switch:
 
   - platform: template
     id: valve6
-    name: 'Valve 6'
+    name: Valve 6
     optimistic: true
     turn_on_action:
       - lambda: |-
@@ -400,18 +400,18 @@ script:
 button:
   # your original quick-ops (still available for poking)
   - platform: template
-    name: 'Turn Next Valve ON'
+    name: Turn Next Valve ON
     on_press:
       - script.execute: next_valve_on
 
   - platform: template
-    name: 'Turn Next Valve OFF'
+    name: Turn Next Valve OFF
     on_press:
       - script.execute: next_valve_off
 
   # Apply a bitmask (0..63) in one frame
   - platform: template
-    name: 'Apply Mask'
+    name: Apply Mask
     on_press:
       - lambda: |-
           int m = (int) id(valve_mask).state;
@@ -425,7 +425,7 @@ button:
 
   # Toggle bit order if mapping is reversed
   - platform: template
-    name: 'Toggle Bit Order (Fwd⁄Rev)'
+    name: Toggle Bit Order (Fwd⁄Rev)
     on_press:
       - lambda: |-
           id(reverse_order) = !id(reverse_order);
@@ -434,7 +434,7 @@ button:
 number:
   - platform: template
     id: valve_mask
-    name: 'Valve Mask (0..63)'
+    name: Valve Mask (0..63)
     optimistic: true
     min_value: 0
     max_value: 63

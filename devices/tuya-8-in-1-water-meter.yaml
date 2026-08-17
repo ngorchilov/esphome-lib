@@ -1,10 +1,10 @@
 substitutions:
   name: tuya-8-in-1-water-meter
   friendly_name: Tuya 8-in-1 Water Quality Meter
-  scale_temp: '0.1'
-  scale_ph: '0.01'
-  scale_pro: '0.001'
-  scale_cf: '0.01'
+  scale_temp: 0.1
+  scale_ph: 0.01
+  scale_pro: 0.001
+  scale_cf: 0.01
 
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml

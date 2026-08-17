@@ -15,7 +15,7 @@ cc1101:
     packet_mode: ${ radio_raw_transceiver.get("packet_mode", false) }
     filter_bandwidth: ${ radio_raw_transceiver.get("filter_bandwidth", "203kHz") }
     symbol_rate: ${ radio_raw_transceiver.get("symbol_rate", 5000) }
-    sync_mode: 'None'
+    sync_mode: None
     output_power: ${ radio_raw_transceiver.get("output_power", 10) }
 
 script:

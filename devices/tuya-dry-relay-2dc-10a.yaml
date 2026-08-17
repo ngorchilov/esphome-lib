@@ -3,24 +3,24 @@ substitutions:
   friendly_name: Tuya Dry Relay 2DC 10A
 
   relay1_pin: GPIO14
-  relay1_inverted: 'false'
+  relay1_inverted: false
   button1_pin: GPIO9
-  button1_inverted: 'true'
+  button1_inverted: true
 
   relay2_pin: GPIO6
-  relay2_inverted: 'false'
+  relay2_inverted: false
   button2_pin: GPIO24
-  button2_inverted: 'true'
+  button2_inverted: true
 
   master_switch_pin: GPIO8
-  master_switch_inverted: 'true'
-  master_switch_pullup: 'true'
+  master_switch_inverted: true
+  master_switch_pullup: true
 
   status_led_pin: GPIO26
-  status_led_inverted: 'true'
+  status_led_inverted: true
 
   rf433_pin: GPIO7
-  rf433_inverted: 'false'
+  rf433_inverted: false
 
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml
