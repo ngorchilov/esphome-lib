@@ -26,7 +26,7 @@ binary_sensor:
   - platform: template
     id: ${rc_id}_power_state
     internal: true
-    publish_initial_state: true
+    trigger_on_initial_state: true
 
 script:
   # State hooks are extended by optional features and device-specific behavior.

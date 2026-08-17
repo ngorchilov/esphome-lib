@@ -15,7 +15,7 @@ binary_sensor:
     name: ${rc_id} External Magic State
     id: ${rc_id}_external_magic_state
     internal: ${magic_state_internal}
-    publish_initial_state: true
+    trigger_on_initial_state: true
 
   - id: !extend ${ext_magic_source_id}
     on_press:
