@@ -1,0 +1,23 @@
+defaults:
+  input: ${ input | default({}) }
+  input_config: ${ input.get("config", {}) }
+
+sensor:
+  - platform: adc
+    name: ${ input_config.get("name", input.get("name")) }
+    id: ${ input.get("id") }
+    internal: ${ input_config.get("internal", false) }
+    disabled_by_default: ${ input_config.get("disabled_by_default", false) }
+    pin: ${ input.get("pin") }
+    attenuation: 12db
+    update_interval: ${ input_config.get("update_interval", "1s") }
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    device_class: voltage
+    filters:
+      - median:
+          window_size: 5
+          send_every: 1
+      - calibrate_linear:
+          - 0.142 -> 0.0
+          - 3.3 -> 5.0

@@ -1,0 +1,270 @@
+# KinCony KC868-A6 appliance for the original ESP32 hardware revision.
+# Owns fixed board wiring while leaving application protocols and automations to consumers.
+
+defaults:
+  kincony_kc868_a6: ${ kincony_kc868_a6 | default({}) }
+  kincony_kc868_a6_networking: ${ kincony_kc868_a6.get("networking", {}) }
+  kincony_kc868_a6_rs485: ${ kincony_kc868_a6.get("rs485", {}) }
+  kincony_kc868_a6_rs232: ${ kincony_kc868_a6.get("rs232", {}) }
+  kincony_kc868_a6_relays: ${ kincony_kc868_a6.get("relays", {}) }
+  kincony_kc868_a6_digital_inputs: ${ kincony_kc868_a6.get("digital_inputs", {}) }
+  kincony_kc868_a6_analog_inputs: ${ kincony_kc868_a6.get("analog_inputs", {}) }
+  kincony_kc868_a6_analog_outputs: ${ kincony_kc868_a6.get("analog_outputs", {}) }
+  esp32_advanced: ${ esp32_advanced | default({}) }
+
+  kincony_kc868_a6_networking_mode: ${ kincony_kc868_a6_networking.get("mode", "wifi") }
+  kincony_kc868_a6_networking_api: ${ kincony_kc868_a6_networking.get("api", {}) }
+  kincony_kc868_a6_networking_wifi: ${ kincony_kc868_a6_networking.get("wifi", {}) }
+
+  kincony_kc868_a6_relay1: ${ kincony_kc868_a6_relays.get("relay1", {}) }
+  kincony_kc868_a6_relay2: ${ kincony_kc868_a6_relays.get("relay2", {}) }
+  kincony_kc868_a6_relay3: ${ kincony_kc868_a6_relays.get("relay3", {}) }
+  kincony_kc868_a6_relay4: ${ kincony_kc868_a6_relays.get("relay4", {}) }
+  kincony_kc868_a6_relay5: ${ kincony_kc868_a6_relays.get("relay5", {}) }
+  kincony_kc868_a6_relay6: ${ kincony_kc868_a6_relays.get("relay6", {}) }
+
+  kincony_kc868_a6_digital_input1: ${ kincony_kc868_a6_digital_inputs.get("input1", {}) }
+  kincony_kc868_a6_digital_input2: ${ kincony_kc868_a6_digital_inputs.get("input2", {}) }
+  kincony_kc868_a6_digital_input3: ${ kincony_kc868_a6_digital_inputs.get("input3", {}) }
+  kincony_kc868_a6_digital_input4: ${ kincony_kc868_a6_digital_inputs.get("input4", {}) }
+  kincony_kc868_a6_digital_input5: ${ kincony_kc868_a6_digital_inputs.get("input5", {}) }
+  kincony_kc868_a6_digital_input6: ${ kincony_kc868_a6_digital_inputs.get("input6", {}) }
+
+  kincony_kc868_a6_analog_input1: ${ kincony_kc868_a6_analog_inputs.get("input1", {}) }
+  kincony_kc868_a6_analog_input2: ${ kincony_kc868_a6_analog_inputs.get("input2", {}) }
+  kincony_kc868_a6_analog_input3: ${ kincony_kc868_a6_analog_inputs.get("input3", {}) }
+  kincony_kc868_a6_analog_input4: ${ kincony_kc868_a6_analog_inputs.get("input4", {}) }
+
+  kincony_kc868_a6_analog_output1: ${ kincony_kc868_a6_analog_outputs.get("output1", {}) }
+  kincony_kc868_a6_analog_output2: ${ kincony_kc868_a6_analog_outputs.get("output2", {}) }
+
+  kincony_kc868_a6_relay1_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r1
+        name: Relay 1
+        number: 0
+        config: ${kincony_kc868_a6_relay1}
+  kincony_kc868_a6_relay2_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r2
+        name: Relay 2
+        number: 1
+        config: ${kincony_kc868_a6_relay2}
+  kincony_kc868_a6_relay3_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r3
+        name: Relay 3
+        number: 2
+        config: ${kincony_kc868_a6_relay3}
+  kincony_kc868_a6_relay4_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r4
+        name: Relay 4
+        number: 3
+        config: ${kincony_kc868_a6_relay4}
+  kincony_kc868_a6_relay5_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r5
+        name: Relay 5
+        number: 4
+        config: ${kincony_kc868_a6_relay5}
+  kincony_kc868_a6_relay6_module: !include
+    file: kincony-kc868-a6/relay.yaml
+    vars:
+      relay:
+        id: r6
+        name: Relay 6
+        number: 5
+        config: ${kincony_kc868_a6_relay6}
+
+  kincony_kc868_a6_digital_input1_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di1
+        name: Digital Input 1
+        number: 0
+        config: ${kincony_kc868_a6_digital_input1}
+  kincony_kc868_a6_digital_input2_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di2
+        name: Digital Input 2
+        number: 1
+        config: ${kincony_kc868_a6_digital_input2}
+  kincony_kc868_a6_digital_input3_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di3
+        name: Digital Input 3
+        number: 2
+        config: ${kincony_kc868_a6_digital_input3}
+  kincony_kc868_a6_digital_input4_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di4
+        name: Digital Input 4
+        number: 3
+        config: ${kincony_kc868_a6_digital_input4}
+  kincony_kc868_a6_digital_input5_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di5
+        name: Digital Input 5
+        number: 4
+        config: ${kincony_kc868_a6_digital_input5}
+  kincony_kc868_a6_digital_input6_module: !include
+    file: kincony-kc868-a6/digital-input.yaml
+    vars:
+      input:
+        id: di6
+        name: Digital Input 6
+        number: 5
+        config: ${kincony_kc868_a6_digital_input6}
+
+  kincony_kc868_a6_analog_input1_module: !include
+    file: kincony-kc868-a6/analog-input.yaml
+    vars:
+      input:
+        id: ai1
+        name: Analog Input 1
+        pin: GPIO36
+        config: ${kincony_kc868_a6_analog_input1}
+  kincony_kc868_a6_analog_input2_module: !include
+    file: kincony-kc868-a6/analog-input.yaml
+    vars:
+      input:
+        id: ai2
+        name: Analog Input 2
+        pin: GPIO39
+        config: ${kincony_kc868_a6_analog_input2}
+  kincony_kc868_a6_analog_input3_module: !include
+    file: kincony-kc868-a6/analog-input.yaml
+    vars:
+      input:
+        id: ai3
+        name: Analog Input 3
+        pin: GPIO34
+        config: ${kincony_kc868_a6_analog_input3}
+  kincony_kc868_a6_analog_input4_module: !include
+    file: kincony-kc868-a6/analog-input.yaml
+    vars:
+      input:
+        id: ai4
+        name: Analog Input 4
+        pin: GPIO35
+        config: ${kincony_kc868_a6_analog_input4}
+
+  kincony_kc868_a6_analog_output1_module: !include
+    file: kincony-kc868-a6/analog-output.yaml
+    vars:
+      output:
+        id: ao1
+        output_id: ao1_dac
+        name: Analog Output 1
+        pin: GPIO25
+        config: ${kincony_kc868_a6_analog_output1}
+  kincony_kc868_a6_analog_output2_module: !include
+    file: kincony-kc868-a6/analog-output.yaml
+    vars:
+      output:
+        id: ao2
+        output_id: ao2_dac
+        name: Analog Output 2
+        pin: GPIO26
+        config: ${kincony_kc868_a6_analog_output2}
+
+packages:
+  - !include
+    file: ../boards/espressif/esp32dev.yaml
+    vars:
+      esp32_advanced: ${esp32_advanced}
+      networking:
+        mode: ${kincony_kc868_a6_networking_mode}
+        api: ${kincony_kc868_a6_networking_api}
+        wifi: ${kincony_kc868_a6_networking_wifi}
+  - ${ kincony_kc868_a6_relay1.get("enabled", true) and kincony_kc868_a6_relay1_module or {} }
+  - ${ kincony_kc868_a6_relay2.get("enabled", true) and kincony_kc868_a6_relay2_module or {} }
+  - ${ kincony_kc868_a6_relay3.get("enabled", true) and kincony_kc868_a6_relay3_module or {} }
+  - ${ kincony_kc868_a6_relay4.get("enabled", true) and kincony_kc868_a6_relay4_module or {} }
+  - ${ kincony_kc868_a6_relay5.get("enabled", true) and kincony_kc868_a6_relay5_module or {} }
+  - ${ kincony_kc868_a6_relay6.get("enabled", true) and kincony_kc868_a6_relay6_module or {} }
+  - ${ kincony_kc868_a6_digital_input1.get("enabled", true) and kincony_kc868_a6_digital_input1_module or {} }
+  - ${ kincony_kc868_a6_digital_input2.get("enabled", true) and kincony_kc868_a6_digital_input2_module or {} }
+  - ${ kincony_kc868_a6_digital_input3.get("enabled", true) and kincony_kc868_a6_digital_input3_module or {} }
+  - ${ kincony_kc868_a6_digital_input4.get("enabled", true) and kincony_kc868_a6_digital_input4_module or {} }
+  - ${ kincony_kc868_a6_digital_input5.get("enabled", true) and kincony_kc868_a6_digital_input5_module or {} }
+  - ${ kincony_kc868_a6_digital_input6.get("enabled", true) and kincony_kc868_a6_digital_input6_module or {} }
+  - ${ kincony_kc868_a6_analog_input1.get("enabled", true) and kincony_kc868_a6_analog_input1_module or {} }
+  - ${ kincony_kc868_a6_analog_input2.get("enabled", true) and kincony_kc868_a6_analog_input2_module or {} }
+  - ${ kincony_kc868_a6_analog_input3.get("enabled", true) and kincony_kc868_a6_analog_input3_module or {} }
+  - ${ kincony_kc868_a6_analog_input4.get("enabled", true) and kincony_kc868_a6_analog_input4_module or {} }
+  - ${ kincony_kc868_a6_analog_output1.get("enabled", true) and kincony_kc868_a6_analog_output1_module or {} }
+  - ${ kincony_kc868_a6_analog_output2.get("enabled", true) and kincony_kc868_a6_analog_output2_module or {} }
+
+uart:
+  - id: rs485
+    tx_pin: GPIO27
+    rx_pin: GPIO14
+    baud_rate: ${ kincony_kc868_a6_rs485.get("baud_rate", 9600) }
+    data_bits: ${ kincony_kc868_a6_rs485.get("data_bits", 8) }
+    parity: ${ kincony_kc868_a6_rs485.get("parity", "NONE") }
+    stop_bits: ${ kincony_kc868_a6_rs485.get("stop_bits", 1) }
+  - id: rs232
+    tx_pin: GPIO17
+    rx_pin: GPIO16
+    baud_rate: ${ kincony_kc868_a6_rs232.get("baud_rate", 9600) }
+    data_bits: ${ kincony_kc868_a6_rs232.get("data_bits", 8) }
+    parity: ${ kincony_kc868_a6_rs232.get("parity", "NONE") }
+    stop_bits: ${ kincony_kc868_a6_rs232.get("stop_bits", 1) }
+
+spi:
+  id: kincony_kc868_a6_spi
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO19
+
+i2c:
+  id: kincony_kc868_a6_i2c
+  sda: GPIO4
+  scl:
+    number: GPIO15
+    ignore_strapping_warning: true
+
+one_wire:
+  - platform: gpio
+    pin: GPIO32
+    id: ow_bus1
+  - platform: gpio
+    pin: GPIO33
+    id: ow_bus2
+
+pcf8574:
+  - id: inputs
+    address: 0x22
+  - id: outputs
+    address: 0x24
+
+time:
+  - id: !extend ha_time
+    on_time_sync:
+      then:
+        - ds1307.write_time:
+            id: rtc_time
+  - platform: ds1307
+    id: rtc_time
+    i2c_id: kincony_kc868_a6_i2c

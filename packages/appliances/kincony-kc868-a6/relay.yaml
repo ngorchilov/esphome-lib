@@ -1,0 +1,16 @@
+defaults:
+  relay: ${ relay | default({}) }
+  relay_config: ${ relay.get("config", {}) }
+
+switch:
+  - platform: gpio
+    name: ${ relay_config.get("name", relay.get("name")) }
+    id: ${ relay.get("id") }
+    internal: ${ relay_config.get("internal", false) }
+    disabled_by_default: ${ relay_config.get("disabled_by_default", false) }
+    pin:
+      pcf8574: outputs
+      number: ${ relay.get("number") }
+      mode: OUTPUT
+      inverted: true
+    restore_mode: ${ relay_config.get("restore_mode", "RESTORE_DEFAULT_OFF") }

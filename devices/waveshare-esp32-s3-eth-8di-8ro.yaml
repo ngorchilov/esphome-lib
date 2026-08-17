@@ -1,0 +1,9 @@
+substitutions:
+  name: waveshare-esp32-s3-eth-8di-8ro
+  friendly_name: Waveshare ESP32-S3-ETH-8DI-8RO
+
+packages:
+  - !include
+    file: ../packages/appliances/waveshare-esp32-s3-eth-8di-8ro.yaml
+    vars:
+      waveshare_8di8ro: ${ waveshare_8di8ro | default({}) }

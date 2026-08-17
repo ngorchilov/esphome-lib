@@ -158,6 +158,19 @@ the pins. The stable UART id is `hri485x_rs485_uart`. The appliance must not cre
 consuming products own `modbus`, controllers, polling, registers, and entities. Add profiles only
 from a verified complete pin map, and never fall back to another HRI model for an unsupported profile.
 
+`packages/appliances/waveshare-esp32-s3-eth-8di-8ro.yaml` owns the fixed W5500, TCA9554 relay bank,
+isolated inputs, RS485 UART, RTC, RGB LED, buzzer, and MCU memory configuration of the matching
+Waveshare board. Its public API is the `waveshare_8di8ro:` object. Per-channel configuration belongs
+under `relays.relay1` through `relay8` and `inputs.input1` through `input8`; `enabled: false` removes
+a channel. The stable RS485 id is `waveshare_8di8ro_rs485_uart`. As with the HRI appliance,
+consumers own Modbus hubs, protocol behavior, and input-to-relay automations.
+
+`packages/appliances/kincony-kc868-a6.yaml` targets the original ESP32 KC868-A6, not the incompatible
+ESP32-S3 A6v3. It owns the fixed relay/input expanders, analog I/O, RS485, RS232, SPI, I2C, OneWire
+ports, and RTC. Its public API is the `kincony_kc868_a6:` object, with channel configuration under
+`relays`, `digital_inputs`, `analog_inputs`, and `analog_outputs`. Existing short infrastructure ids
+are intentionally preserved for compatibility. Consumers own serial protocols and automations.
+
 ### Functional Modules
 
 `packages/modules/*.yaml` files add reusable behavior. Modules should be designed around explicit
@@ -268,6 +281,11 @@ Responsibilities:
 - expose API, OTA, and mDNS defaults
 - use `pin.yaml` for Ethernet pin-number fields
 - disable API and Wi-Fi connection-loss reboots by default with `reboot_timeout: 0s`
+
+Ethernet type selects the physical schema. RMII PHYs use `mdc_pin`, `mdio_pin`, `clk_pin`,
+`clk_mode`, and `phy_addr`; SPI controllers such as W5500 use `clk_pin`, `mosi_pin`, `miso_pin`,
+`cs_pin`, `interrupt_pin`, and `reset_pin`. Keep those implementations separate because ESPHome
+rejects fields from the wrong Ethernet schema.
 
 Device-specific networking overrides should travel through the board package include so the base-board
 layer and nested networking package see the same package context:

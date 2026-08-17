@@ -1,0 +1,96 @@
+# KinCony KC868-A6
+
+This appliance package targets the original ESP32-based KinCony KC868-A6. It does not target the
+later ESP32-S3-based KC868-A6v3, which has a different pin map and peripheral implementation.
+
+The appliance owns the fixed board wiring and exposes six relays, six dry-contact inputs, four
+0-5 V analog inputs, two 0-10 V analog outputs, RS485, RS232, SPI, I2C, two OneWire-capable ports,
+and the DS1307 RTC. Applications own Modbus or other serial protocols, attached SPI/OneWire devices,
+and input-to-relay automations.
+
+## Hardware
+
+- original ESP32 MCU
+- six active-low relays through a PCF8574 at address `0x24`
+- six active-low dry-contact inputs through a PCF8574 at address `0x22`
+- four 0-5 V analog inputs
+- two 0-10 V analog outputs
+- RS485 and RS232 transceivers
+- DS1307 RTC
+- SPI expansion header and two GPIO32/GPIO33 sensor ports
+
+KinCony rates the relay contacts at up to 10 A at 277 V AC. Installation and load selection must
+follow the manufacturer's electrical-safety guidance.
+
+## Pin Map
+
+| Function | ESP32 / expander pin |
+| --- | --- |
+| Analog inputs 1-4 | GPIO36, GPIO39, GPIO34, GPIO35 |
+| Analog outputs used by this profile | Output 1 GPIO25, Output 2 GPIO26 |
+| OneWire-capable ports 1-2 | GPIO32, GPIO33 |
+| I2C SDA / SCL | GPIO4 / GPIO15 |
+| Digital inputs 1-6 | Input PCF8574 pins 0-5 at `0x22` |
+| Relays 1-6 | Output PCF8574 pins 0-5 at `0x24` |
+| RS485 TX / RX | GPIO27 / GPIO14 |
+| RS232 TX / RX | GPIO17 / GPIO16 |
+| SPI SCLK / MOSI / MISO | GPIO18 / GPIO23 / GPIO19 |
+| SPI chip select | GPIO5, available to the consuming component |
+
+KinCony's published pin definition calls GPIO26 `DAC1` and GPIO25 `DAC2`, while ESP32's native DAC
+channel numbering is the reverse. This profile deliberately preserves its established mapping of
+the `Analog Output 1` entity to GPIO25 and `Analog Output 2` to GPIO26. Changing that mapping is a
+separate behavioral decision, not part of the package refactor.
+
+## Usage
+
+The defaults expose every channel, use Wi-Fi, configure both serial ports as 9600-8-N-1, preserve
+the existing relay `RESTORE_DEFAULT_OFF` behavior, poll analog inputs every second, and restore
+analog output values.
+
+```yaml
+packages:
+  - !include
+    file: ../packages/appliances/kincony-kc868-a6.yaml
+    vars:
+      kincony_kc868_a6:
+        rs485:
+          baud_rate: 19200
+          parity: EVEN
+        relays:
+          relay1:
+            name: Pump
+          relay6:
+            enabled: false
+        digital_inputs:
+          input1:
+            name: Pump Feedback
+        analog_inputs:
+          input1:
+            name: Pressure
+            update_interval: 5s
+        analog_outputs:
+          output1:
+            name: Demand
+```
+
+Relay channels accept `enabled`, `name`, `internal`, `disabled_by_default`, and `restore_mode`.
+Digital inputs accept `enabled`, `name`, `internal`, and `disabled_by_default`. Analog inputs also
+accept `update_interval`; analog outputs also accept `restore_value`. Setting `enabled: false`
+removes the complete channel.
+
+Existing infrastructure IDs are preserved for compatibility:
+
+- relays `r1` through `r6`
+- digital inputs `di1` through `di6`
+- analog inputs `ai1` through `ai4`
+- analog output numbers `ao1` and `ao2`, backed by `ao1_dac` and `ao2_dac`
+- UARTs `rs485` and `rs232`
+- OneWire buses `ow_bus1` and `ow_bus2`
+- expanders `inputs` and `outputs`, and RTC `rtc_time`
+
+Sources:
+
+- [KinCony KC868-A6 pin definition](https://www.kincony.com/forum/showthread.php?tid=1962)
+- [KinCony KC868-A6 hardware design](https://www.kincony.com/kc868-a6-hardware-design-details.html)
+- [KinCony controller specifications](https://www.kincony.com/download/KC868-Smart-Controller-parameters-v3.2.pdf)

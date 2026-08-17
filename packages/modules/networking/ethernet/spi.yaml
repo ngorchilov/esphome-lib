@@ -1,0 +1,66 @@
+defaults:
+  firmware_family: ${ firmware_family | default("esphome") }
+  networking: ${ networking | default({}) }
+  networking_ethernet: ${ networking.get("ethernet", {}) }
+  eth_type: ${ networking_ethernet.get("type", "W5500") }
+  eth_clk_pin: ${ networking_ethernet.get("clk_pin", "") }
+  eth_clk_strapping: ${ networking_ethernet.get("clk_strapping", false) }
+  eth_mosi_pin: ${ networking_ethernet.get("mosi_pin", "") }
+  eth_mosi_strapping: ${ networking_ethernet.get("mosi_strapping", false) }
+  eth_miso_pin: ${ networking_ethernet.get("miso_pin", "") }
+  eth_miso_strapping: ${ networking_ethernet.get("miso_strapping", false) }
+  eth_cs_pin: ${ networking_ethernet.get("cs_pin", "") }
+  eth_cs_strapping: ${ networking_ethernet.get("cs_strapping", false) }
+  eth_interrupt_pin: ${ networking_ethernet.get("interrupt_pin", "") }
+  eth_interrupt_strapping: ${ networking_ethernet.get("interrupt_strapping", false) }
+  eth_reset_pin: ${ networking_ethernet.get("reset_pin", "") }
+  eth_reset_strapping: ${ networking_ethernet.get("reset_strapping", false) }
+  eth_clock_speed: ${ networking_ethernet.get("clock_speed", "26.67MHz") }
+  eth_interface: ${ networking_ethernet.get("interface", "spi2") }
+
+ethernet:
+  type: ${eth_type}
+  clk_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_clk_pin}
+        ignore_strapping_warning: ${eth_clk_strapping}
+  mosi_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_mosi_pin}
+        ignore_strapping_warning: ${eth_mosi_strapping}
+  miso_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_miso_pin}
+        ignore_strapping_warning: ${eth_miso_strapping}
+  cs_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_cs_pin}
+        ignore_strapping_warning: ${eth_cs_strapping}
+  interrupt_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_interrupt_pin}
+        ignore_strapping_warning: ${eth_interrupt_strapping}
+  reset_pin: !include
+    file: ../../pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${eth_reset_pin}
+        ignore_strapping_warning: ${eth_reset_strapping}
+  clock_speed: ${eth_clock_speed}
+  interface: ${eth_interface}
