@@ -44,8 +44,8 @@ load selection must follow the manufacturer's electrical-safety guidance.
 
 ## Usage
 
-The defaults expose all relay and input channels, use Ethernet, and configure RS485 as 9600-8-N-1.
-Relay outputs use `ALWAYS_OFF` so every firmware boot starts with all loads off.
+The defaults expose all relay and digital-input channels, use Ethernet, and configure RS485 as
+9600-8-N-1. Relay switch facades use `ALWAYS_OFF` so every firmware boot starts with all loads off.
 
 ```yaml
 packages:
@@ -56,25 +56,48 @@ packages:
         networking:
           mode: ethernet # ethernet | wifi
         rs485:
+          id: controller_rs485_uart
           baud_rate: 19200
           parity: EVEN
+        rtc:
+          id: controller_rtc
         relays:
           relay1:
-            name: Pump
-            restore_mode: RESTORE_DEFAULT_OFF
+            output_id: controller_relay_1
+            entity:
+              enabled: false
+          relay2:
+            entity:
+              name: Pump
+              restore_mode: RESTORE_DEFAULT_OFF
           relay8:
-            enabled: false
-        inputs:
+            entity:
+              enabled: false
+        digital_inputs:
           input1:
+            id: controller_digital_input_1
             name: Pump Feedback
           input8:
             enabled: false
 ```
 
-Each `relay1` through `relay8` object accepts `enabled`, `name`, `internal`,
-`disabled_by_default`, and `restore_mode`. Each `input1` through `input8` object accepts `enabled`,
-`name`, `internal`, `disabled_by_default`, and `use_interrupt`. Setting `enabled: false` removes the
-channel rather than merely hiding it.
+Every relay always creates a physical binary output. Its `output_id` defaults to
+`waveshare_8di8ro_relay_1_output` through `waveshare_8di8ro_relay_8_output`. A user-facing
+output-switch facade is enabled by default with the corresponding id without the `_output` suffix.
+Configure that facade under `entity`:
+
+- `enabled`: create the facade; defaults to `true`
+- `id`, `name`, `internal`, and `disabled_by_default`: entity identity and visibility
+- `restore_mode`: facade restore policy; defaults to `ALWAYS_OFF`
+
+Set `entity.enabled: false` when an application consumes the physical output directly as a light,
+actuator, or controller capability. The output remains present and starts off; without the switch
+facade, the consuming application owns state restoration. Existing flat `enabled`, `id`, `name`,
+`internal`, `disabled_by_default`, and `restore_mode` fields remain fallback values, while nested
+`entity` fields take precedence.
+
+Each `digital_inputs.input1` through `input8` object accepts `enabled`, `id`, `name`, `internal`,
+`disabled_by_default`, and `use_interrupt`. Setting `enabled: false` removes that digital input.
 
 Network mode is a package variable and cannot be selected with an `esphome run` command-line
 option. A local wrapper that selects Wi-Fi looks like this:
@@ -101,13 +124,18 @@ an active input is reported as `ON`.
 
 Stable infrastructure IDs are:
 
-- `waveshare_8di8ro_relay_1` through `waveshare_8di8ro_relay_8`
+- relay outputs `waveshare_8di8ro_relay_1_output` through `waveshare_8di8ro_relay_8_output`
+- relay switch facades `waveshare_8di8ro_relay_1` through `waveshare_8di8ro_relay_8`
 - `waveshare_8di8ro_input_1` through `waveshare_8di8ro_input_8`
 - `waveshare_8di8ro_rs485_uart`
 - `waveshare_8di8ro_i2c` and `waveshare_8di8ro_rtc`
 - `waveshare_8di8ro_rgb_led`
 - `waveshare_8di8ro_buzzer` and `waveshare_8di8ro_buzzer_output`
 - `waveshare_8di8ro_boot_button`
+
+Set `rs485.id`, `rtc.id`, a relay's `output_id`, or a digital input's `id` when a consuming
+application needs capability-oriented identifiers such as `controller_rs485_uart`,
+`controller_rtc`, `controller_relay_1`, and `controller_digital_input_1`.
 
 Sources:
 

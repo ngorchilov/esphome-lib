@@ -6,6 +6,7 @@ defaults:
   kincony_kc868_a6_networking: ${ kincony_kc868_a6.get("networking", {}) }
   kincony_kc868_a6_rs485: ${ kincony_kc868_a6.get("rs485", {}) }
   kincony_kc868_a6_rs232: ${ kincony_kc868_a6.get("rs232", {}) }
+  kincony_kc868_a6_rtc: ${ kincony_kc868_a6.get("rtc", {}) }
   kincony_kc868_a6_relays: ${ kincony_kc868_a6.get("relays", {}) }
   kincony_kc868_a6_digital_inputs: ${ kincony_kc868_a6.get("digital_inputs", {}) }
   kincony_kc868_a6_analog_inputs: ${ kincony_kc868_a6.get("analog_inputs", {}) }
@@ -43,6 +44,7 @@ defaults:
     vars:
       relay:
         id: r1
+        output_id: r1_output
         name: Relay 1
         number: 0
         config: ${kincony_kc868_a6_relay1}
@@ -51,6 +53,7 @@ defaults:
     vars:
       relay:
         id: r2
+        output_id: r2_output
         name: Relay 2
         number: 1
         config: ${kincony_kc868_a6_relay2}
@@ -59,6 +62,7 @@ defaults:
     vars:
       relay:
         id: r3
+        output_id: r3_output
         name: Relay 3
         number: 2
         config: ${kincony_kc868_a6_relay3}
@@ -67,6 +71,7 @@ defaults:
     vars:
       relay:
         id: r4
+        output_id: r4_output
         name: Relay 4
         number: 3
         config: ${kincony_kc868_a6_relay4}
@@ -75,6 +80,7 @@ defaults:
     vars:
       relay:
         id: r5
+        output_id: r5_output
         name: Relay 5
         number: 4
         config: ${kincony_kc868_a6_relay5}
@@ -83,6 +89,7 @@ defaults:
     vars:
       relay:
         id: r6
+        output_id: r6_output
         name: Relay 6
         number: 5
         config: ${kincony_kc868_a6_relay6}
@@ -197,12 +204,12 @@ packages:
         mode: ${kincony_kc868_a6_networking_mode}
         api: ${kincony_kc868_a6_networking_api}
         wifi: ${kincony_kc868_a6_networking_wifi}
-  - ${ kincony_kc868_a6_relay1.get("enabled", true) and kincony_kc868_a6_relay1_module or {} }
-  - ${ kincony_kc868_a6_relay2.get("enabled", true) and kincony_kc868_a6_relay2_module or {} }
-  - ${ kincony_kc868_a6_relay3.get("enabled", true) and kincony_kc868_a6_relay3_module or {} }
-  - ${ kincony_kc868_a6_relay4.get("enabled", true) and kincony_kc868_a6_relay4_module or {} }
-  - ${ kincony_kc868_a6_relay5.get("enabled", true) and kincony_kc868_a6_relay5_module or {} }
-  - ${ kincony_kc868_a6_relay6.get("enabled", true) and kincony_kc868_a6_relay6_module or {} }
+  - ${kincony_kc868_a6_relay1_module}
+  - ${kincony_kc868_a6_relay2_module}
+  - ${kincony_kc868_a6_relay3_module}
+  - ${kincony_kc868_a6_relay4_module}
+  - ${kincony_kc868_a6_relay5_module}
+  - ${kincony_kc868_a6_relay6_module}
   - ${ kincony_kc868_a6_digital_input1.get("enabled", true) and kincony_kc868_a6_digital_input1_module or {} }
   - ${ kincony_kc868_a6_digital_input2.get("enabled", true) and kincony_kc868_a6_digital_input2_module or {} }
   - ${ kincony_kc868_a6_digital_input3.get("enabled", true) and kincony_kc868_a6_digital_input3_module or {} }
@@ -217,14 +224,14 @@ packages:
   - ${ kincony_kc868_a6_analog_output2.get("enabled", true) and kincony_kc868_a6_analog_output2_module or {} }
 
 uart:
-  - id: rs485
+  - id: ${ kincony_kc868_a6_rs485.get("id", "rs485") }
     tx_pin: GPIO27
     rx_pin: GPIO14
     baud_rate: ${ kincony_kc868_a6_rs485.get("baud_rate", 9600) }
     data_bits: ${ kincony_kc868_a6_rs485.get("data_bits", 8) }
     parity: ${ kincony_kc868_a6_rs485.get("parity", "NONE") }
     stop_bits: ${ kincony_kc868_a6_rs485.get("stop_bits", 1) }
-  - id: rs232
+  - id: ${ kincony_kc868_a6_rs232.get("id", "rs232") }
     tx_pin: GPIO17
     rx_pin: GPIO16
     baud_rate: ${ kincony_kc868_a6_rs232.get("baud_rate", 9600) }
@@ -264,7 +271,7 @@ time:
     on_time_sync:
       then:
         - ds1307.write_time:
-            id: rtc_time
+            id: ${ kincony_kc868_a6_rtc.get("id", "rtc_time") }
   - platform: ds1307
-    id: rtc_time
+    id: ${ kincony_kc868_a6_rtc.get("id", "rtc_time") }
     i2c_id: kincony_kc868_a6_i2c

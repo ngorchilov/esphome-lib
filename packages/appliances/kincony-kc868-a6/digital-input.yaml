@@ -5,7 +5,7 @@ defaults:
 binary_sensor:
   - platform: gpio
     name: ${ input_config.get("name", input.get("name")) }
-    id: ${ input.get("id") }
+    id: ${ input_config.get("id", input.get("id")) }
     internal: ${ input_config.get("internal", false) }
     disabled_by_default: ${ input_config.get("disabled_by_default", false) }
     pin:

@@ -45,8 +45,8 @@ separate behavioral decision, not part of the package refactor.
 ## Usage
 
 The defaults expose every channel, use Wi-Fi, configure both serial ports as 9600-8-N-1, preserve
-the existing relay `RESTORE_DEFAULT_OFF` behavior, poll analog inputs every second, and restore
-analog output values.
+the existing relay-switch `RESTORE_DEFAULT_OFF` behavior, poll analog inputs every second, and
+restore analog output values.
 
 ```yaml
 packages:
@@ -55,15 +55,26 @@ packages:
     vars:
       kincony_kc868_a6:
         rs485:
+          id: controller_rs485_uart
           baud_rate: 19200
           parity: EVEN
+        rtc:
+          id: controller_rtc
         relays:
           relay1:
-            name: Pump
+            output_id: controller_relay_1
+            entity:
+              enabled: false
+          relay2:
+            entity:
+              name: Pump
+              restore_mode: RESTORE_DEFAULT_ON
           relay6:
-            enabled: false
+            entity:
+              enabled: false
         digital_inputs:
           input1:
+            id: controller_digital_input_1
             name: Pump Feedback
         analog_inputs:
           input1:
@@ -74,20 +85,38 @@ packages:
             name: Demand
 ```
 
-Relay channels accept `enabled`, `name`, `internal`, `disabled_by_default`, and `restore_mode`.
-Digital inputs accept `enabled`, `name`, `internal`, and `disabled_by_default`. Analog inputs also
-accept `update_interval`; analog outputs also accept `restore_value`. Setting `enabled: false`
-removes the complete channel.
+Every relay always creates a physical binary output. Its `output_id` defaults to `r1_output` through
+`r6_output`. A user-facing output-switch facade is enabled by default with ids `r1` through `r6`.
+Configure that facade under `entity`:
+
+- `enabled`: create the facade; defaults to `true`
+- `id`, `name`, `internal`, and `disabled_by_default`: entity identity and visibility
+- `restore_mode`: facade restore policy; defaults to `RESTORE_DEFAULT_OFF`
+
+Set `entity.enabled: false` when an application consumes the physical output directly as a light,
+actuator, or controller capability. The output remains present and starts off; without the switch
+facade, the consuming application owns state restoration. Existing flat `enabled`, `id`, `name`,
+`internal`, `disabled_by_default`, and `restore_mode` fields remain fallback values for existing
+callers, while nested `entity` fields take precedence.
+
+Digital inputs accept `enabled`, `id`, `name`, `internal`, and `disabled_by_default`. Analog inputs
+also accept `update_interval`; analog outputs also accept `restore_value`. Setting `enabled: false`
+on an input or analog channel removes that complete channel.
 
 Existing infrastructure IDs are preserved for compatibility:
 
-- relays `r1` through `r6`
+- relay outputs `r1_output` through `r6_output`, configurable with `relays.relayN.output_id`
+- relay switch facades `r1` through `r6`, configurable with `relays.relayN.entity.id`
 - digital inputs `di1` through `di6`
 - analog inputs `ai1` through `ai4`
 - analog output numbers `ao1` and `ao2`, backed by `ao1_dac` and `ao2_dac`
 - UARTs `rs485` and `rs232`
 - OneWire buses `ow_bus1` and `ow_bus2`
 - expanders `inputs` and `outputs`, and RTC `rtc_time`
+
+Set `rs485.id`, `rs232.id`, `rtc.id`, or a digital input's `id` when a consuming application needs
+stable capability-oriented identifiers such as `controller_rs485_uart`, `controller_rtc`, and
+`controller_digital_input_1`.
 
 Sources:
 

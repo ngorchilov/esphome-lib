@@ -5,8 +5,9 @@ defaults:
   waveshare_8di8ro: ${ waveshare_8di8ro | default({}) }
   waveshare_8di8ro_networking: ${ waveshare_8di8ro.get("networking", {}) }
   waveshare_8di8ro_rs485: ${ waveshare_8di8ro.get("rs485", {}) }
+  waveshare_8di8ro_rtc: ${ waveshare_8di8ro.get("rtc", {}) }
   waveshare_8di8ro_relays: ${ waveshare_8di8ro.get("relays", {}) }
-  waveshare_8di8ro_inputs: ${ waveshare_8di8ro.get("inputs", {}) }
+  waveshare_8di8ro_digital_inputs: ${ waveshare_8di8ro.get("digital_inputs", {}) }
 
   waveshare_8di8ro_networking_mode: ${ waveshare_8di8ro_networking.get("mode", "ethernet") }
   waveshare_8di8ro_networking_api: ${ waveshare_8di8ro_networking.get("api", {}) }
@@ -21,20 +22,21 @@ defaults:
   waveshare_8di8ro_relay7: ${ waveshare_8di8ro_relays.get("relay7", {}) }
   waveshare_8di8ro_relay8: ${ waveshare_8di8ro_relays.get("relay8", {}) }
 
-  waveshare_8di8ro_input1: ${ waveshare_8di8ro_inputs.get("input1", {}) }
-  waveshare_8di8ro_input2: ${ waveshare_8di8ro_inputs.get("input2", {}) }
-  waveshare_8di8ro_input3: ${ waveshare_8di8ro_inputs.get("input3", {}) }
-  waveshare_8di8ro_input4: ${ waveshare_8di8ro_inputs.get("input4", {}) }
-  waveshare_8di8ro_input5: ${ waveshare_8di8ro_inputs.get("input5", {}) }
-  waveshare_8di8ro_input6: ${ waveshare_8di8ro_inputs.get("input6", {}) }
-  waveshare_8di8ro_input7: ${ waveshare_8di8ro_inputs.get("input7", {}) }
-  waveshare_8di8ro_input8: ${ waveshare_8di8ro_inputs.get("input8", {}) }
+  waveshare_8di8ro_input1: ${ waveshare_8di8ro_digital_inputs.get("input1", {}) }
+  waveshare_8di8ro_input2: ${ waveshare_8di8ro_digital_inputs.get("input2", {}) }
+  waveshare_8di8ro_input3: ${ waveshare_8di8ro_digital_inputs.get("input3", {}) }
+  waveshare_8di8ro_input4: ${ waveshare_8di8ro_digital_inputs.get("input4", {}) }
+  waveshare_8di8ro_input5: ${ waveshare_8di8ro_digital_inputs.get("input5", {}) }
+  waveshare_8di8ro_input6: ${ waveshare_8di8ro_digital_inputs.get("input6", {}) }
+  waveshare_8di8ro_input7: ${ waveshare_8di8ro_digital_inputs.get("input7", {}) }
+  waveshare_8di8ro_input8: ${ waveshare_8di8ro_digital_inputs.get("input8", {}) }
 
   waveshare_8di8ro_relay1_module: !include
     file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
     vars:
       relay:
         id: waveshare_8di8ro_relay_1
+        output_id: waveshare_8di8ro_relay_1_output
         name: Relay 1
         number: 0
         config: ${waveshare_8di8ro_relay1}
@@ -43,6 +45,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_2
+        output_id: waveshare_8di8ro_relay_2_output
         name: Relay 2
         number: 1
         config: ${waveshare_8di8ro_relay2}
@@ -51,6 +54,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_3
+        output_id: waveshare_8di8ro_relay_3_output
         name: Relay 3
         number: 2
         config: ${waveshare_8di8ro_relay3}
@@ -59,6 +63,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_4
+        output_id: waveshare_8di8ro_relay_4_output
         name: Relay 4
         number: 3
         config: ${waveshare_8di8ro_relay4}
@@ -67,6 +72,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_5
+        output_id: waveshare_8di8ro_relay_5_output
         name: Relay 5
         number: 4
         config: ${waveshare_8di8ro_relay5}
@@ -75,6 +81,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_6
+        output_id: waveshare_8di8ro_relay_6_output
         name: Relay 6
         number: 5
         config: ${waveshare_8di8ro_relay6}
@@ -83,6 +90,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_7
+        output_id: waveshare_8di8ro_relay_7_output
         name: Relay 7
         number: 6
         config: ${waveshare_8di8ro_relay7}
@@ -91,6 +99,7 @@ defaults:
     vars:
       relay:
         id: waveshare_8di8ro_relay_8
+        output_id: waveshare_8di8ro_relay_8_output
         name: Relay 8
         number: 7
         config: ${waveshare_8di8ro_relay8}
@@ -177,14 +186,14 @@ packages:
           interrupt_pin: GPIO12
           reset_pin: GPIO39
           interface: spi2
-  - ${ waveshare_8di8ro_relay1.get("enabled", true) and waveshare_8di8ro_relay1_module or {} }
-  - ${ waveshare_8di8ro_relay2.get("enabled", true) and waveshare_8di8ro_relay2_module or {} }
-  - ${ waveshare_8di8ro_relay3.get("enabled", true) and waveshare_8di8ro_relay3_module or {} }
-  - ${ waveshare_8di8ro_relay4.get("enabled", true) and waveshare_8di8ro_relay4_module or {} }
-  - ${ waveshare_8di8ro_relay5.get("enabled", true) and waveshare_8di8ro_relay5_module or {} }
-  - ${ waveshare_8di8ro_relay6.get("enabled", true) and waveshare_8di8ro_relay6_module or {} }
-  - ${ waveshare_8di8ro_relay7.get("enabled", true) and waveshare_8di8ro_relay7_module or {} }
-  - ${ waveshare_8di8ro_relay8.get("enabled", true) and waveshare_8di8ro_relay8_module or {} }
+  - ${waveshare_8di8ro_relay1_module}
+  - ${waveshare_8di8ro_relay2_module}
+  - ${waveshare_8di8ro_relay3_module}
+  - ${waveshare_8di8ro_relay4_module}
+  - ${waveshare_8di8ro_relay5_module}
+  - ${waveshare_8di8ro_relay6_module}
+  - ${waveshare_8di8ro_relay7_module}
+  - ${waveshare_8di8ro_relay8_module}
   - ${ waveshare_8di8ro_input1.get("enabled", true) and waveshare_8di8ro_input1_module or {} }
   - ${ waveshare_8di8ro_input2.get("enabled", true) and waveshare_8di8ro_input2_module or {} }
   - ${ waveshare_8di8ro_input3.get("enabled", true) and waveshare_8di8ro_input3_module or {} }
@@ -213,7 +222,7 @@ pca9554:
     address: 0x20
 
 uart:
-  - id: waveshare_8di8ro_rs485_uart
+  - id: ${ waveshare_8di8ro_rs485.get("id", "waveshare_8di8ro_rs485_uart") }
     tx_pin: GPIO17
     rx_pin: GPIO18
     baud_rate: ${ waveshare_8di8ro_rs485.get("baud_rate", 9600) }
@@ -225,16 +234,16 @@ esphome:
   on_boot:
     - then:
         - pcf85063.read_time:
-            id: waveshare_8di8ro_rtc
+            id: ${ waveshare_8di8ro_rtc.get("id", "waveshare_8di8ro_rtc") }
 
 time:
   - id: !extend ha_time
     on_time_sync:
       then:
         - pcf85063.write_time:
-            id: waveshare_8di8ro_rtc
+            id: ${ waveshare_8di8ro_rtc.get("id", "waveshare_8di8ro_rtc") }
   - platform: pcf85063
-    id: waveshare_8di8ro_rtc
+    id: ${ waveshare_8di8ro_rtc.get("id", "waveshare_8di8ro_rtc") }
     i2c_id: waveshare_8di8ro_i2c
     update_interval: never
 

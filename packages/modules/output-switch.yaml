@@ -1,0 +1,11 @@
+defaults:
+  output_switch: ${ output_switch | default({}) }
+
+switch:
+  - platform: output
+    name: ${ output_switch.get("name") }
+    id: ${ output_switch.get("id") }
+    internal: ${ output_switch.get("internal", false) }
+    disabled_by_default: ${ output_switch.get("disabled_by_default", false) }
+    output: ${ output_switch.get("output_id") }
+    restore_mode: ${ output_switch.get("restore_mode", "ALWAYS_OFF") }
