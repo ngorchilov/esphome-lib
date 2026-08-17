@@ -1,0 +1,24 @@
+# Default relay-control POWER provider: create a binary GPIO output.
+
+defaults:
+  rc: ${ rc | default({}) }
+  rc_power: ${ rc.get("power", {}) }
+
+  rc_id: ${ rc.get("id", "rc1") }
+  power_output_id: ${ rc_power.get("output_id", rc_id ~ "_power_output") }
+  relay_pin: ${ rc_power.get("pin", "GPIO0") }
+  relay_inverted: ${ rc_power.get("inverted", false) }
+  relay_strapping: ${ rc_power.get("strapping", false) }
+
+output:
+  - platform: gpio
+    id: ${power_output_id}
+    pin: !include
+      file: ../pin.yaml
+      vars:
+        pin:
+          number: ${relay_pin}
+          inverted: ${relay_inverted}
+          mode:
+            output: true
+          ignore_strapping_warning: ${relay_strapping}

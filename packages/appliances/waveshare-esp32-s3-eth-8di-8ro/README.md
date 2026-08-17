@@ -68,8 +68,14 @@ packages:
               enabled: false
           relay2:
             entity:
+              type: light
               name: Pump
               restore_mode: RESTORE_DEFAULT_OFF
+          relay3:
+            entity:
+              type: valve
+              name: Irrigation Valve
+              device_class: water
           relay8:
             entity:
               enabled: false
@@ -82,19 +88,20 @@ packages:
 ```
 
 Every relay always creates a physical binary output. Its `output_id` defaults to
-`waveshare_8di8ro_relay_1_output` through `waveshare_8di8ro_relay_8_output`. A user-facing
-output-switch facade is enabled by default with the corresponding id without the `_output` suffix.
-Configure that facade under `entity`:
+`waveshare_8di8ro_relay_1_output` through `waveshare_8di8ro_relay_8_output`. The shared
+relay-control framework creates a user-facing entity by default with the corresponding id without
+the `_output` suffix. Configure that facade under `entity`:
 
 - `enabled`: create the facade; defaults to `true`
+- `type`: `switch` (default), `light`, or `valve`
 - `id`, `name`, `internal`, and `disabled_by_default`: entity identity and visibility
-- `restore_mode`: facade restore policy; defaults to `ALWAYS_OFF`
+- `restore_mode`: restored power-state policy; defaults to `ALWAYS_OFF`
+- `device_class`: optional `water` or `gas` class for valve entities
 
-Set `entity.enabled: false` when an application consumes the physical output directly as a light,
-actuator, or controller capability. The output remains present and starts off; without the switch
-facade, the consuming application owns state restoration. Existing flat `enabled`, `id`, `name`,
-`internal`, `disabled_by_default`, and `restore_mode` fields remain fallback values, while nested
-`entity` fields take precedence.
+Set `entity.enabled: false` when an application consumes the physical output through its own
+component or controller capability. The output remains present; the consuming application then owns
+state and restoration. Existing flat `enabled`, `id`, `name`, `internal`, `disabled_by_default`, and
+`restore_mode` fields remain fallback values, while nested `entity` fields take precedence.
 
 Each `digital_inputs.input1` through `input8` object accepts `enabled`, `id`, `name`, `internal`,
 `disabled_by_default`, and `use_interrupt`. Setting `enabled: false` removes that digital input.
@@ -125,7 +132,7 @@ an active input is reported as `ON`.
 Stable infrastructure IDs are:
 
 - relay outputs `waveshare_8di8ro_relay_1_output` through `waveshare_8di8ro_relay_8_output`
-- relay switch facades `waveshare_8di8ro_relay_1` through `waveshare_8di8ro_relay_8`
+- default relay facade ids `waveshare_8di8ro_relay_1` through `waveshare_8di8ro_relay_8`
 - `waveshare_8di8ro_input_1` through `waveshare_8di8ro_input_8`
 - `waveshare_8di8ro_rs485_uart`
 - `waveshare_8di8ro_i2c` and `waveshare_8di8ro_rtc`

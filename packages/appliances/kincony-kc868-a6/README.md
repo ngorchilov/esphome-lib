@@ -67,8 +67,14 @@ packages:
               enabled: false
           relay2:
             entity:
+              type: light
               name: Pump
               restore_mode: RESTORE_DEFAULT_ON
+          relay3:
+            entity:
+              type: valve
+              name: Irrigation Valve
+              device_class: water
           relay6:
             entity:
               enabled: false
@@ -86,18 +92,20 @@ packages:
 ```
 
 Every relay always creates a physical binary output. Its `output_id` defaults to `r1_output` through
-`r6_output`. A user-facing output-switch facade is enabled by default with ids `r1` through `r6`.
-Configure that facade under `entity`:
+`r6_output`. The shared relay-control framework creates a user-facing entity by default with ids
+`r1` through `r6`. Configure that facade under `entity`:
 
 - `enabled`: create the facade; defaults to `true`
+- `type`: `switch` (default), `light`, or `valve`
 - `id`, `name`, `internal`, and `disabled_by_default`: entity identity and visibility
-- `restore_mode`: facade restore policy; defaults to `RESTORE_DEFAULT_OFF`
+- `restore_mode`: restored power-state policy; defaults to `RESTORE_DEFAULT_OFF`
+- `device_class`: optional `water` or `gas` class for valve entities
 
-Set `entity.enabled: false` when an application consumes the physical output directly as a light,
-actuator, or controller capability. The output remains present and starts off; without the switch
-facade, the consuming application owns state restoration. Existing flat `enabled`, `id`, `name`,
-`internal`, `disabled_by_default`, and `restore_mode` fields remain fallback values for existing
-callers, while nested `entity` fields take precedence.
+Set `entity.enabled: false` when an application consumes the physical output through its own
+component or controller capability. The output remains present; the consuming application then owns
+state and restoration. Existing flat `enabled`, `id`, `name`, `internal`, `disabled_by_default`, and
+`restore_mode` fields remain fallback values for existing callers, while nested `entity` fields take
+precedence.
 
 Digital inputs accept `enabled`, `id`, `name`, `internal`, and `disabled_by_default`. Analog inputs
 also accept `update_interval`; analog outputs also accept `restore_value`. Setting `enabled: false`
@@ -106,7 +114,7 @@ on an input or analog channel removes that complete channel.
 Existing infrastructure IDs are preserved for compatibility:
 
 - relay outputs `r1_output` through `r6_output`, configurable with `relays.relayN.output_id`
-- relay switch facades `r1` through `r6`, configurable with `relays.relayN.entity.id`
+- default relay facade ids `r1` through `r6`, configurable with `relays.relayN.entity.id`
 - digital inputs `di1` through `di6`
 - analog inputs `ai1` through `ai4`
 - analog output numbers `ao1` and `ao2`, backed by `ao1_dac` and `ao2_dac`

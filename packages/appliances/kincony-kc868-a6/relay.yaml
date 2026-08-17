@@ -1,25 +1,23 @@
 defaults:
   relay: ${ relay | default({}) }
   relay_config: ${ relay.get("config", {}) }
-  relay_entity: ${ relay_config.get("entity", {}) }
-  relay_entity_enabled: ${ relay_entity.get("enabled", relay_config.get("enabled", true)) }
-  relay_entity_module: !include
-    file: ../../modules/output-switch.yaml
+  relay_output_id: ${ relay_config.get("output_id", relay.get("output_id")) }
+  relay_control_module: !include
+    file: ../../modules/appliance-relay.yaml
     vars:
-      output_switch:
-        id: ${ relay_entity.get("id", relay_config.get("id", relay.get("id"))) }
-        name: ${ relay_entity.get("name", relay_config.get("name", relay.get("name"))) }
-        output_id: ${ relay_config.get("output_id", relay.get("output_id")) }
-        internal: ${ relay_entity.get("internal", relay_config.get("internal", false)) }
-        disabled_by_default: ${ relay_entity.get("disabled_by_default", relay_config.get("disabled_by_default", false)) }
-        restore_mode: ${ relay_entity.get("restore_mode", relay_config.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
+      appliance_relay:
+        id: ${ relay.get("id") }
+        output_id: ${ relay_output_id }
+        name: ${ relay.get("name") }
+        restore_mode: RESTORE_DEFAULT_OFF
+        config: ${ relay_config }
 
 packages:
-  - ${ relay_entity_enabled and relay_entity_module or {} }
+  - ${ relay_control_module }
 
 output:
   - platform: gpio
-    id: ${ relay_config.get("output_id", relay.get("output_id")) }
+    id: ${ relay_output_id }
     pin:
       pcf8574: outputs
       number: ${ relay.get("number") }

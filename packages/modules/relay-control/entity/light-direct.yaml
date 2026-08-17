@@ -6,16 +6,21 @@ defaults:
   rc_power: ${ rc.get("power", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  entity_name: ${ "none" if rc_entity.get("name", "none") == "None" else rc_entity.get("name", "none") }
-  entity_internal: ${ rc_entity.get("internal", false) }
+  default_entity_name: ${ rc.get("default_name", "none") }
+  default_entity_id: ${ rc.get("default_entity_id", rc_id ~ "_control_light") }
+  entity_name: ${ "none" if rc_entity.get("name", default_entity_name) == "None" else rc_entity.get("name", default_entity_name) }
+  entity_id: ${ rc_entity.get("id", default_entity_id) }
+  entity_internal: ${ rc_entity.get("internal", rc.get("default_internal", false)) }
+  entity_disabled_by_default: ${ rc_entity.get("disabled_by_default", rc.get("default_disabled_by_default", false)) }
   entity_restore_mode: ${ rc_entity.get("restore_mode", rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
   power_output_id: ${ rc_power.get("output_id", rc_id ~ "_power_output") }
 
 light:
   - platform: binary
     name: ${entity_name}
-    id: ${rc_id}_control_light
+    id: ${entity_id}
     internal: ${entity_internal}
+    disabled_by_default: ${entity_disabled_by_default}
     output: ${power_output_id}
     restore_mode: ${entity_restore_mode}
     on_turn_on:
@@ -26,24 +31,24 @@ light:
 script:
   - id: !extend ${rc_id}_power_on
     then:
-      - light.turn_on: ${rc_id}_control_light
+      - light.turn_on: ${entity_id}
 
   - id: !extend ${rc_id}_power_off
     then:
-      - light.turn_off: ${rc_id}_control_light
+      - light.turn_off: ${entity_id}
 
   - id: !extend ${rc_id}_power_toggle
     then:
-      - light.toggle: ${rc_id}_control_light
+      - light.toggle: ${entity_id}
 
   - id: !extend ${rc_id}_primary_on
     then:
-      - light.turn_on: ${rc_id}_control_light
+      - light.turn_on: ${entity_id}
 
   - id: !extend ${rc_id}_primary_off
     then:
-      - light.turn_off: ${rc_id}_control_light
+      - light.turn_off: ${entity_id}
 
   - id: !extend ${rc_id}_primary_toggle
     then:
-      - light.toggle: ${rc_id}_control_light
+      - light.toggle: ${entity_id}

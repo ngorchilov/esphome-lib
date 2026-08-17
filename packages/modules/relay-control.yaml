@@ -13,8 +13,10 @@ defaults:
   rc_power_cycle: ${ rc.get("power_cycle", {}) }
 
   entity_type: ${ rc_entity.get("type", "switch") }
+  entity_enabled: ${ rc_entity.get("enabled", rc.get("default_enabled", true)) }
   entity_control: ${ rc_entity.get("control", {}) }
   entity_power: ${ rc_entity.get("power", {}) }
+  power_provider: ${ rc_power.get("provider", "gpio") }
 
   # Control:
   # - local: external control toggles the local relay
@@ -24,7 +26,7 @@ defaults:
   # A local light can own the GPIO output directly. Valves, switches, detached
   # lights, and separately exposed power controls retain a stateful switch.
   power_exposed: ${ entity_power.get("exposed", entity_type == "switch") }
-  relay_internal: ${ rc_power.get("internal", (rc_entity.get("internal", false) if entity_type == "switch" else false) or not power_exposed) }
+  relay_internal: ${ rc_power.get("internal", (rc_entity.get("internal", rc.get("default_internal", false)) if entity_type == "switch" else false) or not power_exposed) }
   direct_local_light: ${ entity_type == "light" and control_mode == "local" and not power_exposed and relay_internal }
   has_power_switch: ${ not direct_local_light }
 
@@ -37,6 +39,8 @@ defaults:
 
   _rc_target_local_pkg: !include relay-control/control-target/local.yaml
   _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
+  _rc_core_pkg: !include relay-control/core.yaml
+  _rc_power_output_gpio_pkg: !include relay-control/power-output-gpio.yaml
   _rc_power_switch_pkg: !include relay-control/power-switch.yaml
   _rc_entity_switch_pkg: !include relay-control/entity/switch.yaml
   _rc_entity_light_pkg: !include relay-control/entity/light.yaml
@@ -49,14 +53,17 @@ defaults:
   _rc_power_cycle_pkg: !include relay-control/power-cycle.yaml
 
 packages:
-  - !include relay-control/core.yaml
+  # GPIO is the default provider. External providers create the binary output
+  # before including relay-control and pass only its id.
+  - ${ power_provider == "gpio" and _rc_power_output_gpio_pkg or {} }
+  - ${ entity_enabled and _rc_core_pkg or {} }
 
-  - ${ has_power_switch and _rc_power_switch_pkg or {} }
-  - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
-  - ${ _rc_entity_light_direct_pkg if direct_local_light else _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg }
+  - ${ entity_enabled and has_power_switch and _rc_power_switch_pkg or {} }
+  - ${ entity_enabled and (_rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {}) or {} }
+  - ${ entity_enabled and (_rc_entity_light_direct_pkg if direct_local_light else _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg) or {} }
 
-  - ${ has_indicator_led and _rc_indicator_led_pkg or {} }
-  - ${ has_integrated_button and _rc_integrated_button_pkg or {} }
-  - ${ has_external_switch_gpio and _rc_external_switch_gpio_pkg or {} }
-  - ${ has_external_magic and _rc_external_magic_pkg or {} }
-  - ${ has_power_cycle and _rc_power_cycle_pkg or {} }
+  - ${ entity_enabled and has_indicator_led and _rc_indicator_led_pkg or {} }
+  - ${ entity_enabled and has_integrated_button and _rc_integrated_button_pkg or {} }
+  - ${ entity_enabled and has_external_switch_gpio and _rc_external_switch_gpio_pkg or {} }
+  - ${ entity_enabled and has_external_magic and _rc_external_magic_pkg or {} }
+  - ${ entity_enabled and has_power_cycle and _rc_power_cycle_pkg or {} }

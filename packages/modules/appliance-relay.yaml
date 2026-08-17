@@ -1,0 +1,32 @@
+# Bridge an appliance-owned binary output into the relay-control framework.
+
+defaults:
+  appliance_relay: ${ appliance_relay | default({}) }
+  relay_config: ${ appliance_relay.get("config", {}) }
+  relay_entity: ${ relay_config.get("entity", {}) }
+
+  relay_id: ${ appliance_relay.get("id", "relay") }
+  relay_output_id: ${ relay_config.get("output_id", appliance_relay.get("output_id", relay_id ~ "_output")) }
+  relay_default_name: ${ relay_config.get("name", appliance_relay.get("name", "Relay")) }
+  relay_default_entity_id: ${ relay_config.get("id", relay_id) }
+  relay_default_enabled: ${ relay_config.get("enabled", true) }
+  relay_default_internal: ${ relay_config.get("internal", false) }
+  relay_default_disabled_by_default: ${ relay_config.get("disabled_by_default", false) }
+  relay_default_restore_mode: ${ relay_config.get("restore_mode", appliance_relay.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
+
+packages:
+  - !include
+    file: relay-control.yaml
+    vars:
+      rc:
+        id: ${relay_id}
+        default_name: ${relay_default_name}
+        default_entity_id: ${relay_default_entity_id}
+        default_enabled: ${relay_default_enabled}
+        default_internal: ${relay_default_internal}
+        default_disabled_by_default: ${relay_default_disabled_by_default}
+        entity: ${relay_entity}
+        power:
+          provider: external
+          output_id: ${relay_output_id}
+          restore_mode: ${relay_default_restore_mode}

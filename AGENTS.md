@@ -162,18 +162,39 @@ from a verified complete pin map, and never fall back to another HRI model for a
 isolated inputs, RS485 UART, RTC, RGB LED, buzzer, and MCU memory configuration of the matching
 Waveshare board. Its public API is the `waveshare_8di8ro:` object. Per-channel configuration belongs
 under `relays.relay1` through `relay8` and `digital_inputs.input1` through `input8`. Relay channels
-always provide a physical output and expose an optional switch facade under `entity`; digital-input
-channels may be removed with `enabled: false`. RS485, RTC, relay-output, relay-entity, and input ids
-are configurable while retaining namespaced defaults. As with the HRI appliance, consumers own
-Modbus hubs, protocol behavior, and input-to-relay automations.
+always provide an appliance-owned physical output and use the shared relay-control framework for an
+optional switch, light, or valve facade under `entity`; `entity.enabled: false` leaves only the
+physical output. Digital-input channels may be removed with `enabled: false`. RS485, RTC,
+relay-output, relay-entity, and input ids are configurable while retaining namespaced defaults. As
+with the HRI appliance, consumers own Modbus hubs, protocol behavior, and input-to-relay automations.
 
 `packages/appliances/kincony-kc868-a6.yaml` targets the original ESP32 KC868-A6, not the incompatible
 ESP32-S3 A6v3. It owns the fixed relay/input expanders, analog I/O, RS485, RS232, SPI, I2C, OneWire
 ports, and RTC. Its public API is the `kincony_kc868_a6:` object, with channel configuration under
 `relays`, `digital_inputs`, `analog_inputs`, and `analog_outputs`. Relay channels always provide a
-physical output and expose an optional switch facade under `entity`. Existing short infrastructure
-ids remain defaults, but relay-output, relay-entity, UART, RTC, and digital-input ids are configurable.
-Consumers own serial protocols and automations.
+physical output and use the shared relay-control framework for an optional switch, light, or valve
+facade under `entity`; `entity.enabled: false` leaves only the physical output. Existing short
+infrastructure ids remain defaults, but relay-output, relay-entity, UART, RTC, and digital-input ids
+are configurable. Consumers own serial protocols and automations.
+
+Both relay appliances retain their established flat per-channel fields as compatibility defaults,
+but new role configuration belongs under `entity`:
+
+```yaml
+relays:
+  relay1:
+    entity:
+      type: light
+      name: None
+  relay2:
+    entity:
+      type: valve
+      name: Irrigation Valve
+      device_class: water
+  relay3:
+    entity:
+      enabled: false
+```
 
 ### Functional Modules
 
@@ -185,7 +206,9 @@ Important modules:
 - `networking.yaml` selects Wi-Fi, Ethernet, or no network support and owns API/OTA/mDNS defaults.
 - `pin.yaml` is the shared pin schema wrapper used by modules that need ESPHome/LibreTiny-safe pins.
 - `relay-control.yaml` is the public relay-control assembler and composes smaller relay-control packages.
-- `output-switch.yaml` exposes a switch facade over a caller-owned binary output.
+- `appliance-relay.yaml` connects an appliance-owned binary output to the shared relay-control API.
+- `output-switch.yaml` is the low-level output-backed switch used by relay-control where state
+  ownership requires it.
 - `energy-monitoring-bl0937.yaml` and `energy-monitoring-bl0942.yaml` expose reusable energy monitor setups.
 - `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
 - `radio/driver.yaml` and `radio/display.yaml` provide the capability layers used by the radio appliance.
@@ -359,12 +382,18 @@ files:
 Omitting `entity` produces the default unnamed switch. Valve entities hide their backing power
 switch by default. Local light entities do not create a backing switch unless it is needed;
 `rc.entity.power.exposed: true` creates and exposes one separately, and `rc.entity.power.name` sets
-its name. `rc.power.output_id` optionally overrides the physical output id, which otherwise defaults
-to `${rc.id}_power_output`.
+its name. `rc.entity.enabled: false` suppresses the facade, state owner, control scripts, and optional
+features while retaining the selected provider's physical output. `rc.power.output_id` optionally
+overrides the physical output id, which otherwise defaults to `${rc.id}_power_output`.
+
+The default `rc.power.provider: gpio` creates that output from `rc.power.pin`. Appliance packages may
+instead use `rc.power.provider: external`; the appliance must create the binary output itself and
+pass its id through `rc.power.output_id`. This keeps fixed expander wiring in the appliance while
+reusing the same entity and control behavior.
 
 Core invariants:
 
-- The local GPIO output is always present; a switch facade is created only when the selected role
+- The local binary output is always present; a switch facade is created only when the selected role
   needs one.
 - Exactly one component owns restored POWER state: an output switch, or a direct local binary light.
 - `${rc.id}_power_state` is the stable internal binary sensor for observing POWER independently of

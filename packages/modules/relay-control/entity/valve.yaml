@@ -5,15 +5,20 @@ defaults:
   rc_entity: ${ rc.get("entity", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  entity_name: ${ "none" if rc_entity.get("name", "none") == "None" else rc_entity.get("name", "none") }
-  entity_internal: ${ rc_entity.get("internal", false) }
+  default_entity_name: ${ rc.get("default_name", "none") }
+  default_entity_id: ${ rc.get("default_entity_id", rc_id ~ "_control_valve") }
+  entity_name: ${ "none" if rc_entity.get("name", default_entity_name) == "None" else rc_entity.get("name", default_entity_name) }
+  entity_id: ${ rc_entity.get("id", default_entity_id) }
+  entity_internal: ${ rc_entity.get("internal", rc.get("default_internal", false)) }
+  entity_disabled_by_default: ${ rc_entity.get("disabled_by_default", rc.get("default_disabled_by_default", false)) }
   entity_device_class: ${ rc_entity.get("device_class", "") }
 
 valve:
   - platform: template
     name: ${entity_name}
-    id: ${rc_id}_control_valve
+    id: ${entity_id}
     internal: ${entity_internal}
+    disabled_by_default: ${entity_disabled_by_default}
     device_class: ${entity_device_class}
     lambda: |-
       return id(${rc_id}_power_state).state ? 1.0f : 0.0f;
@@ -27,12 +32,12 @@ valve:
 script:
   - id: !extend ${rc_id}_primary_on
     then:
-      - valve.open: ${rc_id}_control_valve
+      - valve.open: ${entity_id}
 
   - id: !extend ${rc_id}_primary_off
     then:
-      - valve.close: ${rc_id}_control_valve
+      - valve.close: ${entity_id}
 
   - id: !extend ${rc_id}_primary_toggle
     then:
-      - valve.toggle: ${rc_id}_control_valve
+      - valve.toggle: ${entity_id}
