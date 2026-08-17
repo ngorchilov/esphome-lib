@@ -137,10 +137,10 @@ binary_sensor:
       - if:
           condition:
             lambda: |-
-              return (${relay_1_enabled_cpp} && id(relay_1_power_relay).state) ||
-                     (${relay_2_enabled_cpp} && id(relay_2_power_relay).state) ||
-                     (${relay_3_enabled_cpp} && id(relay_3_power_relay).state) ||
-                     (${relay_4_enabled_cpp} && id(relay_4_power_relay).state);
+              return (${relay_1_enabled_cpp} && id(relay_1_power_state).state) ||
+                     (${relay_2_enabled_cpp} && id(relay_2_power_state).state) ||
+                     (${relay_3_enabled_cpp} && id(relay_3_power_state).state) ||
+                     (${relay_4_enabled_cpp} && id(relay_4_power_state).state);
           then:
             - if:
                 condition:

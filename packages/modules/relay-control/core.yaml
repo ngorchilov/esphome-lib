@@ -1,38 +1,36 @@
 # Relay Control (core)
-# - Power relay switch is ALWAYS present (safety / power-cycle).
+# - The physical GPIO output is always present.
+# - A role-specific package owns restored state and extends the POWER scripts.
 # - "Control" scripts are implemented by relay-control/control-target/*.yaml via !extend.
-# - Indicator LED (if present) hooks into ${rc_id}_after_power_change (via !extend).
+# - Optional features use POWER scripts and state hooks, independent of entity type.
 
 defaults:
   rc: ${ rc | default({}) }
   rc_entity: ${ rc.get("entity", {}) }
   rc_power: ${ rc.get("power", {}) }
-  entity_power: ${ rc_entity.get("power", {}) }
 
   rc_id: ${ rc.get("id", "rc1") }
-  entity_type: ${ rc_entity.get("type", "switch") }
-  entity_name: ${ "none" if rc_entity.get("name", "none") == "None" else rc_entity.get("name", "none") }
-  power_name: ${ entity_power.get("name", "Power") }
-  relay_name: ${ entity_name if entity_type == "switch" else power_name }
-  power_exposed: ${ entity_power.get("exposed", entity_type == "switch") }
-
+  power_output_id: ${ rc_power.get("output_id", rc_id ~ "_power_output") }
   relay_pin: ${ rc_power.get("pin", "GPIO0") }
   relay_inverted: ${ rc_power.get("inverted", false) }
   relay_strapping: ${ rc_power.get("strapping", false) }
-  relay_restore_mode: ${ entity_power.get("restore_mode", rc_power.get("restore_mode", "RESTORE_DEFAULT_OFF")) }
-  relay_internal: ${ rc_power.get("internal", not power_exposed) }
 
 esphome:
   on_boot:
     priority: -100
     then:
+      - if:
+          condition:
+            binary_sensor.is_on: ${rc_id}_power_state
+          then:
+            - script.execute: ${rc_id}_after_power_on
+          else:
+            - script.execute: ${rc_id}_after_power_off
       - script.execute: ${rc_id}_after_power_change
 
-switch:
+output:
   - platform: gpio
-    name: ${relay_name}
-    id: ${rc_id}_power_relay
-    internal: ${relay_internal}
+    id: ${power_output_id}
     pin: !include
       file: ../pin.yaml
       vars:
@@ -42,35 +40,69 @@ switch:
           mode:
             output: true
           ignore_strapping_warning: ${relay_strapping}
-    restore_mode: ${relay_restore_mode}
-    on_turn_on:
-      - script.execute: ${rc_id}_after_power_change
-    on_turn_off:
-      - script.execute: ${rc_id}_after_power_change
+
+binary_sensor:
+  - platform: template
+    id: ${rc_id}_power_state
+    internal: true
+    publish_initial_state: true
 
 script:
-  # Hook: extended by indicator-led.yaml (and possibly others).
+  # State hooks are extended by optional features and device-specific behavior.
+  - id: ${rc_id}_after_power_on
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
+  - id: ${rc_id}_after_power_off
+    mode: single
+    then:
+      - lambda: |-
+          return;
+
   - id: ${rc_id}_after_power_change
     mode: single
     then:
       - lambda: |-
           return;
 
-  # Power relay control (always local)
+  - id: ${rc_id}_record_power_on
+    mode: single
+    then:
+      - binary_sensor.template.publish:
+          id: ${rc_id}_power_state
+          state: true
+      - script.execute: ${rc_id}_after_power_on
+      - script.execute: ${rc_id}_after_power_change
+
+  - id: ${rc_id}_record_power_off
+    mode: single
+    then:
+      - binary_sensor.template.publish:
+          id: ${rc_id}_power_state
+          state: false
+      - script.execute: ${rc_id}_after_power_off
+      - script.execute: ${rc_id}_after_power_change
+
+  # The selected state owner extends these local POWER commands.
   - id: ${rc_id}_power_on
     mode: single
     then:
-      - switch.turn_on: ${rc_id}_power_relay
+      - lambda: |-
+          return;
 
   - id: ${rc_id}_power_off
     mode: single
     then:
-      - switch.turn_off: ${rc_id}_power_relay
+      - lambda: |-
+          return;
 
   - id: ${rc_id}_power_toggle
     mode: single
     then:
-      - switch.toggle: ${rc_id}_power_relay
+      - lambda: |-
+          return;
 
   # Control (local relay OR HA entity, depending on control_mode)
   - id: ${rc_id}_control_on

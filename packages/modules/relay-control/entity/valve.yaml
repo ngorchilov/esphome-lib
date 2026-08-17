@@ -16,7 +16,7 @@ valve:
     internal: ${entity_internal}
     device_class: ${entity_device_class}
     lambda: |-
-      return id(${rc_id}_power_relay).state ? 1.0f : 0.0f;
+      return id(${rc_id}_power_state).state ? 1.0f : 0.0f;
     open_action:
       - script.execute: ${rc_id}_control_on
     close_action:

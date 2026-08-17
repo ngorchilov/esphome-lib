@@ -4,6 +4,7 @@
 defaults:
   rc: ${ rc | default({}) }
   rc_entity: ${ rc.get("entity", {}) }
+  rc_power: ${ rc.get("power", {}) }
   rc_control: ${ rc.get("control", {}) }
   rc_indicator_led: ${ rc.get("indicator_led", {}) }
   rc_integrated_button: ${ rc.get("integrated_button", {}) }
@@ -13,11 +14,19 @@ defaults:
 
   entity_type: ${ rc_entity.get("type", "switch") }
   entity_control: ${ rc_entity.get("control", {}) }
+  entity_power: ${ rc_entity.get("power", {}) }
 
   # Control:
   # - local: external control toggles the local relay
   # - detached: external control toggles a HA entity (relay remains always controllable via Power switch)
   control_mode: ${ entity_control.get("mode", rc_control.get("mode", "local")) }
+
+  # A local light can own the GPIO output directly. Valves, switches, detached
+  # lights, and separately exposed power controls retain a stateful switch.
+  power_exposed: ${ entity_power.get("exposed", entity_type == "switch") }
+  relay_internal: ${ rc_power.get("internal", (rc_entity.get("internal", false) if entity_type == "switch" else false) or not power_exposed) }
+  direct_local_light: ${ entity_type == "light" and control_mode == "local" and not power_exposed and relay_internal }
+  has_power_switch: ${ not direct_local_light }
 
   # Optional plugins
   has_indicator_led: ${ rc_indicator_led.get("enabled", false) }
@@ -28,8 +37,10 @@ defaults:
 
   _rc_target_local_pkg: !include relay-control/control-target/local.yaml
   _rc_target_detached_pkg: !include relay-control/control-target/detached.yaml
+  _rc_power_switch_pkg: !include relay-control/power-switch.yaml
   _rc_entity_switch_pkg: !include relay-control/entity/switch.yaml
   _rc_entity_light_pkg: !include relay-control/entity/light.yaml
+  _rc_entity_light_direct_pkg: !include relay-control/entity/light-direct.yaml
   _rc_entity_valve_pkg: !include relay-control/entity/valve.yaml
   _rc_indicator_led_pkg: !include relay-control/indicator-led.yaml
   _rc_integrated_button_pkg: !include relay-control/input/integrated-button-gpio.yaml
@@ -40,8 +51,9 @@ defaults:
 packages:
   - !include relay-control/core.yaml
 
+  - ${ has_power_switch and _rc_power_switch_pkg or {} }
   - ${ _rc_target_detached_pkg if control_mode=='detached' else _rc_target_local_pkg if control_mode=='local' else {} }
-  - ${ _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg }
+  - ${ _rc_entity_light_direct_pkg if direct_local_light else _rc_entity_light_pkg if entity_type=='light' else _rc_entity_valve_pkg if entity_type=='valve' else _rc_entity_switch_pkg }
 
   - ${ has_indicator_led and _rc_indicator_led_pkg or {} }
   - ${ has_integrated_button and _rc_integrated_button_pkg or {} }

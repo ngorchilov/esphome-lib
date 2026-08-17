@@ -1,4 +1,4 @@
-# Switch entity uses the physical POWER relay and delegates commands to CONTROL.
+# Switch entity uses the POWER switch and delegates commands to CONTROL.
 
 defaults:
   rc: ${ rc | default({}) }

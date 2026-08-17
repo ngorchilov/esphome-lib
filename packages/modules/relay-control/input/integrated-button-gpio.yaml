@@ -1,5 +1,5 @@
 # Optional integrated push button
-# Always toggles POWER relay (safety / hardwired behavior).
+# Always toggles POWER (safety / hardwired behavior).
 
 defaults:
   rc: ${ rc | default({}) }

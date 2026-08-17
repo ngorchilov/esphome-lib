@@ -322,7 +322,7 @@ type, one control target, and optional feature packages.
 
 Relay-control concepts:
 
-- POWER is the local physical relay.
+- POWER is the local physical relay output plus its logical state and command scripts.
 - CONTROL is the logical target for external inputs and optional entity facades.
 - CONTROL may map to POWER locally, call a detached Home Assistant entity, or remain no-op.
 - ENTITY is the complete user-facing role configuration under `rc.entity`.
@@ -330,11 +330,12 @@ Relay-control concepts:
 
 Supported `rc.entity.type` values:
 
-- `switch` (default): expose the local power relay as the primary entity.
-- `light`: expose the CONTROL light facade as the primary entity and hide the backing power relay
-  by default.
-- `valve`: expose a binary CONTROL valve facade as the primary entity, report the local power relay
-  as its open/closed state, and hide the backing power relay by default.
+- `switch` (default): use an output-backed switch as the POWER state owner and primary entity.
+- `light`: for local control, use a binary light as the POWER state owner and drive the GPIO output
+  directly. Detached lights and lights with separately exposed power use an output-backed POWER
+  switch plus a CONTROL light facade.
+- `valve`: retain an output-backed POWER switch as the state and restoration owner, then expose a
+  binary CONTROL valve facade that reports that POWER state as open or closed.
 
 Valve entities accept an optional `rc.entity.device_class` (`water`, `gas`, or empty). Do not assign
 a generic valve device class when the physical medium is unknown.
@@ -355,27 +356,35 @@ files:
         device_class: water
 ```
 
-Omitting `entity` produces the default unnamed switch. Light and valve entities hide the backing
-power switch by default. `rc.entity.power.exposed: true` exposes it separately, and
-`rc.entity.power.name` sets its name.
+Omitting `entity` produces the default unnamed switch. Valve entities hide their backing power
+switch by default. Local light entities do not create a backing switch unless it is needed;
+`rc.entity.power.exposed: true` creates and exposes one separately, and `rc.entity.power.name` sets
+its name. `rc.power.output_id` optionally overrides the physical output id, which otherwise defaults
+to `${rc.id}_power_output`.
 
 Core invariants:
 
-- The local power relay switch is always present.
-- The local power relay name defaults to `None`.
-- The power relay is always directly controllable, even in detached mode.
-- Indicator LEDs, when present, follow the power relay state for safety.
-- Integrated physical buttons, when present, toggle the power relay.
+- The local GPIO output is always present; a switch facade is created only when the selected role
+  needs one.
+- Exactly one component owns restored POWER state: an output switch, or a direct local binary light.
+- `${rc.id}_power_state` is the stable internal binary sensor for observing POWER independently of
+  its owner type. Device packages must not inspect `${rc.id}_power_relay` directly.
+- `${rc.id}_power_on`, `${rc.id}_power_off`, and `${rc.id}_power_toggle` are the stable commands for
+  operating POWER. Device packages must use these scripts instead of addressing the owner directly.
+- A POWER switch defaults to `None` when it is the primary switch entity. POWER remains independently
+  controllable through its stable scripts even when CONTROL is detached.
+- Indicator LEDs, when present, follow POWER state for safety.
+- Integrated physical buttons, when present, toggle POWER.
 - External wall-switch inputs toggle PRIMARY so facade state remains synchronized.
-- Light and valve entities target CONTROL while the power switch remains independent.
+- Valve and adapter-style light entities target CONTROL while their POWER switch remains independent.
 - The optional power-cycle feature exposes a template button backed by an `${rc.id}_power_cycle`
   script. The off-time defaults to `3s`; `rc.power_cycle.delay` overrides it when needed.
 
 Relay-control exposes `${rc.id}_primary_on`, `${rc.id}_primary_off`, and
 `${rc.id}_primary_toggle` scripts for physical inputs. Primary switch commands delegate directly to
-CONTROL; light and valve commands operate their facade, which then delegates the resulting state to
-CONTROL. Device-specific input components should call these PRIMARY scripts rather than bypassing
-the selected facade.
+CONTROL. Valve and adapter-style light commands operate their facade, which delegates the resulting
+state to CONTROL; a direct local light owns POWER itself. Device-specific input components should
+call these PRIMARY scripts rather than bypassing the selected facade.
 
 `rc.entity.control.mode` values:
 

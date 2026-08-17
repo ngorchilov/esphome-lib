@@ -82,7 +82,7 @@ binary_sensor:
       - if:
           condition:
             lambda: |-
-              return id(relay_1_power_relay).state || id(relay_2_power_relay).state;
+              return id(relay_1_power_state).state || id(relay_2_power_state).state;
           then:
             - script.execute: relay_1_power_off
             - script.execute: relay_2_power_off

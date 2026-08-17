@@ -146,9 +146,9 @@ binary_sensor:
     id: power_status
     name: Power Status
     lambda: |-
-      return id(${relay1_id}_power_relay).state || id(${relay2_id}_power_relay).state ||
-             id(${relay3_id}_power_relay).state || id(${relay4_id}_power_relay).state ||
-             id(${relay5_id}_power_relay).state;
+      return id(${relay1_id}_power_state).state || id(${relay2_id}_power_state).state ||
+             id(${relay3_id}_power_state).state || id(${relay4_id}_power_state).state ||
+             id(${relay5_id}_power_state).state;
     on_state:
       then:
         - if:
@@ -173,17 +173,17 @@ binary_sensor:
             condition:
               binary_sensor.is_on: power_status
             then:
-              - switch.turn_off: ${relay1_id}_power_relay
-              - switch.turn_off: ${relay2_id}_power_relay
-              - switch.turn_off: ${relay3_id}_power_relay
-              - switch.turn_off: ${relay4_id}_power_relay
-              - switch.turn_off: ${relay5_id}_power_relay
+              - script.execute: ${relay1_id}_power_off
+              - script.execute: ${relay2_id}_power_off
+              - script.execute: ${relay3_id}_power_off
+              - script.execute: ${relay4_id}_power_off
+              - script.execute: ${relay5_id}_power_off
             else:
-              - switch.turn_on: ${relay1_id}_power_relay
-              - switch.turn_on: ${relay2_id}_power_relay
-              - switch.turn_on: ${relay3_id}_power_relay
-              - switch.turn_on: ${relay4_id}_power_relay
-              - switch.turn_on: ${relay5_id}_power_relay
+              - script.execute: ${relay1_id}_power_on
+              - script.execute: ${relay2_id}_power_on
+              - script.execute: ${relay3_id}_power_on
+              - script.execute: ${relay4_id}_power_on
+              - script.execute: ${relay5_id}_power_on
 
 button:
   - platform: template

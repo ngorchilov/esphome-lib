@@ -10,9 +10,9 @@ script:
   - id: ${rc_id}_power_cycle
     mode: restart
     then:
-      - switch.turn_off: ${rc_id}_power_relay
+      - script.execute: ${rc_id}_power_off
       - delay: ${power_cycle_delay}
-      - switch.turn_on: ${rc_id}_power_relay
+      - script.execute: ${rc_id}_power_on
 
 button:
   - platform: template

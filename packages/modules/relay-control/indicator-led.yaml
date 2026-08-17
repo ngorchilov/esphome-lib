@@ -34,12 +34,10 @@ light:
     internal: ${led_internal}
 
 script:
-  - id: !extend ${rc_id}_after_power_change
+  - id: !extend ${rc_id}_after_power_on
     then:
-      - if:
-          condition:
-            switch.is_on: ${rc_id}_power_relay
-          then:
-            - light.turn_on: ${rc_id}_indicator_led
-          else:
-            - light.turn_off: ${rc_id}_indicator_led
+      - light.turn_on: ${rc_id}_indicator_led
+
+  - id: !extend ${rc_id}_after_power_off
+    then:
+      - light.turn_off: ${rc_id}_indicator_led
