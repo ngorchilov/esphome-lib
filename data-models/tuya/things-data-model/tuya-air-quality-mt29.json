@@ -1,0 +1,462 @@
+{
+  "modelId": "e1nif0vg",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "ro",
+          "code": "air_quality_index",
+          "description": "",
+          "extensions": {
+            "attribute": "1664"
+          },
+          "name": "AQI",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "level_1",
+              "level_2",
+              "level_3"
+            ]
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "ro",
+          "code": "temp_current",
+          "description": "",
+          "extensions": {
+            "attribute": "1664"
+          },
+          "name": "TEMP",
+          "typeSpec": {
+            "type": "value",
+            "max": 2000,
+            "min": -400,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 3,
+          "accessMode": "ro",
+          "code": "humidity_value",
+          "description": "",
+          "extensions": {
+            "attribute": "1664"
+          },
+          "name": "HUM",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 4,
+          "accessMode": "ro",
+          "code": "co2_value",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "CO2",
+          "typeSpec": {
+            "type": "value",
+            "max": 10000,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ppm"
+          }
+        },
+        {
+          "abilityId": 5,
+          "accessMode": "ro",
+          "code": "ch2o_value",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "HCHO",
+          "typeSpec": {
+            "type": "value",
+            "max": 9999,
+            "min": 0,
+            "scale": 3,
+            "step": 1,
+            "unit": "mg/m³"
+          }
+        },
+        {
+          "abilityId": 7,
+          "accessMode": "ro",
+          "code": "pm25_value",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "PM2.5",
+          "typeSpec": {
+            "type": "value",
+            "max": 999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ug/m³"
+          }
+        },
+        {
+          "abilityId": 8,
+          "accessMode": "ro",
+          "code": "pm1",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "PM1.0",
+          "typeSpec": {
+            "type": "value",
+            "max": 999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ug/m³"
+          }
+        },
+        {
+          "abilityId": 9,
+          "accessMode": "ro",
+          "code": "pm10",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "PM10",
+          "typeSpec": {
+            "type": "value",
+            "max": 999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ug/m³"
+          }
+        },
+        {
+          "abilityId": 22,
+          "accessMode": "ro",
+          "code": "battery_percentage",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "Battery Level",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "ro",
+          "code": "charge_state",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "Charging State",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 28,
+          "accessMode": "rw",
+          "code": "alarm_volume",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "Alarm Volume",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "low",
+              "middle",
+              "high",
+              "mute"
+            ]
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "tvoc_value",
+          "description": "",
+          "name": "TVOC",
+          "typeSpec": {
+            "type": "value",
+            "max": 9999,
+            "min": 0,
+            "scale": 3,
+            "step": 1,
+            "unit": "mg/m³"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "co_value",
+          "description": "",
+          "name": "CO",
+          "typeSpec": {
+            "type": "value",
+            "max": 999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ppm"
+          }
+        },
+        {
+          "abilityId": 103,
+          "accessMode": "rw",
+          "code": "bl_level",
+          "description": "",
+          "name": "Backlight Brightness",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "level1",
+              "level2",
+              "level3",
+              "level4"
+            ]
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "rw",
+          "code": "co2_alarm_value",
+          "description": "",
+          "name": "CO2 Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 3000,
+            "min": 500,
+            "scale": 0,
+            "step": 100,
+            "unit": "ppm"
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "rw",
+          "code": "sleep_timer",
+          "description": "",
+          "name": "Screen Sleep Time",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "rw",
+          "code": "buzz",
+          "description": "",
+          "name": "Sound",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "ro",
+          "code": "pm03",
+          "description": "",
+          "name": "PM0.3",
+          "typeSpec": {
+            "type": "value",
+            "max": 999,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "ug/m³"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "rw",
+          "code": "secondcal",
+          "description": "",
+          "name": "Timer",
+          "typeSpec": {
+            "type": "value",
+            "max": 599,
+            "min": 1,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "rw",
+          "code": "clock1",
+          "description": "",
+          "name": "Alarm 1",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "rw",
+          "code": "clock2",
+          "description": "",
+          "name": "Alarm 2",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "rw",
+          "code": "clock3",
+          "description": "",
+          "name": "Alarm 3",
+          "typeSpec": {
+            "type": "value",
+            "max": 1440,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "min"
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "rw",
+          "code": "temp_unit_convert",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "4096"
+          },
+          "name": "Temperature Unit",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "c",
+              "f"
+            ]
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "rw",
+          "code": "co_alarm_value",
+          "description": "",
+          "name": "CO Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 500,
+            "min": 10,
+            "scale": 0,
+            "step": 10,
+            "unit": "ppm"
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "rw",
+          "code": "pm25_alarm_value",
+          "description": "",
+          "name": "PM2.5 Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 300,
+            "min": 50,
+            "scale": 0,
+            "step": 10,
+            "unit": "ug/m³"
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "rw",
+          "code": "hcho_alarm_value",
+          "description": "",
+          "name": "Formaldehyde Alarm Threshold",
+          "typeSpec": {
+            "type": "value",
+            "max": 199,
+            "min": 8,
+            "scale": 2,
+            "step": 1,
+            "unit": "mg/m³"
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "rw",
+          "code": "clock1_en",
+          "description": "",
+          "name": "Alarm 1 Enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 117,
+          "accessMode": "rw",
+          "code": "clock2_en",
+          "description": "",
+          "name": "Alarm 2 Enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 118,
+          "accessMode": "rw",
+          "code": "clock3_en",
+          "description": "",
+          "name": "Alarm 3 Enable",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}
