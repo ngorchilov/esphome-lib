@@ -8,9 +8,6 @@ packages:
   - !include ../packages/boards/tuya/t1u.yaml
   - !include ../packages/modules/tuya-product.yaml
 
-logger:
-  level: DEBUG
-
 uart:
   id: tuya_uart
   tx_pin: TX1
