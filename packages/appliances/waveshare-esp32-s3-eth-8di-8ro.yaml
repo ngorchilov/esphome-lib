@@ -280,5 +280,5 @@ light:
     pin: GPIO38
     chipset: WS2812
     num_leds: 1
-    rgb_order: RGB
+    channel_colors: RGB
     restore_mode: ALWAYS_OFF
