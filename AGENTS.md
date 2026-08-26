@@ -168,6 +168,15 @@ physical output. Digital-input channels may be removed with `enabled: false`. RS
 relay-output, relay-entity, and input ids are configurable while retaining namespaced defaults. As
 with the HRI appliance, consumers own Modbus hubs, protocol behavior, and input-to-relay automations.
 
+`packages/appliances/waveshare-esp32-s3-touch-lcd-7b.yaml` owns the fixed 1024 x 600 RGB display,
+GT911 touchscreen, backlight, memory configuration, and Waveshare-specific I2C extension of the
+touch-enabled 7B board. Its public API is the `waveshare_lcd7b:` object. The extension at address
+`0x24` is not compatible with the CH422G used by other Waveshare panels; use ESPHome's native
+`waveshare_io_ch32v003` component. The display defaults are LVGL-ready, but applications own the
+LVGL configuration or alternate display drawing behavior and any non-display onboard interfaces.
+Stable default ids and the implemented wiring are documented under
+`packages/appliances/waveshare-esp32-s3-touch-lcd-7b/README.md`.
+
 `packages/appliances/kincony-kc868-a6.yaml` targets the original ESP32 KC868-A6, not the incompatible
 ESP32-S3 A6v3. It owns the fixed relay/input expanders, analog I/O, RS485, RS232, SPI, I2C, OneWire
 ports, and RTC. Its public API is the `kincony_kc868_a6:` object, with channel configuration under

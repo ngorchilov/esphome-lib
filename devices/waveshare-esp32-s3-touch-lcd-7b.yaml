@@ -1,0 +1,9 @@
+substitutions:
+  name: waveshare-esp32-s3-touch-lcd-7b
+  friendly_name: Waveshare ESP32-S3-Touch-LCD-7B
+
+packages:
+  - !include
+    file: ../packages/appliances/waveshare-esp32-s3-touch-lcd-7b.yaml
+    vars:
+      waveshare_lcd7b: ${ waveshare_lcd7b | default({}) }

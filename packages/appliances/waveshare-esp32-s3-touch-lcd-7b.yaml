@@ -1,0 +1,118 @@
+# Waveshare ESP32-S3-Touch-LCD-7B appliance.
+# Owns the fixed display, touch controller, I/O extension, and backlight wiring.
+
+defaults:
+  waveshare_lcd7b: ${ waveshare_lcd7b | default({}) }
+  waveshare_lcd7b_networking: ${ waveshare_lcd7b.get("networking", {}) }
+  waveshare_lcd7b_display: ${ waveshare_lcd7b.get("display", {}) }
+  waveshare_lcd7b_touchscreen: ${ waveshare_lcd7b.get("touchscreen", {}) }
+  waveshare_lcd7b_backlight: ${ waveshare_lcd7b.get("backlight", {}) }
+
+packages:
+  - !include
+    file: ../boards/espressif/esp32-s3-devkitc-1.yaml
+    vars:
+      networking: ${waveshare_lcd7b_networking}
+
+esphome:
+  min_version: 2026.8.0
+
+esp32:
+  flash_size: 16MB
+  framework:
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+i2c:
+  id: waveshare_lcd7b_i2c
+  sda: GPIO8
+  scl: GPIO9
+  frequency: 400kHz
+  scan: false
+
+waveshare_io_ch32v003:
+  - id: waveshare_lcd7b_io
+    i2c_id: waveshare_lcd7b_i2c
+    address: 0x24
+
+output:
+  - platform: waveshare_io_ch32v003
+    id: waveshare_lcd7b_backlight_output
+    waveshare_io_ch32v003_id: waveshare_lcd7b_io
+    power_supply: waveshare_lcd7b_backlight_power
+    inverted: true
+    zero_means_zero: true
+    safe_pwm_levels:
+      min_value: 1
+      max_value: 247
+
+power_supply:
+  - id: waveshare_lcd7b_backlight_power
+    pin:
+      number: 2
+      waveshare_io_ch32v003: waveshare_lcd7b_io
+      mode:
+        output: true
+    enable_time: 0ms
+    keep_on_time: 0ms
+
+light:
+  - platform: monochromatic
+    name: ${ waveshare_lcd7b_backlight.get("name", "Backlight") }
+    id: ${ waveshare_lcd7b_backlight.get("id", "waveshare_lcd7b_backlight") }
+    output: waveshare_lcd7b_backlight_output
+    restore_mode: ${ waveshare_lcd7b_backlight.get("restore_mode", "RESTORE_DEFAULT_ON") }
+    default_transition_length: ${ waveshare_lcd7b_backlight.get("transition_length", "250ms") }
+
+display:
+  - platform: mipi_rgb
+    model: RPI
+    id: ${ waveshare_lcd7b_display.get("id", "waveshare_lcd7b_display") }
+    update_interval: ${ waveshare_lcd7b_display.get("update_interval", "never") }
+    auto_clear_enabled: ${ waveshare_lcd7b_display.get("auto_clear_enabled", false) }
+    dimensions:
+      width: 1024
+      height: 600
+    color_order: RGB
+    pclk_frequency: 24MHz
+    pclk_inverted: true
+    hsync_pulse_width: 162
+    hsync_back_porch: 152
+    hsync_front_porch: 48
+    vsync_pulse_width: 45
+    vsync_back_porch: 13
+    vsync_front_porch: 3
+    de_pin: GPIO5
+    pclk_pin: GPIO7
+    hsync_pin:
+      number: GPIO46
+      ignore_strapping_warning: true
+    vsync_pin:
+      number: GPIO3
+      ignore_strapping_warning: true
+    reset_pin:
+      number: 3
+      waveshare_io_ch32v003: waveshare_lcd7b_io
+      mode:
+        output: true
+    data_pins:
+      red: [GPIO1, GPIO2, GPIO42, GPIO41, GPIO40]
+      green: [GPIO39, GPIO0, GPIO45, GPIO48, GPIO47, GPIO21]
+      blue: [GPIO14, GPIO38, GPIO18, GPIO17, GPIO10]
+
+touchscreen:
+  - platform: gt911
+    id: ${ waveshare_lcd7b_touchscreen.get("id", "waveshare_lcd7b_touchscreen") }
+    display: ${ waveshare_lcd7b_display.get("id", "waveshare_lcd7b_display") }
+    i2c_id: waveshare_lcd7b_i2c
+    address: 0x5D
+    interrupt_pin: GPIO4
+    reset_pin:
+      number: 1
+      waveshare_io_ch32v003: waveshare_lcd7b_io
+      mode:
+        output: true
