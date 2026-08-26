@@ -31,7 +31,9 @@ i2c:
   id: waveshare_lcd7b_i2c
   sda: GPIO8
   scl: GPIO9
-  frequency: 400kHz
+  # Work around intermittent GT911 initialization failures (ESPHome #15019).
+  # Re-test 400kHz after the upstream reset and timing handling is fixed.
+  frequency: 50kHz
   scan: false
 
 waveshare_io_ch32v003:
