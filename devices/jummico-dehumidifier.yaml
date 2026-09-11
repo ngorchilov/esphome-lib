@@ -1,0 +1,371 @@
+# JUMMICO Luftentfeuchter 30L/Tag mit App & WLAN (ASIN B0GZ33Y978).
+#
+# The original Wi-Fi assembly is a Tuya WBR3 on a 5 V serial carrier with an onboard 3.3 V
+# regulator. Replace it with an ESP-07 serial Wi-Fi adapter board with 5 V input, onboard 3.3 V
+# regulation, and a UART/program switch. The appliance connector is marked VCC, GND, TX, and RX.
+# Verified UART wiring is 9600 baud with ESP TX connected to the carrier's RX marking and ESP RX
+# connected to its TX marking.
+
+substitutions:
+  name: jummico-dehumidifier
+  friendly_name: JUMMICO Dehumidifier
+
+packages:
+  - !include ../packages/boards/espressif/esp07.yaml
+  - !include ../packages/modules/tuya-product.yaml
+
+esphome:
+  project:
+    name: yepiq.JUMMICO_Dehumidifier
+    version: 0.1.0
+
+globals:
+  - id: jummico_fan_speed_dp
+    type: int
+    restore_value: false
+    initial_value: '-1'
+
+  - id: jummico_syncing_fan
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+uart:
+  id: tuya_uart
+  baud_rate: 9600
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+
+tuya:
+  id: jummico_tuya
+  uart_id: tuya_uart
+  on_datapoint_update:
+    - sensor_datapoint: 1
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            ESP_LOGD("jummico", "DP1 (Power) update: %s", x ? "ON" : "OFF");
+            id(jummico_syncing_fan) = true;
+            auto call = id(jummico_fan).make_call();
+            call.set_state(x);
+            if (x && id(jummico_fan_speed_dp) >= 0) {
+              call.set_speed(id(jummico_fan_speed_dp) + 1);
+            }
+            call.perform();
+            id(jummico_syncing_fan) = false;
+
+    - sensor_datapoint: 4
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            if (x > 1) {
+              ESP_LOGD("jummico", "Ignoring DP4 unavailable sentinel: %u", x);
+              return;
+            }
+
+            ESP_LOGD("jummico", "DP4 (Fan Speed) update: %u", x);
+            id(jummico_fan_speed_dp) = x;
+            id(jummico_syncing_fan) = true;
+            auto call = id(jummico_fan).make_call();
+            call.set_speed(x + 1);
+            call.perform();
+            id(jummico_syncing_fan) = false;
+
+    - sensor_datapoint: 19
+      datapoint_type: bitmask
+      then:
+        - lambda: |-
+            const uint32_t mask = x;
+
+            id(jummico_fault_mask).publish_state(mask);
+            id(jummico_fault_water_full).publish_state(mask & (1u << 0));
+            id(jummico_fault_filter).publish_state(mask & (1u << 1));
+            id(jummico_fault_room_temperature).publish_state(mask & (1u << 2));
+            id(jummico_fault_low_temperature).publish_state(mask & (1u << 3));
+            id(jummico_fault_high_temperature).publish_state(mask & (1u << 4));
+            id(jummico_fault_low_humidity).publish_state(mask & (1u << 5));
+            id(jummico_fault_coil).publish_state(mask & (1u << 6));
+            id(jummico_fault_motor).publish_state(mask & (1u << 7));
+
+            std::string faults;
+            auto add = [&](const char *fault) {
+              if (!faults.empty()) faults += ", ";
+              faults += fault;
+            };
+            if (mask & (1u << 0)) add("FULL: Water tank full");
+            if (mask & (1u << 1)) add("Cleaning: Filter reminder");
+            if (mask & (1u << 2)) add("E1: Room temperature sensor");
+            if (mask & (1u << 3)) add("CL: Low temperature");
+            if (mask & (1u << 4)) add("CH: High temperature");
+            if (mask & (1u << 5)) add("LO: Low humidity");
+            if (mask & (1u << 6)) add("COIL: Coil sensor");
+            if (mask & (1u << 7)) add("MOTOR: Fan motor");
+            if (faults.empty()) faults = "None";
+
+            id(jummico_faults).publish_state(faults);
+
+fan:
+  - platform: template
+    name: None
+    id: jummico_fan
+    speed_count: 2
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_state:
+      - lambda: |-
+          if (id(jummico_syncing_fan)) return;
+
+          const bool want_on = x->state;
+          const int want_speed = static_cast<int>(x->speed);
+
+          ESP_LOGD("jummico", "fan.on_state: state=%s speed=%d",
+                   want_on ? "ON" : "OFF", want_speed);
+
+          if (!want_on) {
+            if (id(jummico_power_dp).state) {
+              id(jummico_power_dp).turn_off();
+            }
+            return;
+          }
+
+          if (!id(jummico_power_dp).state) {
+            id(jummico_power_dp).turn_on();
+          }
+
+          if (want_speed == 1 || want_speed == 2) {
+            const uint8_t datapoint_value = want_speed - 1;
+            if (id(jummico_fan_speed_dp) != datapoint_value) {
+              id(jummico_tuya).set_enum_datapoint_value(4, datapoint_value);
+            }
+          }
+
+switch:
+  - platform: tuya
+    name: Power
+    id: jummico_power_dp
+    internal: true
+    tuya_id: jummico_tuya
+    switch_datapoint: 1
+    icon: mdi:power
+
+  - platform: tuya
+    name: Ionizer
+    id: jummico_ionizer
+    tuya_id: jummico_tuya
+    switch_datapoint: 10
+
+  - platform: tuya
+    name: Child Lock
+    id: jummico_child_lock
+    entity_category: config
+    tuya_id: jummico_tuya
+    switch_datapoint: 16
+
+number:
+  - platform: tuya
+    name: Target Humidity
+    id: jummico_target_humidity
+    tuya_id: jummico_tuya
+    number_datapoint: 2
+    unit_of_measurement: '%'
+    device_class: humidity
+    min_value: 30
+    max_value: 80
+    step: 5
+    mode: box
+    icon: mdi:water-percent
+
+select:
+  - platform: tuya
+    name: Mode
+    id: jummico_mode
+    entity_category: config
+    tuya_id: jummico_tuya
+    enum_datapoint: 5
+    icon: mdi:autorenew
+    options:
+      0: Continuous
+      1: Auto
+      2: Sleep
+
+  - platform: tuya
+    name: Countdown
+    id: jummico_countdown
+    entity_category: config
+    tuya_id: jummico_tuya
+    enum_datapoint: 17
+    icon: mdi:timer
+    options:
+      0: 'Off'
+      1: 1h
+      2: 2h
+      3: 3h
+      4: 4h
+      5: 5h
+      6: 6h
+      7: 7h
+      8: 8h
+      9: 9h
+      10: 10h
+      11: 11h
+      12: 12h
+      13: 13h
+      14: 14h
+      15: 15h
+      16: 16h
+      17: 17h
+      18: 18h
+      19: 19h
+      20: 20h
+      21: 21h
+      22: 22h
+      23: 23h
+      24: 24h
+
+  - platform: tuya
+    name: Temperature Unit
+    id: jummico_temperature_unit
+    entity_category: config
+    tuya_id: jummico_tuya
+    enum_datapoint: 24
+    options:
+      0: Celsius
+      1: Fahrenheit
+
+sensor:
+  - platform: tuya
+    name: Ambient Humidity
+    id: jummico_indoor_humidity
+    tuya_id: jummico_tuya
+    sensor_datapoint: 6
+    unit_of_measurement: '%'
+    device_class: humidity
+    state_class: measurement
+    accuracy_decimals: 0
+    icon: mdi:water-percent
+
+  - platform: tuya
+    name: Ambient Temperature
+    id: jummico_indoor_temperature
+    tuya_id: jummico_tuya
+    sensor_datapoint: 7
+    unit_of_measurement: °C
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: Filter Life
+    id: jummico_filter_life
+    entity_category: diagnostic
+    tuya_id: jummico_tuya
+    sensor_datapoint: 23
+    unit_of_measurement: '%'
+    state_class: measurement
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: Client Model
+    id: jummico_client_model
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: jummico_tuya
+    sensor_datapoint: 102
+    accuracy_decimals: 0
+
+  - platform: tuya
+    name: Equipment Type
+    id: jummico_equipment_type
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: jummico_tuya
+    sensor_datapoint: 104
+    accuracy_decimals: 0
+
+  - platform: template
+    name: Fault Mask
+    id: jummico_fault_mask
+    internal: true
+    accuracy_decimals: 0
+
+binary_sensor:
+  - platform: template
+    name: 'Fault: Water Full (FULL)'
+    id: jummico_fault_water_full
+    icon: mdi:cup-water
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Filter Cleaning (Cleaning)'
+    id: jummico_fault_filter
+    icon: mdi:air-filter
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Room Temp Sensor (E1)'
+    id: jummico_fault_room_temperature
+    icon: mdi:alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Low Temperature (CL)'
+    id: jummico_fault_low_temperature
+    icon: mdi:thermometer-alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: High Temperature (CH)'
+    id: jummico_fault_high_temperature
+    icon: mdi:thermometer-alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Low Humidity (LO)'
+    id: jummico_fault_low_humidity
+    icon: mdi:water-alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Coil Sensor (COIL)'
+    id: jummico_fault_coil
+    icon: mdi:alert
+    device_class: problem
+    entity_category: diagnostic
+
+  - platform: template
+    name: 'Fault: Fan Motor (MOTOR)'
+    id: jummico_fault_motor
+    icon: mdi:fan-alert
+    device_class: problem
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: template
+    name: Faults
+    id: jummico_faults
+    icon: mdi:alert-circle-outline
+
+button:
+  - platform: template
+    name: Reset Filter Life
+    id: jummico_filter_reset
+    icon: mdi:air-filter
+    entity_category: config
+    on_press:
+      - lambda: |-
+          id(jummico_tuya).force_set_boolean_datapoint_value(20, true);
+
+  - platform: template
+    name: Reset Operating Time
+    id: jummico_runtime_reset
+    icon: mdi:timer-refresh-outline
+    entity_category: config
+    disabled_by_default: true
+    on_press:
+      - lambda: |-
+          id(jummico_tuya).force_set_boolean_datapoint_value(28, true);

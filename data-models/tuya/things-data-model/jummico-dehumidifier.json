@@ -1,0 +1,297 @@
+{
+  "modelId": "000004k6s2",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "switch",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power",
+            "attribute": "4"
+          },
+          "name": "Switch",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "rw",
+          "code": "dehumidify_set_value",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-shidu",
+            "attribute": "0"
+          },
+          "name": "Humidity Setpoint",
+          "typeSpec": {
+            "type": "value",
+            "max": 80,
+            "min": 30,
+            "scale": 0,
+            "step": 5,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 4,
+          "accessMode": "rw",
+          "code": "fan_speed_enum",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-a_fan_med",
+            "attribute": "0"
+          },
+          "name": "Fan Speed",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "low",
+              "high"
+            ]
+          }
+        },
+        {
+          "abilityId": 5,
+          "accessMode": "rw",
+          "code": "mode",
+          "description": "Continuous, automatic dehumidification, sleep",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "0"
+          },
+          "name": "Operating Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "Continuities",
+              "Auto",
+              "Sleep"
+            ]
+          }
+        },
+        {
+          "abilityId": 6,
+          "accessMode": "ro",
+          "code": "humidity_indoor",
+          "description": "",
+          "name": "Indoor Humidity",
+          "typeSpec": {
+            "type": "value",
+            "max": 90,
+            "min": 20,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 7,
+          "accessMode": "ro",
+          "code": "temp_indoor",
+          "description": "",
+          "name": "Indoor Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 38,
+            "min": 5,
+            "scale": 0,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "rw",
+          "code": "anion",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power2",
+            "attribute": "1024"
+          },
+          "name": "Negative Ion",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 16,
+          "accessMode": "rw",
+          "code": "child_lock",
+          "description": "",
+          "name": "Child Lock",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 17,
+          "accessMode": "rw",
+          "code": "countdown_set",
+          "description": "cancel = 0h",
+          "extensions": {
+            "iconName": "icon-dp_time2",
+            "attribute": "1024"
+          },
+          "name": "Countdown",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "cancel",
+              "1h",
+              "2h",
+              "3h",
+              "4h",
+              "5h",
+              "6h",
+              "7h",
+              "8h",
+              "9h",
+              "10h",
+              "11h",
+              "12h",
+              "13h",
+              "14h",
+              "15h",
+              "16h",
+              "17h",
+              "18h",
+              "19h",
+              "20h",
+              "21h",
+              "22h",
+              "23h",
+              "24h"
+            ]
+          }
+        },
+        {
+          "abilityId": 19,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "Faults: 0 FULL - water tank full; 1 Cleaning - filter reminder; 2 E1 - room-temperature sensor; 3 CL - low temperature; 4 CH - high temperature; 5 LO - low humidity; 6 COIL - coil sensor; 7 MOTOR - fan motor",
+          "extensions": {
+            "scope": "fault"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "FULL",
+              "Cleaning",
+              "E1",
+              "CL",
+              "CH",
+              "LO",
+              "COIL",
+              "MOTOR"
+            ],
+            "maxlen": 8
+          }
+        },
+        {
+          "abilityId": 20,
+          "accessMode": "rw",
+          "code": "filter_reset",
+          "description": "Used together with filter life",
+          "extensions": {
+            "iconName": "icon-dp_loop",
+            "attribute": "1152"
+          },
+          "name": "Filter Reset",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "ro",
+          "code": "filter_life",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_time2",
+            "attribute": "1152"
+          },
+          "name": "Filter Life",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 24,
+          "accessMode": "rw",
+          "code": "temp_unit_convert",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_mode",
+            "attribute": "1152"
+          },
+          "name": "Temperature Unit",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "c",
+              "f"
+            ]
+          }
+        },
+        {
+          "abilityId": 28,
+          "accessMode": "rw",
+          "code": "runtime_total_reset",
+          "description": "",
+          "extensions": {
+            "attribute": "1152"
+          },
+          "name": "Reset Operating Time",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "client_id",
+          "description": "",
+          "name": "Client Model",
+          "typeSpec": {
+            "type": "value",
+            "max": 99,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 104,
+          "accessMode": "ro",
+          "code": "type_of_equipment",
+          "description": "",
+          "name": "Equipment Type",
+          "typeSpec": {
+            "type": "value",
+            "max": 99,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": ""
+          }
+        }
+      ]
+    }
+  ]
+}
