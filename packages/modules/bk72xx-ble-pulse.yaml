@@ -1,0 +1,11 @@
+# Optional one-byte BLE command input for a caller-owned command script.
+defaults:
+  ble_pulse: ${ ble_pulse | default({}) }
+  # CLI substitutions arrive as strings; reject anything except true/false.
+  _ble_pulse_enabled: ${ ble_pulse.get("enabled", false) | string | lower }
+  _ble_pulse_package: !include bk72xx-ble-pulse/enabled.yaml
+
+packages:
+  - >-
+      ${ _ble_pulse_package if _ble_pulse_enabled == "true" else
+         ({} if _ble_pulse_enabled == "false" else "ble_pulse.enabled must be true or false") }

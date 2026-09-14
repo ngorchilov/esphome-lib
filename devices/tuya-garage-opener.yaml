@@ -1,6 +1,15 @@
 substitutions:
   name: tuya-garage-opener
   friendly_name: Tuya Garage Opener
+  ble_enabled: ${ (ble | default({})).get("enabled", false) }
+  ble_name_add_mac_suffix: ${ (ble | default({})).get("name_add_mac_suffix", false) }
+  # BT Inspector's separate Shortcut actions need the previous BLE connection released.
+  ble_connection_timeout: ${ (ble | default({})).get("connection_timeout", "5s") }
+  # BDK 3.0.78 limits the BLE device name to 17 bytes.
+  ble_name: >-
+    ${ (ble | default({})).get("name",
+       friendly_name[:10 if (ble_name_add_mac_suffix | string | lower) in
+       ["true", "yes", "on", "enable"] else 17].rstrip()) }
   led_pin: GPIO6
   button_pin: GPIO7
   relay_pin: GPIO8
@@ -11,6 +20,17 @@ substitutions:
 
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
+  - !include
+    file: ../packages/modules/bk72xx-ble-pulse.yaml
+    vars:
+      ble_pulse:
+        enabled: ${ble_enabled}
+        name: ${ble_name}
+        name_add_mac_suffix: ${ble_name_add_mac_suffix}
+        connection_timeout: ${ble_connection_timeout}
+        id: garage_ble
+        command_script_id: toggle_door
+
 logger:
   level: DEBUG
 
@@ -51,6 +71,10 @@ light:
     internal: true
 
 script:
+  - id: toggle_door
+    then:
+      - cover.toggle: garage_door
+
   - id: pulse_relay
     then:
       - output.turn_on: relay_output
@@ -159,7 +183,7 @@ binary_sensor:
       inverted: true
     on_press:
       then:
-        - cover.toggle: garage_door
+        - script.execute: toggle_door
 
   - platform: gpio
     id: magnetic_contact

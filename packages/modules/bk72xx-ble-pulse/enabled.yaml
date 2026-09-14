@@ -1,0 +1,43 @@
+defaults:
+  ble_pulse: ${ ble_pulse | default({}) }
+  ble_id: ${ ble_pulse.get("id", "ble_command") }
+  _ble_pulse_name: ${ ble_pulse.get("name", "BLE Command") }
+  ble_command_script_id: ${ ble_pulse.get("command_script_id", ble_pulse.get("pulse_script_id", "")) }
+
+esphome:
+  # Requires native bk72xx_ble (added in 2026.8.0), which selects BDK 3.0.78.
+  # https://github.com/esphome/esphome/pull/17775
+  min_version: 2026.8.0
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [bk72xx_ble_server]
+
+bk72xx_ble_server:
+  id: ${ble_id}_server
+  name: ${_ble_pulse_name}
+  name_add_mac_suffix: ${ ble_pulse.get("name_add_mac_suffix", false) }
+  connection_timeout: ${ ble_pulse.get("connection_timeout", "0s") }
+  on_write:
+    - if:
+        condition:
+          lambda: return value == 0x01;
+        then:
+          - script.execute: ${ble_id}_command
+        else:
+          - logger.log:
+              level: WARN
+              format: 'Ignored unknown BLE command: 0x%02X'
+              args: [value]
+
+script:
+  - id: ${ble_id}_command
+    mode: single
+    then:
+      - logger.log: BLE command requested
+      - script.execute: ${ble_command_script_id}
+      - script.wait: ${ble_command_script_id}
+      - logger.log: BLE command dispatched
+      - delay: 1s
