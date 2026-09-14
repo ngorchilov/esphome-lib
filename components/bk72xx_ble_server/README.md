@@ -131,7 +131,7 @@ finished so other clients can discover and connect to the controller.
 ## Hardware validation
 
 Tests on 2026-09-13 used ESPHome 2026.8.1, LibreTiny 1.13.0 and BDK 3.0.78 on the
-power-only CBU at `10.10.10.205`. Discovery, both write modes, invalid writes,
+a power-only bench CBU. Discovery, both write modes, invalid writes,
 burst suppression and reconnection passed. With Wi-Fi disabled after startup:
 
 | Requested outage | Measured interval | Command writes | Completed pulse scripts |
