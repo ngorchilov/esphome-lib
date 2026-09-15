@@ -10,27 +10,20 @@ esphome:
   min_version: 2026.8.0
 
 external_components:
-  - source:
-      type: local
-      path: ../components
+  - source: github://ngorchilov/esphome-lib@main
     components: [bk72xx_ble_server]
+    refresh: 0s
 
 bk72xx_ble_server:
   id: ${ble_id}_server
   name: ${_ble_pulse_name}
   name_add_mac_suffix: ${ ble_pulse.get("name_add_mac_suffix", false) }
   connection_timeout: ${ ble_pulse.get("connection_timeout", "0s") }
+  command: ${ ble_pulse.get("command", "") }
+  reboot_condition: !lambda |-
+    return ${ ble_pulse.get("reboot_condition", "true") };
   on_write:
-    - if:
-        condition:
-          lambda: return value == 0x01;
-        then:
-          - script.execute: ${ble_id}_command
-        else:
-          - logger.log:
-              level: WARN
-              format: 'Ignored unknown BLE command: 0x%02X'
-              args: [value]
+    - script.execute: ${ble_id}_command
 
 script:
   - id: ${ble_id}_command

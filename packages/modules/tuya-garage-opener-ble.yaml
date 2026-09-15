@@ -1,0 +1,18 @@
+substitutions:
+  ble_command: !secret tuya_garage_opener_ble_command
+
+packages:
+  - !include
+    file: bk72xx-ble-pulse.yaml
+    vars:
+      ble_pulse:
+        enabled: true
+        command: ${ble_command}
+        name: ${ble_name}
+        name_add_mac_suffix: ${ble_name_add_mac_suffix}
+        connection_timeout: ${ble_connection_timeout}
+        id: garage_ble
+        command_script_id: toggle_door
+        reboot_condition: >-
+          !id(pulse_relay).is_running() &&
+          id(garage_door).current_operation == esphome::cover::COVER_OPERATION_IDLE

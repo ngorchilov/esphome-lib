@@ -20,16 +20,12 @@ substitutions:
 
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
+  # Load the garage command secret only in the enabled package.
   - !include
-    file: ../packages/modules/bk72xx-ble-pulse.yaml
+    file: ../packages/modules/${ 'tuya-garage-opener-ble' if (ble_enabled | string | lower) == 'true' else 'bk72xx-ble-pulse' }.yaml
     vars:
       ble_pulse:
         enabled: ${ble_enabled}
-        name: ${ble_name}
-        name_add_mac_suffix: ${ble_name_add_mac_suffix}
-        connection_timeout: ${ble_connection_timeout}
-        id: garage_ble
-        command_script_id: toggle_door
 
 logger:
   level: DEBUG

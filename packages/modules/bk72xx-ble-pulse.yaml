@@ -1,4 +1,4 @@
-# Optional one-byte BLE command input for a caller-owned command script.
+# Optional three-byte BLE command input for a caller-owned command script.
 defaults:
   ble_pulse: ${ ble_pulse | default({}) }
   # CLI substitutions arrive as strings; reject anything except true/false.

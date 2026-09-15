@@ -10,6 +10,8 @@ from esphome.const import CONF_ID, CONF_NAME, CONF_NAME_ADD_MAC_SUFFIX
 
 CONF_ON_WRITE = "on_write"
 CONF_CONNECTION_TIMEOUT = "connection_timeout"
+CONF_REBOOT_CONDITION = "reboot_condition"
+CONF_COMMAND = "command"
 
 AUTO_LOAD = ["bk72xx_ble"]
 DEPENDENCIES = ["bk72xx", "wifi"]
@@ -35,6 +37,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_NAME, default="BLE Command"): validate_name,
         cv.Optional(CONF_NAME_ADD_MAC_SUFFIX, default=False): cv.boolean,
         cv.Optional(CONF_CONNECTION_TIMEOUT, default="0s"): cv.positive_time_period_milliseconds,
+        cv.Required(CONF_COMMAND): cv.All(cv.hex_uint32_t, cv.Range(max=0xFFFFFF)),
+        cv.Optional(CONF_REBOOT_CONDITION): cv.returning_lambda,
         cv.Optional(CONF_ON_WRITE): automation.validate_automation(single=True),
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -68,6 +72,10 @@ async def to_code(config):
     cg.add(var.set_name(config[CONF_NAME]))
     cg.add(var.set_name_add_mac_suffix(config[CONF_NAME_ADD_MAC_SUFFIX]))
     cg.add(var.set_connection_timeout(config[CONF_CONNECTION_TIMEOUT].total_milliseconds))
+    cg.add(var.set_command(config[CONF_COMMAND]))
+    if CONF_REBOOT_CONDITION in config:
+        condition = await cg.process_lambda(config[CONF_REBOOT_CONDITION], [], return_type=cg.bool_)
+        cg.add(var.set_reboot_condition(condition))
     ota.request_ota_state_listeners()
     if conf := config.get(CONF_ON_WRITE):
-        await automation.build_automation(var.get_write_trigger(), [(cg.uint8, "value")], conf)
+        await automation.build_automation(var.get_write_trigger(), [(cg.uint32, "value")], conf)
