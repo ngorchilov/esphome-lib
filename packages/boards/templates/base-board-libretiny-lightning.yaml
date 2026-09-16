@@ -1,0 +1,6 @@
+substitutions:
+  name: base-board-libretiny-lightning
+  friendly_name: Base Board LibreTiny (Lightning)
+
+packages:
+  - !include base-board-libretiny.yaml

@@ -1,0 +1,6 @@
+substitutions:
+  name: kickstart-wl2h
+  friendly_name: Kickstart WL2H
+
+packages:
+  - !include ../packages/boards/tuya/wl2h.yaml

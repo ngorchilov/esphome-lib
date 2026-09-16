@@ -1,0 +1,9 @@
+substitutions:
+  name: base-board-wl2h
+  friendly_name: Base Board WL2H
+
+packages:
+  - !include ../templates/base-board-libretiny-lightning.yaml
+
+ln882x:
+  board: wl2h-u

@@ -8,7 +8,7 @@ Each file:
 
 - includes the matching board package from `packages/boards/`
 - uses the library's standard API, OTA, logging, networking, and diagnostics
-- explicitly enables the fallback Wi-Fi AP and captive portal for first-boot recovery
+- defines only its generic kickstart identity and board package include
 - contains no application-specific components or pin assignments
 
 Run configuration checks and UART uploads from this directory, for example:
