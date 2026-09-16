@@ -1,6 +1,6 @@
 substitutions:
-  name: tuya-ceiling-light
-  friendly_name: Tuya Ceiling Light
+  name: tuya-ceiling-light-cbu
+  friendly_name: Tuya Ceiling Light (CBU)
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
 output:
