@@ -1,8 +1,10 @@
 substitutions:
   name: tuya-ceiling-light-cbu
   friendly_name: Tuya Ceiling Light (CBU)
+
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
+
 output:
   - platform: libretiny_pwm
     id: out_blue
