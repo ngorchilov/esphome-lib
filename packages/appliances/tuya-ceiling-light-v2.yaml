@@ -1,0 +1,28 @@
+# V2 denotes the newer light assembly, not a manufacturer's revision number.
+# Select the module through ceiling_light.chip: cbu | wl2h.
+
+defaults:
+  ceiling_light: ${ ceiling_light | default({}) }
+  ceiling_light_chip: ${ ceiling_light.get("chip", "cbu") }
+
+packages:
+  - !include tuya-ceiling-light-v2/${ceiling_light_chip}.yaml
+
+light:
+  - platform: rgbww
+    name: None
+    id: main_light
+    red: out_red
+    green: out_green
+    blue: out_blue
+    warm_white: out_warm
+    cold_white: out_cold
+    # Retain the established UI range; optical endpoints have not been measured.
+    warm_white_color_temperature: 2700 K
+    cold_white_color_temperature: 6500 K
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 200ms
+    gamma_correct: 2.2
+    color_interlock: true
+    # Both stock mixers split one white channel's full duty across the pair.
+    constant_brightness: true

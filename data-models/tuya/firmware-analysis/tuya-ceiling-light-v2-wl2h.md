@@ -1,7 +1,7 @@
-# Tuya Ceiling Light — WL2H Firmware Analysis
+# Tuya Ceiling Light V2 (WL2H) — Firmware Analysis
 
 This is a reconstruction from executable code, not an extracted `user_param_key` object.
-It applies to the inspected WL2H-U/LN882H revision. The existing CBU device YAML and its
+It applies to the inspected WL2H-U/LN882H revision. The V1 CBU device YAML and its
 `user_param_key` JSON describe a different revision.
 
 ## Source
@@ -35,10 +35,10 @@ and the firmware's pin translation exactly:
 | 11 | PA12 | 26 | White, temperature endpoint 1000 | White mixer at 1000 drives this output only |
 | 12 | PB03 | 24 | White, temperature endpoint 0 | White mixer at 0 drives this output only |
 
-PA12 is provisionally cold white and PB03 warm white, assuming increasing mixer temperature
-means increasing color temperature. The numerical endpoints are verified; the emitted white
-colors and their Kelvin limits have not been measured. The mixer was tested directly, so this
-does not verify every transformation between cloud commands and its input.
+The owner confirmed PA12 as cold white and PB03 as warm white on the replacement firmware.
+The numerical endpoints are verified; optical Kelvin limits have not been measured. The mixer
+was tested directly, so this does not verify every transformation between cloud commands and
+its input.
 
 All five channels initialize at **4,000 Hz**, with a duty range of **0–10,000** and initial duty
 zero. The stock driver's endpoint paths use low for zero and high for full duty, establishing
@@ -103,7 +103,7 @@ translation, and output polarity. The original dump's hash was unchanged after a
 ## Replacement Firmware Considerations
 
 - Preserve RGB plus independently mixed white channels as the functional target.
-- Verify the physical white endpoints before treating the provisional cold/warm labels as final.
+- The owner confirmed both physical white endpoints after flashing the replacement.
 - Do not infer optical calibration, minimum brightness, Kelvin limits, or all mode behavior from
   the isolated probes. The CBU device's 2700–6500 K range remains a comparison, not a measurement
   of this revision.
@@ -114,11 +114,17 @@ translation, and output polarity. The original dump's hash was unchanged after a
   advanced timers without modifying LibreTiny.
 
 The replacement configuration is
-[`devices/tuya-ceiling-light-wl2h.yaml`](../../../devices/tuya-ceiling-light-wl2h.yaml).
-It uses the recovered 4 kHz pin mapping and provisional white assignments, with the CBU variant's
+[`devices/tuya-ceiling-light-v2-wl2h.yaml`](../../../devices/tuya-ceiling-light-v2-wl2h.yaml).
+It uses the recovered 4 kHz pin mapping and confirmed white assignments, with the V1 CBU variant's
 RGBWW entity behavior and 2700–6500 K UI range. It does not copy the CBU's green/blue power limits.
 White mixing uses `constant_brightness: true` to keep combined white duty within one channel's
 full output, consistent with the recovered mixer's 50/50 midpoint.
-Validation is limited to `esphome config`; compilation and hardware testing are owner-run steps.
+The V2 CBU and WL2H configurations now share the
+[`tuya-ceiling-light-v2` appliance](../../../packages/appliances/tuya-ceiling-light-v2.yaml),
+with separate hardware profiles selected by `ceiling_light.chip`. V1/V2 are owner-defined labels,
+not manufacturer revision numbers. See the [V2 CBU analysis](tuya-ceiling-light-v2-cbu.md).
 
-No replacement application firmware has been flashed as part of this analysis.
+Agent validation is limited to `esphome config`; compilation and hardware testing are owner-run
+steps. The owner reports successful WL2H boot, Home Assistant integration, and white-channel tests.
+
+No replacement application firmware was flashed by the agent.

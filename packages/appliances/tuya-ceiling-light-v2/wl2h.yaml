@@ -1,0 +1,38 @@
+packages:
+  - !include ../../boards/tuya/wl2h.yaml
+
+external_components:
+  - source: !include ../../component-source.yaml
+    components: [ln882h_pwm]
+    refresh: 0s
+
+output:
+  - platform: ln882h_pwm
+    id: out_red
+    pin: PA07
+    timer: 0
+    frequency: 4000 Hz
+
+  - platform: ln882h_pwm
+    id: out_green
+    pin: PA10
+    timer: 1
+    frequency: 4000 Hz
+
+  - platform: ln882h_pwm
+    id: out_blue
+    pin: PA11
+    timer: 2
+    frequency: 4000 Hz
+
+  - platform: ln882h_pwm
+    id: out_cold
+    pin: PA12
+    timer: 3
+    frequency: 4000 Hz
+
+  - platform: ln882h_pwm
+    id: out_warm
+    pin: PB03
+    timer: 4
+    frequency: 4000 Hz

@@ -89,8 +89,22 @@ cases:
     local_components: [magic_switch]
     contract: enabled-basic
   - id: source-ln882h-pwm
-    file: devices/tuya-ceiling-light-wl2h.yaml
+    file: devices/tuya-ceiling-light-v2-wl2h.yaml
     local_components: [ln882h_pwm]
+    contract: ceiling-light-v2
+  - id: ceiling-light-v1-cbu
+    file: devices/tuya-ceiling-light-v1-cbu.yaml
+  - id: ceiling-light-v2-cbu
+    file: devices/tuya-ceiling-light-v2-cbu.yaml
+    contract: ceiling-light-v2
+  - id: ceiling-light-v2-chip-override
+    file: devices/tuya-ceiling-light-v2-wl2h.yaml
+    substitutions: {chip: cbu}
+    contract: ceiling-light-v2
+  - id: reject-ceiling-light-v2-chip
+    file: devices/tuya-ceiling-light-v2-cbu.yaml
+    substitutions: {chip: unsupported}
+    reject: tuya-ceiling-light-v2/unsupported.yaml
   - id: source-rtl8720c-evse
     file: devices/evse-feyree-three-phase.yaml
     local_components: [rtl8720c_uart]

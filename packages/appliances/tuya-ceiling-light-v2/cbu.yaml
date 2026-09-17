@@ -1,0 +1,29 @@
+packages:
+  - !include ../../boards/tuya/cbu.yaml
+
+output:
+  - platform: libretiny_pwm
+    id: out_red
+    pin: P8
+    frequency: 5000 Hz
+
+  - platform: libretiny_pwm
+    id: out_green
+    pin: P7
+    frequency: 5000 Hz
+
+  - platform: libretiny_pwm
+    id: out_blue
+    pin: P6
+    frequency: 5000 Hz
+
+  # White roles follow the stock mixer; confirm emitted colors on this revision.
+  - platform: libretiny_pwm
+    id: out_cold
+    pin: P26
+    frequency: 5000 Hz
+
+  - platform: libretiny_pwm
+    id: out_warm
+    pin: P24
+    frequency: 5000 Hz

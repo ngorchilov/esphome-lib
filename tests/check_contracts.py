@@ -130,6 +130,29 @@ def check(config, contract, substitutions):
         assert config["esphome"]["min_version"] == substitutions["expected_min_version"]
     if contract == "versions":
         return
+    if contract == "ceiling-light-v2":
+        chip = config["substitutions"]["chip"]
+        is_cbu = chip == "cbu"
+        platform = "bk72xx" if is_cbu else "ln882x"
+        assert config[platform]["board"] == ("cbu" if is_cbu else "wl2h-u")
+        assert ("ln882x" if is_cbu else "bk72xx") not in config
+        channels = ("red", "green", "blue", "cold", "warm")
+        expected_pins = (8, 7, 6, 26, 24) if is_cbu else (7, 10, 11, 12, 19)
+        assert len(config["output"]) == 5
+        for timer, (channel, pin) in enumerate(zip(channels, expected_pins)):
+            output = entity(config, "output", f"out_{channel}")
+            assert output["platform"] == ("libretiny_pwm" if is_cbu else "ln882h_pwm")
+            assert output["pin"]["number"] == pin and not output["pin"]["inverted"]
+            assert output["frequency"] == (5000 if is_cbu else 4000)
+            assert output.get("max_power", 1) == 1
+            assert ("timer" not in output) if is_cbu else (output["timer"] == timer)
+        light = entity(config, "light", "main_light")
+        assert light["platform"] == "rgbww" and light["name"] == ""
+        assert light["constant_brightness"] and light["color_interlock"]
+        for role, channel in zip(("red", "green", "blue", "cold_white", "warm_white"), channels):
+            assert str(light[role]) == f"out_{channel}"
+        assert not config.get("external_components") if is_cbu else config.get("external_components")
+        return
     if contract == "version-composition":
         sources = [item["source"] for item in requirements]
         assert sources.count("fixture.repeated") == 2

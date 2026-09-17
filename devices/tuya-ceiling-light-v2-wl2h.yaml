@@ -1,0 +1,11 @@
+substitutions:
+  name: tuya-ceiling-light-v2-wl2h
+  friendly_name: Tuya Ceiling Light V2 (WL2H)
+  chip: wl2h
+
+packages:
+  - !include
+    file: ../packages/appliances/tuya-ceiling-light-v2.yaml
+    vars:
+      ceiling_light:
+        chip: ${chip}
