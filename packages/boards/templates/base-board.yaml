@@ -1,9 +1,10 @@
-defaults:
-  base_networking_settings: !include ../../modules/networking/settings.yaml
-
 substitutions:
   name: base-board
   friendly_name: Base Board
+  esphome_requirements:
+    # Conditional packages and reliable !include vars substitution in lambdas.
+    - source: esphome-lib.base
+      version: 2026.5.0
 
   log_level: INFO
   has_internal_temperature: true
@@ -17,8 +18,38 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
 
-  # Requires conditional packages and reliable !include vars substitution in lambdas.
-  min_version: ${ '2026.8.0' if base_networking_settings.requires_2026_8 else '2026.5.0' }
+  # Sole writer: package requirement lists concatenate before this expression runs.
+  min_version: |-
+    <% set versions = [] %>
+    <% set errors = [] %>
+    <% if esphome_requirements is not sequence or esphome_requirements is string or esphome_requirements is mapping %>
+      <% do errors.append('expected a list') %>
+    <% else %>
+      <% for requirement in esphome_requirements %>
+        <% if requirement is not mapping or requirement.keys() | list | sort != ['source', 'version'] %>
+          <% do errors.append('each entry must contain source and version only') %>
+        <% elif requirement.source is not string or not requirement.source.strip() %>
+          <% do errors.append('source must be a nonempty string') %>
+        <% else %>
+          <% set parts = requirement.version.split('.') if requirement.version is string else [] %>
+          <% set valid = namespace(value=parts | length == 3) %>
+          <% for part in parts %>
+            <% if not part.isascii() or not part.isdecimal() %>
+              <% set valid.value = false %>
+            <% endif %>
+          <% endfor %>
+          <% if valid.value %>
+            <% do versions.append(parts | map('int') | list) %>
+          <% else %>
+            <% do errors.append(requirement.source ~ ': expected a released version (major.minor.patch)') %>
+          <% endif %>
+        <% endif %>
+      <% endfor %>
+    <% endif %>
+    <% if not versions and not errors %>
+      <% do errors.append('at least one requirement is needed') %>
+    <% endif %>
+    ${ 'Invalid esphome_requirements: ' ~ errors | join('; ') if errors else versions | max | join('.') }
 
   on_boot:
     - priority: 500

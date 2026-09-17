@@ -1,0 +1,5 @@
+# Included twice, once nested, to exercise additive package merging.
+substitutions:
+  esphome_requirements:
+    - source: fixture.repeated
+      version: 2026.6.0

@@ -1,13 +1,70 @@
 """Tests for the regression runner's pass/fail accounting (no firmware builds)."""
 
+import subprocess
 import unittest
+from pathlib import Path
 
 import yaml
 
 from validate import ROOT, classify, tracked_files, unique_pairs
 
 
+def min_version_lines(node):
+    """Inspect YAML structure without resolving includes or custom tags."""
+    found = []
+    seen = set()
+
+    def visit(item):
+        if id(item) in seen:
+            return
+        seen.add(id(item))
+        if isinstance(item, yaml.MappingNode):
+            for key, value in item.value:
+                if key.value == "esphome" and isinstance(value, yaml.MappingNode):
+                    found.extend(k.start_mark.line + 1 for k, _ in value.value if k.value == "min_version")
+                visit(value)
+        elif isinstance(item, yaml.SequenceNode):
+            for value in item.value:
+                visit(value)
+
+    visit(node)
+    return found
+
+
 class ValidationTests(unittest.TestCase):
+    def test_min_version_scanner(self):
+        config = yaml.compose("""
+defaults:
+  optional_package:
+    esphome: {min_version: 2026.8.0}
+packages:
+  - !include another.yaml
+  - esphome:
+      min_version: 2026.7.0
+substitutions:
+  esphome_requirements:
+    - source: test
+      version: 2026.8.0
+""")
+        self.assertEqual(min_version_lines(config), [4, 8])
+
+    def test_min_version_has_one_owner(self):
+        result = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--",
+             "devices", "kickstart", "packages", "tests/fixtures"],
+            cwd=ROOT, capture_output=True, text=True, check=True,
+        )
+        owner = Path("packages/boards/templates/base-board.yaml")
+        declarations = []
+        for name in sorted(set(result.stdout.split("\0")) - {""}):
+            path = Path(name)
+            if path.suffix not in (".yaml", ".yml"):
+                continue
+            node = yaml.compose((ROOT / path).read_text())
+            declarations.extend((path, line) for line in min_version_lines(node))
+        self.assertEqual([path for path, _ in declarations], [owner],
+                         f"Only the base resolver may set esphome.min_version: {declarations}")
+
     def test_normal_config(self):
         self.assertEqual(classify(0, "valid", {}), "PASS")
         self.assertEqual(classify(1, "error", {}), "FAIL")

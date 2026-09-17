@@ -1,14 +1,13 @@
 substitutions:
   name: melcutter
   friendly_name: MELcutter
+  esphome_requirements:
+    - source: api.homeassistant_action_responses
+      version: 2025.10.0
 
   # Default Home Assistant entity_id used as the external temperature source.
   # Can be an empty string.
   default_remote_temperature_entity: ''
-
-esphome:
-  # Required for Home Assistant Action Responses
-  min_version: 2025.10.0
 
 packages:
   - !include ../packages/boards/espressif/esp07.yaml

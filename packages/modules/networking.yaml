@@ -4,6 +4,13 @@ defaults:
   networking_api: ${ networking.get("api", {}) }
   networking_ota: ${ networking.get("ota", {}) }
   networking_mdns: ${ networking.get("mdns", {}) }
+  networking_dual_interface_package:
+    substitutions:
+      esphome_requirements:
+        - source: networking.interfaces
+          version: 2026.8.0
+    network:
+      priority: ${networking_settings.interfaces}
   networking_status_package:
     binary_sensor:
       - platform: status
@@ -17,6 +24,10 @@ defaults:
       - platform: homeassistant
         id: ${networking_settings.clock_id}
   networking_uptime_clock_package:
+    substitutions:
+      esphome_requirements:
+        - source: sensor.device_class.uptime
+          version: 2026.6.0
     sensor:
       - id: !extend mcu_uptime
         time_id: ${networking_settings.clock_id}
@@ -33,7 +44,7 @@ packages:
       networking_multiple: ${networking_settings.multiple}
   - '${ {"INVALID_NETWORKING_CONFIGURATION": networking_settings.errors} if networking_settings.errors else {} }'
   - '${ {"INVALID_NETWORKING_CONFIGURATION": "Multiple network interfaces require ESP32"} if networking_settings.multiple and firmware_platform != "esp32" else {} }'
-  - '${ {"network": {"priority": networking_settings.interfaces}} if networking_settings.multiple else {} }'
+  - ${ networking_dual_interface_package if networking_settings.multiple else {} }
   - '${ {"api": dict({"id": "hapi", "reboot_timeout": "0s"}, **dict(networking_api.items() | rejectattr(0, "eq", "enabled")))} if networking_settings.api else {} }'
   - '${ {"ota": [dict({"platform": "esphome"}, **dict(networking_ota.items() | rejectattr(0, "eq", "enabled")))]} if networking_settings.ota else {} }'
   # Network auto-loads mDNS, so disabling it requires an explicit disabled flag.

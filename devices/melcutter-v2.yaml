@@ -1,6 +1,9 @@
 substitutions:
   name: melcutter-v2
   friendly_name: MELcutter V2
+  esphome_requirements:
+    - source: climate.mitsubishi_cn105.set_remote_temperature
+      version: 2026.5.0
 
   # Default Home Assistant entity_id used as the external temperature source.
   # Can be an empty string.
@@ -10,11 +13,6 @@ esphome:
   project:
     name: yepiq.MELCloud_Cutter
     version: 2.0b
-
-  # Required for climate.mitsubishi_cn105.set_remote_temperature.
-  # If remote temperature is not used, this can be lowered to 2026.4.0,
-  # where the native mitsubishi_cn105 component was introduced.
-  min_version: 2026.5.0
 
 packages:
   - !include ../packages/boards/espressif/esp07.yaml

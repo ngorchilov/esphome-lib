@@ -99,6 +99,7 @@ cases:
     local_components: [rtl8720c_uart]
   - id: source-ble
     file: tests/fixtures/garage-ble.yaml
+    substitutions: {expected_min_version: 2026.8.0}
     local_components: [bk72xx_ble_server]
 
   - id: disabled-basic
@@ -365,6 +366,103 @@ cases:
     substitutions: {test_clock_id: panel_clock}
     secrets: false
     contract: networking-appliance
+
+  - id: version-order
+    file: tests/fixtures/version-requirements.yaml
+    secrets: false
+    contract: version-composition
+  - id: version-reverse-order
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_reverse: true}
+    secrets: false
+    contract: version-composition
+  - id: version-enabled-feature
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_optional: true, expected_min_version: 2026.8.0}
+    secrets: false
+    contract: version-composition
+  - id: version-disabled-future-feature
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_optional_version: 2099.10.0}
+    secrets: false
+    contract: version-composition
+  - id: version-dashboard-addition
+    file: tests/fixtures/version-requirements.yaml
+    substitutions:
+      test_dashboard_requirements: "${ [{'source': 'dashboard', 'version': '2026.8.2'}] }"
+      expected_min_version: 2026.8.2
+    secrets: false
+    contract: version-composition
+  - id: version-melcutter
+    file: devices/melcutter.yaml
+    substitutions: {expected_min_version: 2026.6.0}
+  - id: version-lcd-wifi
+    file: tests/fixtures/lcd-networking.yaml
+    substitutions: {test_interfaces: "${ ['wifi'] }", expected_min_version: 2026.7.0}
+    secrets: false
+  - id: version-lcd-dual
+    file: tests/fixtures/lcd-networking.yaml
+    substitutions: {expected_min_version: 2026.8.0}
+    secrets: false
+  - id: version-lcd-ethernet-on-demand
+    file: tests/fixtures/lcd-networking.yaml
+    substitutions:
+      test_interfaces: "${ ['ethernet'] }"
+      test_ethernet_boot_option: true
+      expected_min_version: 2026.8.0
+    secrets: false
+  - id: reject-version-month-order
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: 2026.9.0, test_second_version: 2026.10.0}
+    secrets: false
+    reject: Please update to at least 2026.10.0
+  - id: reject-version-patch-order
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: 2026.8.9, test_second_version: 2026.8.10}
+    secrets: false
+    reject: Please update to at least 2026.8.10
+  - id: reject-version-format
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: 2026.bad.0}
+    secrets: false
+    reject: 'fixture.first: expected a released version'
+  - id: reject-version-short
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: 2026.8}
+    secrets: false
+    reject: 'fixture.first: expected a released version'
+  - id: reject-version-prerelease
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: 2026.8.0b1}
+    secrets: false
+    reject: 'fixture.first: expected a released version'
+  - id: reject-version-type
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {test_first_version: "${ 2026 }"}
+    secrets: false
+    reject: 'fixture.first: expected a released version'
+  - id: reject-version-entry
+    file: tests/fixtures/version-requirements.yaml
+    substitutions:
+      test_dashboard_requirements: "${ [{'source': 'dashboard', 'verison': '2026.8.0'}] }"
+    secrets: false
+    reject: each entry must contain source and version only
+  - id: reject-version-source
+    file: tests/fixtures/version-requirements.yaml
+    substitutions:
+      test_dashboard_requirements: "${ [{'source': '', 'version': '2026.8.0'}] }"
+    secrets: false
+    reject: source must be a nonempty string
+  - id: reject-version-registry-type
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {esphome_requirements: "${ {'source': 'dashboard', 'version': '2026.8.0'} }"}
+    secrets: false
+    reject: 'Invalid esphome_requirements: expected a list'
+  - id: reject-version-registry-empty
+    file: tests/fixtures/version-requirements.yaml
+    substitutions: {esphome_requirements: "${ [] }"}
+    secrets: false
+    reject: at least one requirement is needed
 
   # Deliberately invalid public API values must be rejected, not silently defaulted.
   - id: reject-entity-type

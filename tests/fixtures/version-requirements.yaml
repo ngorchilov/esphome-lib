@@ -1,0 +1,36 @@
+substitutions:
+  name: test-version-requirements
+  test_reverse: false
+  test_optional: false
+  test_first_version: 2026.7.0
+  test_second_version: 2025.10.0
+  test_optional_version: 2026.8.0
+  test_dashboard_requirements: []
+  esphome_requirements: ${test_dashboard_requirements}
+  first_package:
+    substitutions:
+      esphome_requirements:
+        - source: fixture.first
+          version: ${test_first_version}
+  second_package:
+    substitutions:
+      esphome_requirements:
+        - source: fixture.second
+          version: ${test_second_version}
+  optional_package:
+    substitutions:
+      esphome_requirements:
+        - source: fixture.optional
+          version: ${test_optional_version}
+packages:
+  - !include
+    file: ../../packages/boards/espressif/esp32dev.yaml
+    vars:
+      networking:
+        mode: none
+  - packages:
+      - !include version-requirement.yaml
+  - !include version-requirement.yaml
+  - ${ second_package if test_reverse | string | lower == 'true' else first_package }
+  - ${ first_package if test_reverse | string | lower == 'true' else second_package }
+  - ${ optional_package if test_optional | string | lower == 'true' else {} }

@@ -10,7 +10,7 @@ python tests/validate.py                              # Consumer matrix and JSON
 python tests/validate.py --all                        # Also every tracked device/kickstart
 python tests/validate.py source-tuya-product c3-light  # Named cases from cases.yaml
 python tests/validate.py devices/jummico-dehumidifier.yaml
-python -m unittest discover -s tests -p 'test_*.py'    # Runner accounting tests
+python -m unittest discover -s tests -p 'test_*.py'    # Runner and source-policy tests
 ```
 
 The runner invokes `esphome config`, never `esphome compile`. It copies working-tree content
@@ -74,6 +74,19 @@ for Tuya and integrated RTC appliances, both dual-interface priorities, disabled
 startup policy, distinct IP/MAC diagnostics, and appliance forwarding. Invalid selectors, service
 dependencies, boolean options and missing clocks are rejected. Config validation does not test
 physical cable failover, radio association or HA reconnection; those need hardware verification.
+
+Every passing configuration also checks that `esphome.min_version` is the highest contributed
+`esphome_requirements` version, using ESPHome's own version parser as an independent reference.
+The source-policy tests scan YAML structure (including inline/conditional packages) to enforce
+the shared base template as the sole writer. Configuration cases cover package order, repeated
+and nested includes, dashboard additions, disabled features, LCD/network combinations and the
+MELcutter/base collision. Invalid declarations and too-new month/patch versions must be rejected.
+These checks use config validation only; they do not require a firmware build.
+
+CI also runs focused checks at the declared minimum releases: 2026.5.0 for clockless configurations,
+2026.6.0 for timestamp uptime with HA/external clocks, and 2026.7.0 for version composition and the
+LCD appliance. The full suite stays on the current baseline. These are representative contract
+checks, not a claim that every device supports every tested release.
 
 ## C++ And CI
 

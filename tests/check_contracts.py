@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 
-from esphome import pins
+from esphome import config_validation as cv, pins
 from esphome.config import path_context, read_config
 from esphome.core import CORE
 
@@ -119,6 +119,24 @@ def check_fan433(config, substitutions):
 
 
 def check(config, contract, substitutions):
+    requirements = config["substitutions"]["esphome_requirements"]
+    assert isinstance(requirements, list) and requirements
+    required = max(cv.Version.parse(item["version"]) for item in requirements)
+    assert config["esphome"]["min_version"] == str(required), "min_version must be the highest requirement"
+    assert any(item["source"] == "esphome-lib.base" for item in requirements)
+    uptime = entity(config, "sensor", "mcu_uptime")
+    assert any(item["source"] == "sensor.device_class.uptime" for item in requirements) == (uptime["type"] == "timestamp")
+    if "expected_min_version" in substitutions:
+        assert config["esphome"]["min_version"] == substitutions["expected_min_version"]
+    if contract == "versions":
+        return
+    if contract == "version-composition":
+        sources = [item["source"] for item in requirements]
+        assert sources.count("fixture.repeated") == 2
+        assert "fixture.first" in sources and "fixture.second" in sources
+        assert ("fixture.optional" in sources) == enabled(substitutions.get("test_optional", False))
+        assert config["esphome"]["min_version"] == substitutions.get("expected_min_version", "2026.7.0")
+        return
     if "esp32" in config:
         assert "<esp_ota_ops.h>" in config["esphome"]["includes"]
     if contract in ("offline", "offline-clock"):
@@ -141,13 +159,15 @@ def check(config, contract, substitutions):
     elif contract == "networking-single":
         assert ("wifi" in config) != ("ethernet" in config)
         ethernet = "ethernet" in config
-        minimum = "2026.8.0" if ethernet and "test_ethernet_on_boot" in substitutions else "2026.5.0"
+        api_enabled = enabled(substitutions.get("test_api", True))
+        minimum = "2026.6.0" if api_enabled else "2026.5.0"
+        if ethernet and "test_ethernet_on_boot" in substitutions:
+            minimum = "2026.8.0"
         assert config["esphome"]["min_version"] == minimum
         info = next(sensor for sensor in config["text_sensor"] if sensor["platform"] == ("ethernet_info" if ethernet else "wifi_info"))
         assert str(info["mac_address"]["id"]) == "mcu_mac_address"
         ip_id = "mcu_ip_address" if ethernet else "mcu_ip"
         assert str(info["ip_address"]["id"]) == ip_id
-        api_enabled = enabled(substitutions.get("test_api", True))
         assert ("api" in config) == api_enabled
         assert ("ha_time" in ids(config, "time")) == api_enabled
         assert entity(config, "sensor", "mcu_uptime")["type"] == ("timestamp" if api_enabled else "seconds")

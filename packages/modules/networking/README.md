@@ -34,6 +34,10 @@ The same `vars` object works with a local `!include`. Each appliance retains its
 Waveshare 8DI/8RO uses Ethernet; the other listed appliances use Wi-Fi. Omit networking settings
 to keep that default. Fixed Ethernet wiring remains owned by the appliance.
 
+Networking contributes its feature requirements to the shared
+[version resolver](../../README.md). Other packages can demand a higher version independently;
+do not override `esphome.min_version` to combine them.
+
 ## Interfaces
 
 Choose **one** selector:

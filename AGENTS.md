@@ -332,7 +332,7 @@ vars:
 Responsibilities:
 
 - select interfaces through `networking.interfaces` (an ordered list of `wifi`/`ethernet`, or `[]`)
-  or the existing `networking.mode`; specifying both is invalid
+  or `networking.mode`; specifying both is invalid
 - expose API, OTA, and mDNS defaults only with a network, with individual `enabled` controls
 - own HA time, connectivity status and uptime's clock-dependent form; offline/no-clock uptime is
   elapsed seconds, with no fabricated clock or implicit network prerequisite
@@ -364,7 +364,7 @@ packages:
 
 The two interface selectors use deferred includes. Keep them lazy: preloading all variants would
 resolve Wi-Fi secrets even for Ethernet-only/offline devices. `networking/settings.yaml` is the
-shared normalization used by the assembler, base-board and appliance-owned HA/RTC hooks; do not
+shared normalization used by the assembler and appliance-owned HA/RTC hooks; do not
 duplicate those decisions in wrappers. Forward complete networking objects, retaining fixed
 appliance Ethernet wiring. Clock synchronization and API LED hooks must not recreate disabled
 services. Device-level HA actions and explicit clock references remain consumer prerequisites;
@@ -500,6 +500,33 @@ packages:
 ```
 
 ## Package Design Standards
+
+### ESPHome Version Requirements
+
+`packages/boards/templates/base-board.yaml` is the sole writer of `esphome.min_version`. Each
+device/module/feature contributes its own minimum through the additive global list:
+
+```yaml
+substitutions:
+  esphome_requirements:
+    - source: waveshare_io_ch32v003
+      version: 2026.7.0
+```
+
+Use released `major.minor.patch` strings and a nonempty feature/source label. The base resolver
+validates the entries and compares numeric version triples after package requirements have merged.
+Lists concatenate, including repeated/nested includes; never replace the registry with a scalar
+or a source-keyed mapping. Requirements are global facts, not module vars or defaults. Put an
+optional feature's contribution inside its selected package so disabling it removes the requirement.
+Packages with no additional requirement contribute nothing. Do not enumerate other modules' needs
+or inspect networking in an appliance to calculate its version. The base contributes the library
+floor independently of device-specific requirements.
+
+Dashboard requirements use the same list. A native top-level `esphome.min_version` overrides the
+resolver under ESPHome's merge rules and is outside this contract. CI scans YAML for other writers
+and checks every passing config's resolved minimum against its complete requirement list. Keep the
+resolver inline in the shared base template; no Python component or one-use include is needed.
+See `packages/README.md` for the consumer contract and dashboard example.
 
 ### Defaults, Vars, And Substitutions
 

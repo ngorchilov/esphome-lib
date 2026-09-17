@@ -12,22 +12,34 @@ jobs:
   config:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - esphome: 2026.5.0
+            targets: offline wifi-services-disabled
+          - esphome: 2026.6.0
+            targets: ethernet-legacy-defaults explicit-wifi-no-secrets offline-external-time
+          - esphome: 2026.7.0
+            targets: version-order version-reverse-order version-disabled-future-feature version-lcd-wifi
+          - esphome: 2026.8.2
+            targets: --all
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Install ESPHome
-        run: python -m pip install esphome==2026.8.2
+        run: python -m pip install esphome==${{ matrix.esphome }}
       - name: Test regression runner
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Validate configurations and models
-        run: python tests/validate.py --all
+        run: python tests/validate.py ${{ matrix.targets }}
       - name: Upload validation results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: config-validation
+          name: config-validation-${{ matrix.esphome }}
           path: |
             /tmp/esphome-lib-validation-*/results.json
             /tmp/esphome-lib-validation-*/logs/

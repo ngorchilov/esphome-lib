@@ -6,7 +6,6 @@
   <% set valid = requested in [[], ['wifi'], ['ethernet'], ['ethernet', 'wifi'], ['wifi', 'ethernet']] %>
   <% set interfaces = requested if valid else [] %>
   <% set online = interfaces | length > 0 %>
-  <% set new_interface_options = interfaces | length > 1 or ('ethernet' in interfaces and 'enable_on_boot' in cfg.get('ethernet', {})) %>
   <% set api = cfg.get('api', {}).get('enabled', online) | string | lower == 'true' %>
   <% set ota = cfg.get('ota', {}).get('enabled', online) | string | lower == 'true' %>
   <% set mdns = cfg.get('mdns', {}).get('enabled', online) | string | lower == 'true' %>
@@ -51,6 +50,5 @@
     <% endif %>
   <% endfor %>
   ${ {'interfaces': interfaces, 'online': online, 'multiple': interfaces | length > 1,
-      'requires_2026_8': new_interface_options,
       'api': api, 'ota': ota, 'mdns': mdns, 'time_source': source,
       'clock_id': clock.get('id', 'ha_time'), 'errors': errors} }

@@ -4,6 +4,13 @@ defaults:
   networking_multiple: false
   eth_type: ${ networking_ethernet.get("type", "LAN8720") }
   eth_driver: ${ "spi" if eth_type in ["W5500", "DM9051", "ENC28J60"] else "rmii" }
+  ethernet_boot_package:
+    substitutions:
+      esphome_requirements:
+        - source: ethernet.enable_on_boot
+          version: 2026.8.0
+    ethernet:
+      enable_on_boot: ${ networking_ethernet.get("enable_on_boot", true) }
 
 packages:
   - !include
@@ -11,7 +18,7 @@ packages:
     vars:
       networking: ${networking}
   # Older single-interface configurations must not receive this newer schema key.
-  - '${ {"ethernet": {"enable_on_boot": networking_ethernet["enable_on_boot"]}} if "enable_on_boot" in networking_ethernet else {} }'
+  - ${ ethernet_boot_package if 'enable_on_boot' in networking_ethernet else {} }
 
 text_sensor:
   - platform: ethernet_info

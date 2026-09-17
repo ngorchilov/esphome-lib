@@ -4,10 +4,12 @@ defaults:
   _ble_pulse_name: ${ ble_pulse.get("name", "BLE Command") }
   ble_command_script_id: ${ ble_pulse.get("command_script_id", ble_pulse.get("pulse_script_id", "")) }
 
-esphome:
+substitutions:
   # Requires native bk72xx_ble (added in 2026.8.0), which selects BDK 3.0.78.
   # https://github.com/esphome/esphome/pull/17775
-  min_version: 2026.8.0
+  esphome_requirements:
+    - source: bk72xx_ble
+      version: 2026.8.0
 
 external_components:
   - source: !include ../../component-source.yaml

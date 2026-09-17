@@ -137,9 +137,9 @@ def main():
             output += "\nComponent provenance:\n" + provenance
             if code:
                 status = "FAIL"
-        if status == "PASS" and case.get("contract"):
+        if status == "PASS":
             command = [sys.executable, str(work / "tests/check_contracts.py"), str(path),
-                       case["contract"], json.dumps(case.get("substitutions", {}))]
+                       case.get("contract", "versions"), json.dumps(case.get("substitutions", {}))]
             code, contract = run(command, path.parent, env, args.timeout)
             output += "\nResolved contract:\n" + contract
             if code:
