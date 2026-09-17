@@ -1,6 +1,7 @@
 substitutions:
   name: base-board-libretiny-realtek
   friendly_name: Base Board LibreTiny (Realtek)
+  firmware_platform: rtl87xx
   has_internal_temperature: false
 
 packages:

@@ -1,6 +1,7 @@
 substitutions:
   name: base-board-esphome-esp32
   friendly_name: Base Board ESPHome (ESP32)
+  firmware_platform: esp32
 
 packages:
   - !include base-board-esphome.yaml

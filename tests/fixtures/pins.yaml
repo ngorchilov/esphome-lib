@@ -1,0 +1,81 @@
+substitutions:
+  name: test-pins
+  board_vendor: espressif
+  board: esp32dev
+  output_pin: GPIO4
+  input_pin: GPIO5
+  tx_pin: GPIO12
+  rx_pin: GPIO13
+  pin_schema: gpio
+  drive_strength: 40mA
+  ignore_strapping: false
+
+  number_pin: !include
+    file: ../../packages/modules/pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${tx_pin}
+        # GPIO-only options must not leak into a number-only schema.
+        inverted: true
+        mode:
+          output: true
+        drive_strength: ${drive_strength}
+        ignore_pin_validation_error: true
+        ignore_strapping_warning: ${ignore_strapping}
+
+packages:
+  - !include ../../packages/boards/${board_vendor}/${board}.yaml
+
+output:
+  - platform: gpio
+    id: pin_test_output
+    pin: !include
+      file: ../../packages/modules/pin.yaml
+      vars:
+        pin:
+          schema: ${pin_schema}
+          number: ${output_pin}
+          inverted: true
+          mode:
+            output: true
+            open_drain: true
+          drive_strength: ${drive_strength}
+          ignore_strapping_warning: ${ignore_strapping}
+
+binary_sensor:
+  - platform: gpio
+    id: pin_test_input
+    pin: !include
+      file: ../../packages/modules/pin.yaml
+      vars:
+        pin:
+          number: ${input_pin}
+          allow_other_uses: true
+          mode:
+            input: true
+            pullup: true
+          ignore_strapping_warning: ${ignore_strapping}
+  - platform: gpio
+    id: pin_test_input_copy
+    pin: !include
+      file: ../../packages/modules/pin.yaml
+      vars:
+        pin:
+          number: ${input_pin}
+          allow_other_uses: true
+          mode:
+            input: true
+            pullup: true
+          ignore_strapping_warning: ${ignore_strapping}
+
+uart:
+  id: pin_test_uart
+  tx_pin: ${number_pin}
+  rx_pin: !include
+    file: ../../packages/modules/pin.yaml
+    vars:
+      pin:
+        schema: number
+        number: ${rx_pin}
+  baud_rate: 9600

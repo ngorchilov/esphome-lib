@@ -153,8 +153,46 @@ cases:
   - id: esp8266-pin
     file: tests/fixtures/relay.yaml
     substitutions: {board: esp07}
-    known_failure: '[drive_strength] is an invalid option'
-    reason: Phase 3 - ESP32-only keys in the shared pin wrapper.
+    contract: esp8266-relay-pin
+  - id: esp8266-light
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp07, role: light}
+    contract: esp8266-relay-pin
+  - id: esp8266-valve
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp07, role: valve}
+    contract: esp8266-relay-pin
+  - id: pins-esp32
+    file: tests/fixtures/pins.yaml
+    contract: pins
+  - id: pins-esp32-strapping
+    file: tests/fixtures/pins.yaml
+    substitutions: {output_pin: GPIO0, ignore_strapping: true}
+    contract: pins
+  - id: pins-c3
+    file: tests/fixtures/pins.yaml
+    substitutions: {board: esp32-c3-devkitm-1, tx_pin: GPIO6, rx_pin: GPIO7}
+    contract: pins
+  - id: pins-s3
+    file: tests/fixtures/pins.yaml
+    substitutions: {board: esp32-s3-devkitc-1, tx_pin: GPIO6, rx_pin: GPIO7}
+    contract: pins
+  - id: pins-esp8266
+    file: tests/fixtures/pins.yaml
+    substitutions: {board: esp07, ignore_strapping: true}
+    contract: pins
+  - id: pins-beken
+    file: tests/fixtures/pins.yaml
+    substitutions: {board_vendor: tuya, board: cb3s, output_pin: P6, input_pin: P7, tx_pin: P11, rx_pin: P10}
+    contract: pins
+  - id: pins-realtek
+    file: tests/fixtures/pins.yaml
+    substitutions: {board_vendor: tuya, board: wbr3, output_pin: PA17, input_pin: PA7, tx_pin: PA14, rx_pin: PA13}
+    contract: pins
+  - id: pins-lightning
+    file: tests/fixtures/pins.yaml
+    substitutions: {board_vendor: tuya, board: wl2h, output_pin: PA4, input_pin: PA5, tx_pin: PA2, rx_pin: PA3}
+    contract: pins
   - id: offline
     file: tests/fixtures/offline.yaml
     known_failure: Component api requires component network
@@ -173,3 +211,11 @@ cases:
     file: tests/fixtures/radio.yaml
     substitutions: {profile: unsupported}
     reject: INVALID_RADIO_PROFILE_OR_DRIVER
+  - id: reject-pin-schema
+    file: tests/fixtures/pins.yaml
+    substitutions: {pin_schema: unsupported}
+    reject: INVALID_PIN_SCHEMA
+  - id: reject-esp8266-pullup
+    file: tests/fixtures/pins.yaml
+    substitutions: {board: esp07, input_pin: GPIO16}
+    reject: GPIO Pin 16 does not support pullup pin mode

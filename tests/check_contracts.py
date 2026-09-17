@@ -4,7 +4,8 @@ import json
 from pathlib import Path
 import sys
 
-from esphome.config import read_config
+from esphome import pins
+from esphome.config import path_context, read_config
 from esphome.core import CORE
 
 
@@ -21,7 +22,45 @@ def enabled(value):
 
 
 def check(config, contract, substitutions):
-    if contract == "disabled-basic":
+    if contract == "esp8266-relay-pin":
+        pin = entity(config, "output", "channel1_power_output")["pin"]
+        assert pin["number"] == 4 and pin["mode"]["output"]
+        assert not pin["inverted"] and not pin["allow_other_uses"]
+        assert not {"drive_strength", "ignore_strapping_warning", "ignore_pin_validation_error"} & pin.keys()
+    elif contract == "pins":
+        platform = config["substitutions"]["firmware_platform"]
+        assert platform == CORE.target_platform
+        esp32 = platform == "esp32"
+        output = entity(config, "output", "pin_test_output")["pin"]
+        input_pin = entity(config, "binary_sensor", "pin_test_input")["pin"]
+        input_copy = entity(config, "binary_sensor", "pin_test_input_copy")["pin"]
+        assert output["inverted"] and not output["allow_other_uses"]
+        assert output["mode"]["output"] and output["mode"]["open_drain"]
+        assert not output["mode"]["input"] and not output["mode"]["pullup"]
+        assert input_pin["number"] == input_copy["number"]
+        for pin in (input_pin, input_copy):
+            assert pin["mode"]["input"] and pin["mode"]["pullup"]
+            assert pin["allow_other_uses"] and not pin["inverted"]
+            assert not pin["mode"]["output"] and not pin["mode"]["pulldown"]
+        special = {"drive_strength", "ignore_strapping_warning", "ignore_pin_validation_error"}
+        for pin in (output, input_pin, input_copy):
+            assert (special & pin.keys()) == (special if esp32 else set())
+        if esp32:
+            assert output["drive_strength"] == 40
+            assert input_pin["drive_strength"] == 20
+            assert not output["ignore_pin_validation_error"]
+            assert output["ignore_strapping_warning"] == enabled(substitutions.get("ignore_strapping", False))
+        number = config["substitutions"]["number_pin"]
+        assert set(number) == ({"number", "ignore_strapping_warning"} if esp32 else {"number"})
+        if esp32:
+            assert enabled(number["ignore_strapping_warning"]) == enabled(substitutions.get("ignore_strapping", False))
+        uart = entity(config, "uart", "pin_test_uart")
+        token = path_context.set(["substitutions", "number_pin"])
+        try:
+            assert pins.internal_gpio_output_pin_number(number) == uart["tx_pin"]["number"]
+        finally:
+            path_context.reset(token)
+    elif contract == "disabled-basic":
         assert "sbr4_power_output" in ids(config, "output")
         assert "sbr4_power_state" not in ids(config, "binary_sensor")
         assert "sbr4_primary_toggle" not in ids(config, "script")

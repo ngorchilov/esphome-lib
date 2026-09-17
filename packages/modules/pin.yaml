@@ -1,1 +1,37 @@
-${ ({'number':(pin|default({})).get('number','GPIO0'),'ignore_strapping_warning':(pin|default({})).get('ignore_strapping_warning',false)} if firmware_family == 'esphome' else {'number':(pin|default({})).get('number','GPIO0')}) if (pin|default({})).get('schema','gpio') == 'number' else ({'number':(pin|default({})).get('number','GPIO0'),'inverted':(pin|default({})).get('inverted',false),'allow_other_uses':(pin|default({})).get('allow_other_uses',false),'mode':{'input':(pin|default({})).get('mode',{}).get('input',false),'output':(pin|default({})).get('mode',{}).get('output',false),'pullup':(pin|default({})).get('mode',{}).get('pullup',false),'pulldown':(pin|default({})).get('mode',{}).get('pulldown',false),'open_drain':(pin|default({})).get('mode',{}).get('open_drain',false)},'drive_strength':(pin|default({})).get('drive_strength','20mA'),'ignore_strapping_warning':(pin|default({})).get('ignore_strapping_warning',false),'ignore_pin_validation_error':(pin|default({})).get('ignore_pin_validation_error',false)} if firmware_family == 'esphome' else {'number':(pin|default({})).get('number','GPIO0'),'inverted':(pin|default({})).get('inverted',false),'allow_other_uses':(pin|default({})).get('allow_other_uses',false),'mode':{'input':(pin|default({})).get('mode',{}).get('input',false),'output':(pin|default({})).get('mode',{}).get('output',false),'pullup':(pin|default({})).get('mode',{}).get('pullup',false),'pulldown':(pin|default({})).get('mode',{}).get('pulldown',false),'open_drain':(pin|default({})).get('mode',{}).get('open_drain',false)}}) }
+# Authoritative pin wrapper. Return a mapping directly: package defaults cannot live in a pin schema.
+# firmware_platform is supplied by the board template; firmware_family alone cannot identify ESP32.
+>-
+  ${
+    {'INVALID_PIN_SCHEMA': (pin | default({})).get('schema')}
+    if (pin | default({})).get('schema', 'gpio') not in ['gpio', 'number']
+    else (
+      dict(
+        number=(pin | default({})).get('number', 'GPIO0'),
+        **(
+          {'ignore_strapping_warning': (pin | default({})).get('ignore_strapping_warning', false)}
+          if firmware_platform == 'esp32' else {}
+        )
+      )
+      if (pin | default({})).get('schema', 'gpio') == 'number'
+      else dict(
+        number=(pin | default({})).get('number', 'GPIO0'),
+        inverted=(pin | default({})).get('inverted', false),
+        allow_other_uses=(pin | default({})).get('allow_other_uses', false),
+        mode={
+          'input': (pin | default({})).get('mode', {}).get('input', false),
+          'output': (pin | default({})).get('mode', {}).get('output', false),
+          'pullup': (pin | default({})).get('mode', {}).get('pullup', false),
+          'pulldown': (pin | default({})).get('mode', {}).get('pulldown', false),
+          'open_drain': (pin | default({})).get('mode', {}).get('open_drain', false)
+        },
+        **(
+          {
+            'drive_strength': (pin | default({})).get('drive_strength', '20mA'),
+            'ignore_strapping_warning': (pin | default({})).get('ignore_strapping_warning', false),
+            'ignore_pin_validation_error': (pin | default({})).get('ignore_pin_validation_error', false)
+          }
+          if firmware_platform == 'esp32' else {}
+        )
+      )
+    )
+  }

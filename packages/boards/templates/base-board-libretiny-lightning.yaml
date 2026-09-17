@@ -1,6 +1,7 @@
 substitutions:
   name: base-board-libretiny-lightning
   friendly_name: Base Board LibreTiny (Lightning)
+  firmware_platform: ln882x
 
 packages:
   - !include base-board-libretiny.yaml

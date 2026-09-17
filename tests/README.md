@@ -47,14 +47,20 @@ processes the original remote source first. Third-party component sources are no
 - `XPASS`: a known bug unexpectedly validates; the run fails until its expectation is reviewed.
 - `FAIL`: a new failure, wrong failure reason, rejected-input acceptance or subprocess timeout.
 
-The two remaining `known_failure` entries in `cases.yaml` track ESP8266 pins (phase 3) and
-offline networking (phase 4). Each records a specific expected error, not just a nonzero exit code.
+The remaining `known_failure` entry in `cases.yaml` tracks offline networking (phase 4).
+It records a specific expected error, not just a nonzero exit code.
 Remove its `known_failure` and `reason` when fixing it, keeping the fixture as a passing regression.
 The phase-2 regressions now pass, with resolved-output assertions for optional relay controls,
 EARU sampling/units, packet-radio frequency and Wi-Fi credentials. Partial-secret fixtures supply
 only the missing credential; this prevents an unused fallback secret from masking a regression.
 Configuration validation does not prove actuator behavior or hardware safety. The invalid six-zone
 valve GPIO draft is no longer tracked; its Tuya model remains in the archive.
+
+The pin matrix covers ESP32 (classic, C3 and S3), ESP8266, Beken, Realtek and Lightning. It checks
+the resolved GPIO options, explicit true/false values, shared inputs, open-drain outputs, ESP32
+drive strength and strapping flags, and number-only mappings through ESPHome's pin-number
+validator. Concrete Ethernet devices exercise number-only consumers in the full sweep. Invalid
+schema names and unsupported ESP8266 pullups must fail; ESP8266 relay roles must now pass.
 
 ## C++ And CI
 

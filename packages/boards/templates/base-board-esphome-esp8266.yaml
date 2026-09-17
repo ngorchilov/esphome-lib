@@ -1,6 +1,7 @@
 substitutions:
   name: base-board-esphome-esp8266
   friendly_name: Base Board ESPHome (ESP8266)
+  firmware_platform: esp8266
 
 packages:
   - !include base-board-esphome.yaml

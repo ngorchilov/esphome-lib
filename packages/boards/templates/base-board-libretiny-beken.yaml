@@ -1,6 +1,7 @@
 substitutions:
   name: base-board-libretiny-beken
   friendly_name: Base Board LibreTiny (Beken)
+  firmware_platform: bk72xx
 
 packages:
   - !include base-board-libretiny.yaml
