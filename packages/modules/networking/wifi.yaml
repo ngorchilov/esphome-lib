@@ -1,6 +1,7 @@
 defaults:
   networking: ${ networking | default({}) }
   networking_wifi: ${ networking.get("wifi", {}) }
+  networking_multiple: false
   wifi_reboot_timeout: ${ networking_wifi.get("reboot_timeout", "0s") }
 
 wifi:
@@ -14,6 +15,7 @@ wifi:
     vars:
       credential_value: ${ networking_wifi.get("password", "") }
   reboot_timeout: ${wifi_reboot_timeout}
+  enable_on_boot: ${ networking_wifi.get("enable_on_boot", true) }
 
 sensor:
   - platform: wifi_signal
@@ -31,8 +33,8 @@ sensor:
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: IP
-      id: mcu_ip
+      name: ${ 'WiFi IP Address' if networking_multiple else 'IP' }
+      id: ${ 'mcu_wifi_ip_address' if networking_multiple else 'mcu_ip' }
       entity_category: diagnostic
       icon: mdi:ip-network
     ssid:
@@ -46,7 +48,7 @@ text_sensor:
       entity_category: diagnostic
       disabled_by_default: true
     mac_address:
-      name: MAC Address
-      id: mcu_mac_address
+      name: ${ 'WiFi MAC Address' if networking_multiple else 'MAC Address' }
+      id: ${ 'mcu_wifi_mac_address' if networking_multiple else 'mcu_mac_address' }
       entity_category: diagnostic
       disabled_by_default: true

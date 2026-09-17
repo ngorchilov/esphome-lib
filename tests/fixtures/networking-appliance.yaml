@@ -1,0 +1,21 @@
+substitutions:
+  name: test-network-appliance
+  test_appliance: waveshare-esp32-s3-eth-8di-8ro
+  test_interfaces: [ethernet, wifi]
+  test_api: true
+  test_time_source: homeassistant
+  test_clock_id: ha_time
+  test_networking: >-
+    ${ {'interfaces': test_interfaces, 'api': {'enabled': test_api | string | lower == 'true'},
+        'time': {'source': test_time_source, 'id': test_clock_id},
+        'wifi': {'ssid': 'test-network', 'password': 'test-password'}} }
+packages:
+  - !include
+    file: ../../packages/appliances/${test_appliance}.yaml
+    vars:
+      waveshare_8di8ro:
+        networking: ${test_networking}
+      hri485x:
+        networking: ${test_networking}
+      kincony_kc868_a6:
+        networking: ${test_networking}

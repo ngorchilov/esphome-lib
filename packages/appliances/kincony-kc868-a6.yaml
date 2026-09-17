@@ -4,6 +4,10 @@
 defaults:
   kincony_kc868_a6: ${ kincony_kc868_a6 | default({}) }
   kincony_kc868_a6_networking: ${ kincony_kc868_a6.get("networking", {}) }
+  kincony_kc868_a6_networking_settings: !include
+    file: ../modules/networking/settings.yaml
+    vars:
+      networking: ${kincony_kc868_a6_networking}
   kincony_kc868_a6_rs485: ${ kincony_kc868_a6.get("rs485", {}) }
   kincony_kc868_a6_rs232: ${ kincony_kc868_a6.get("rs232", {}) }
   kincony_kc868_a6_rtc: ${ kincony_kc868_a6.get("rtc", {}) }
@@ -13,9 +17,13 @@ defaults:
   kincony_kc868_a6_analog_outputs: ${ kincony_kc868_a6.get("analog_outputs", {}) }
   esp32_advanced: ${ esp32_advanced | default({}) }
 
-  kincony_kc868_a6_networking_mode: ${ kincony_kc868_a6_networking.get("mode", "wifi") }
-  kincony_kc868_a6_networking_api: ${ kincony_kc868_a6_networking.get("api", {}) }
-  kincony_kc868_a6_networking_wifi: ${ kincony_kc868_a6_networking.get("wifi", {}) }
+  kincony_kc868_a6_ha_clock_sync_package:
+    time:
+      - id: !extend ${kincony_kc868_a6_networking_settings.clock_id}
+        on_time_sync:
+          then:
+            - ds1307.write_time:
+                id: ${ kincony_kc868_a6_rtc.get("id", "rtc_time") }
 
   kincony_kc868_a6_relay1: ${ kincony_kc868_a6_relays.get("relay1", {}) }
   kincony_kc868_a6_relay2: ${ kincony_kc868_a6_relays.get("relay2", {}) }
@@ -200,10 +208,8 @@ packages:
     file: ../boards/espressif/esp32dev.yaml
     vars:
       esp32_advanced: ${esp32_advanced}
-      networking:
-        mode: ${kincony_kc868_a6_networking_mode}
-        api: ${kincony_kc868_a6_networking_api}
-        wifi: ${kincony_kc868_a6_networking_wifi}
+      networking: ${kincony_kc868_a6_networking}
+  - ${ kincony_kc868_a6_ha_clock_sync_package if kincony_kc868_a6_networking_settings.time_source == 'homeassistant' else {} }
   - ${kincony_kc868_a6_relay1_module}
   - ${kincony_kc868_a6_relay2_module}
   - ${kincony_kc868_a6_relay3_module}
@@ -267,11 +273,6 @@ pcf8574:
     address: 0x24
 
 time:
-  - id: !extend ha_time
-    on_time_sync:
-      then:
-        - ds1307.write_time:
-            id: ${ kincony_kc868_a6_rtc.get("id", "rtc_time") }
   - platform: ds1307
     id: ${ kincony_kc868_a6_rtc.get("id", "rtc_time") }
     i2c_id: kincony_kc868_a6_i2c

@@ -4,6 +4,10 @@
 defaults:
   waveshare_lcd7b: ${ waveshare_lcd7b | default({}) }
   waveshare_lcd7b_networking: ${ waveshare_lcd7b.get("networking", {}) }
+  waveshare_lcd7b_networking_settings: !include
+    file: ../modules/networking/settings.yaml
+    vars:
+      networking: ${waveshare_lcd7b_networking}
   waveshare_lcd7b_display: ${ waveshare_lcd7b.get("display", {}) }
   waveshare_lcd7b_touchscreen: ${ waveshare_lcd7b.get("touchscreen", {}) }
   waveshare_lcd7b_backlight: ${ waveshare_lcd7b.get("backlight", {}) }
@@ -15,7 +19,7 @@ packages:
       networking: ${waveshare_lcd7b_networking}
 
 esphome:
-  min_version: 2026.7.0
+  min_version: ${ '2026.8.0' if waveshare_lcd7b_networking_settings.requires_2026_8 else '2026.7.0' }
 
 esp32:
   flash_size: 16MB

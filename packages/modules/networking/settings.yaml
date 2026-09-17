@@ -1,0 +1,56 @@
+# Shared normalization for the network assembler and appliance-owned HA/RTC hooks.
+|-
+  <% set cfg = networking | default({}) %>
+  <% set modes = {'wifi': ['wifi'], 'ethernet': ['ethernet'], 'none': []} %>
+  <% set requested = cfg.get('interfaces', modes.get(cfg.get('mode', 'wifi'), [])) %>
+  <% set valid = requested in [[], ['wifi'], ['ethernet'], ['ethernet', 'wifi'], ['wifi', 'ethernet']] %>
+  <% set interfaces = requested if valid else [] %>
+  <% set online = interfaces | length > 0 %>
+  <% set new_interface_options = interfaces | length > 1 or ('ethernet' in interfaces and 'enable_on_boot' in cfg.get('ethernet', {})) %>
+  <% set api = cfg.get('api', {}).get('enabled', online) | string | lower == 'true' %>
+  <% set ota = cfg.get('ota', {}).get('enabled', online) | string | lower == 'true' %>
+  <% set mdns = cfg.get('mdns', {}).get('enabled', online) | string | lower == 'true' %>
+  <% set clock = cfg.get('time', {}) %>
+  <% set source = clock.get('source', 'homeassistant' if api else 'none') %>
+  <% set errors = [] %>
+  <% for key in cfg %>
+    <% if key not in ['mode', 'interfaces', 'wifi', 'ethernet', 'api', 'ota', 'mdns', 'time'] %>
+      <% do errors.append('Unknown networking option: ' ~ key) %>
+    <% endif %>
+  <% endfor %>
+  <% if 'mode' in cfg and 'interfaces' in cfg %>
+    <% do errors.append('Use networking.mode OR networking.interfaces, not both') %>
+  <% endif %>
+  <% if cfg.get('mode', 'wifi') not in modes %>
+    <% do errors.append('networking.mode must be wifi, ethernet or none') %>
+  <% endif %>
+  <% if not valid %>
+    <% do errors.append('networking.interfaces must be an ordered list of unique wifi/ethernet names, or []') %>
+  <% endif %>
+  <% for service in ['api', 'ota', 'mdns'] %>
+    <% set value = cfg.get(service, {}).get('enabled', online) | string | lower %>
+    <% if value not in ['true', 'false'] %>
+      <% do errors.append('networking.' ~ service ~ '.enabled must be a boolean') %>
+    <% endif %>
+    <% if not online and value == 'true' %>
+      <% do errors.append('networking.' ~ service ~ ' requires a network interface') %>
+    <% endif %>
+  <% endfor %>
+  <% if source not in ['homeassistant', 'external', 'none'] %>
+    <% do errors.append('networking.time.source must be homeassistant, external or none') %>
+  <% endif %>
+  <% if source == 'homeassistant' and not api %>
+    <% do errors.append('Home Assistant time requires networking.api.enabled') %>
+  <% endif %>
+  <% if source == 'external' and not clock.get('id') %>
+    <% do errors.append('External time requires networking.time.id and a consumer-owned time component') %>
+  <% endif %>
+  <% for key in clock %>
+    <% if key not in ['source', 'id'] %>
+      <% do errors.append('Unknown networking.time option: ' ~ key) %>
+    <% endif %>
+  <% endfor %>
+  ${ {'interfaces': interfaces, 'online': online, 'multiple': interfaces | length > 1,
+      'requires_2026_8': new_interface_options,
+      'api': api, 'ota': ota, 'mdns': mdns, 'time_source': source,
+      'clock_id': clock.get('id', 'ha_time'), 'errors': errors} }

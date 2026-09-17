@@ -6,6 +6,11 @@ substitutions:
 packages:
   - !include base-board-esphome.yaml
 
+esphome:
+  # The firmware-slot diagnostic also needs this when OTA/safe_mode is absent.
+  includes:
+    - <esp_ota_ops.h>
+
 esp32:
   framework:
     type: esp-idf

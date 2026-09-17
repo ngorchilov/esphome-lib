@@ -119,7 +119,85 @@ def check_fan433(config, substitutions):
 
 
 def check(config, contract, substitutions):
-    if contract == "fan433":
+    if "esp32" in config:
+        assert "<esp_ota_ops.h>" in config["esphome"]["includes"]
+    if contract in ("offline", "offline-clock"):
+        assert not {"wifi", "ethernet", "network", "api", "ota", "mdns"} & config.keys()
+        assert "mcu_status" not in ids(config, "binary_sensor")
+        assert not any(clock["platform"] == "homeassistant" for clock in config.get("time", []))
+        assert not any("on_time_sync" in clock for clock in config.get("time", []))
+        uptime = entity(config, "sensor", "mcu_uptime")
+        if contract == "offline-clock":
+            assert uptime["type"] == "timestamp"
+            assert str(uptime["time_id"]) in ids(config, "time")
+        else:
+            assert uptime["type"] == "seconds" and "time_id" not in uptime
+            assert uptime["device_class"] == "duration" and uptime["unit_of_measurement"] == "s"
+        if "tuya" in config:
+            assert str(config["tuya"]["time_id"]) == "ha_time"
+            assert "ha_time" in ids(config, "time")
+        if "channel1_power_output" in ids(config, "output"):
+            assert "channel1_control_on" in ids(config, "script")
+    elif contract == "networking-single":
+        assert ("wifi" in config) != ("ethernet" in config)
+        ethernet = "ethernet" in config
+        minimum = "2026.8.0" if ethernet and "test_ethernet_on_boot" in substitutions else "2026.5.0"
+        assert config["esphome"]["min_version"] == minimum
+        info = next(sensor for sensor in config["text_sensor"] if sensor["platform"] == ("ethernet_info" if ethernet else "wifi_info"))
+        assert str(info["mac_address"]["id"]) == "mcu_mac_address"
+        ip_id = "mcu_ip_address" if ethernet else "mcu_ip"
+        assert str(info["ip_address"]["id"]) == ip_id
+        api_enabled = enabled(substitutions.get("test_api", True))
+        assert ("api" in config) == api_enabled
+        assert ("ha_time" in ids(config, "time")) == api_enabled
+        assert entity(config, "sensor", "mcu_uptime")["type"] == ("timestamp" if api_enabled else "seconds")
+        assert ("ota" in config) == enabled(substitutions.get("test_ota", True))
+        assert config["mdns"]["disabled"] != enabled(substitutions.get("test_mdns", True))
+        if ethernet and "test_ethernet_on_boot" in substitutions:
+            assert config["ethernet"]["enable_on_boot"] == enabled(substitutions["test_ethernet_on_boot"])
+    elif contract in ("networking", "networking-appliance"):
+        interfaces = config["substitutions"]["test_interfaces"]
+        assert [item["interface"] for item in config["network"]["priority"]] == interfaces
+        assert {"wifi", "ethernet"} <= config.keys()
+        assert config["esphome"]["min_version"] == "2026.8.0"
+        api_enabled = enabled(substitutions.get("test_api", True))
+        assert ("api" in config) == api_enabled
+        if api_enabled:
+            assert str(config["api"]["id"]) == "hapi"
+            assert config["api"]["reboot_timeout"].total_milliseconds == 0
+            assert substitutions.get("test_clock_id", "ha_time") in ids(config, "time")
+        else:
+            assert not any(clock["platform"] == "homeassistant" for clock in config.get("time", []))
+        assert ("ota" in config) == enabled(substitutions.get("test_ota", True))
+        assert config["mdns"]["disabled"] != enabled(substitutions.get("test_mdns", True))
+        assert config["wifi"]["enable_on_boot"] == enabled(substitutions.get("test_wifi_on_boot", True))
+        assert config["ethernet"]["enable_on_boot"] == enabled(substitutions.get("test_ethernet_on_boot", True))
+        assert config["wifi"]["reboot_timeout"].total_milliseconds == 0
+        assert "mcu_status" in ids(config, "binary_sensor")
+        uptime = entity(config, "sensor", "mcu_uptime")
+        assert uptime["type"] == ("timestamp" if api_enabled else "seconds")
+        diagnostic_ids = set()
+        for sensor in config["text_sensor"]:
+            if sensor["platform"] in ("wifi_info", "ethernet_info"):
+                prefix = "wifi" if sensor["platform"] == "wifi_info" else "ethernet"
+                for key in ("ip_address", "mac_address"):
+                    name = str(sensor[key]["id"])
+                    assert name == f"mcu_{prefix}_{key}" and name not in diagnostic_ids
+                    diagnostic_ids.add(name)
+        assert len(diagnostic_ids) == 4
+        if contract == "networking-appliance":
+            if substitutions.get("test_appliance") == "heltec-hri-485x":
+                assert config["ethernet"]["type"] == "RTL8201"
+                assert config["ethernet"]["clk"]["pin"] == 17
+                if api_enabled:
+                    assert "on_client_connected" in config["api"]
+            else:
+                assert config["ethernet"]["type"] == "W5500"
+                assert config["ethernet"]["clk_pin"] == 15
+                clock = entity(config, "time", substitutions.get("test_clock_id", "ha_time"))
+                action = clock["on_time_sync"][0]["then"][0]["pcf85063.write_time"]
+                assert str(action["id"]) == "waveshare_8di8ro_rtc"
+    elif contract == "fan433":
         check_fan433(config, substitutions)
     elif contract == "esp8266-relay-pin":
         pin = entity(config, "output", "channel1_power_output")["pin"]

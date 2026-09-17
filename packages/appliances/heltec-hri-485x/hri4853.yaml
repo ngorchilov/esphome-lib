@@ -3,11 +3,34 @@
 defaults:
   hri485x: ${ hri485x | default({}) }
   hri485x_networking: ${ hri485x.get("networking", {}) }
+  hri485x_networking_settings: !include
+    file: ../../modules/networking/settings.yaml
+    vars:
+      networking: ${hri485x_networking}
   hri485x_rs485: ${ hri485x.get("rs485", {}) }
 
-  hri485x_networking_mode: ${ hri485x_networking.get("mode", "wifi") }
-  hri485x_networking_api: ${ hri485x_networking.get("api", {}) }
-  hri485x_networking_wifi: ${ hri485x_networking.get("wifi", {}) }
+  hri485x_ethernet:
+    type: RTL8201
+    mdc_pin: GPIO23
+    mdc_strapping: false
+    mdio_pin: GPIO18
+    mdio_strapping: false
+    clk_pin: GPIO17
+    clk_strapping: false
+    clk_mode: CLK_OUT
+    phy_addr: 0
+  hri485x_api_led_package:
+    api:
+      on_client_connected:
+        - switch.turn_on: hri485x_network_led
+      on_client_disconnected:
+        - delay: 1s
+        - if:
+            condition:
+              not:
+                api.connected:
+            then:
+              - switch.turn_off: hri485x_network_led
 
 packages:
   - !include
@@ -15,20 +38,8 @@ packages:
     vars:
       esp32_advanced:
         sram1_as_iram: true
-      networking:
-        mode: ${hri485x_networking_mode}
-        api: ${hri485x_networking_api}
-        wifi: ${hri485x_networking_wifi}
-        ethernet:
-          type: RTL8201
-          mdc_pin: GPIO23
-          mdc_strapping: false
-          mdio_pin: GPIO18
-          mdio_strapping: false
-          clk_pin: GPIO17
-          clk_strapping: false
-          clk_mode: CLK_OUT
-          phy_addr: 0
+      networking: ${ dict(hri485x_networking, ethernet=dict(hri485x_networking.get('ethernet', {}), **hri485x_ethernet)) }
+  - ${ hri485x_api_led_package if hri485x_networking_settings.api else {} }
   - !include
     file: rs485.yaml
     vars:
@@ -57,18 +68,6 @@ status_led:
     number: GPIO2
     inverted: true
     ignore_strapping_warning: true
-
-api:
-  on_client_connected:
-    - switch.turn_on: hri485x_network_led
-  on_client_disconnected:
-    - delay: 1s
-    - if:
-        condition:
-          not:
-            api.connected:
-        then:
-          - switch.turn_off: hri485x_network_led
 
 switch:
   - platform: gpio

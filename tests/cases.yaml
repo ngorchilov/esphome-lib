@@ -243,8 +243,128 @@ cases:
     contract: pins
   - id: offline
     file: tests/fixtures/offline.yaml
-    known_failure: Component api requires component network
-    reason: Phase 4 - base services require a network even in offline mode.
+    secrets: false
+    contract: offline
+  - id: offline-esp8266
+    file: tests/fixtures/offline.yaml
+    substitutions: {board: esp07}
+    secrets: false
+    contract: offline
+  - id: offline-beken
+    file: tests/fixtures/offline.yaml
+    substitutions: {board_vendor: tuya, board: cb3s}
+    secrets: false
+    contract: offline
+  - id: offline-realtek
+    file: tests/fixtures/offline.yaml
+    substitutions: {board_vendor: tuya, board: wbr3}
+    secrets: false
+    contract: offline
+  - id: offline-interfaces
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'interfaces': []} }"}
+    secrets: false
+    contract: offline
+  - id: offline-local-relay
+    file: tests/fixtures/offline-relay.yaml
+    secrets: false
+    contract: offline
+  - id: offline-tuya-clock
+    file: tests/fixtures/offline-tuya.yaml
+    substitutions: {test_has_clock: true}
+    secrets: false
+    contract: offline
+  - id: offline-external-time
+    file: tests/fixtures/offline-tuya.yaml
+    substitutions:
+      test_has_clock: true
+      test_networking: "${ {'interfaces': [], 'time': {'source': 'external', 'id': 'ha_time'}} }"
+    secrets: false
+    contract: offline-clock
+  - id: dual-ethernet-first
+    file: tests/fixtures/networking.yaml
+    secrets: false
+    contract: networking
+  - id: dual-literal
+    file: tests/fixtures/networking-literal.yaml
+    secrets: false
+  - id: dual-wifi-first
+    file: tests/fixtures/networking.yaml
+    substitutions: {test_interfaces: "${ ['wifi', 'ethernet'] }"}
+    secrets: false
+    contract: networking
+  - id: dual-wifi-on-demand
+    file: tests/fixtures/networking.yaml
+    substitutions: {test_wifi_on_boot: false}
+    secrets: false
+    contract: networking
+  - id: dual-ethernet-on-demand
+    file: tests/fixtures/networking.yaml
+    substitutions: {test_ethernet_on_boot: false}
+    secrets: false
+    contract: networking
+  - id: ethernet-legacy-defaults
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'ethernet'} }"}
+    secrets: false
+    contract: networking-single
+  - id: ethernet-on-demand
+    file: tests/fixtures/networking.yaml
+    substitutions: {test_interfaces: "${ ['ethernet'] }", test_ethernet_on_boot: false}
+    secrets: false
+    contract: networking-single
+  - id: network-services-disabled
+    file: tests/fixtures/networking.yaml
+    substitutions: {test_api: false, test_ota: false, test_mdns: false, test_time: "${ {'source': 'none'} }"}
+    secrets: false
+    contract: networking
+  - id: wifi-services-disabled
+    file: tests/fixtures/networking.yaml
+    substitutions:
+      test_interfaces: "${ ['wifi'] }"
+      test_api: false
+      test_ota: false
+      test_mdns: false
+      test_time: "${ {} }"
+    secrets: false
+    contract: networking-single
+  - id: waveshare-dual
+    file: tests/fixtures/networking-appliance.yaml
+    secrets: false
+    contract: networking-appliance
+  - id: hri-dual
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions: {test_appliance: heltec-hri-485x}
+    secrets: false
+    contract: networking-appliance
+  - id: waveshare-offline-rtc
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions:
+      test_networking: "${ {'interfaces': [], 'time': {'source': 'external', 'id': 'waveshare_8di8ro_rtc'}} }"
+    secrets: false
+    contract: offline-clock
+  - id: kincony-offline-rtc
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions:
+      test_appliance: kincony-kc868-a6
+      test_networking: "${ {'interfaces': [], 'time': {'source': 'external', 'id': 'rtc_time'}} }"
+    secrets: false
+    contract: offline-clock
+  - id: hri-offline
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions: {test_appliance: heltec-hri-485x, test_networking: "${ {'interfaces': []} }"}
+    secrets: false
+    contract: offline
+  - id: hri-api-disabled
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions: {test_appliance: heltec-hri-485x, test_api: false, test_time_source: none}
+    secrets: false
+    contract: networking-appliance
+  - id: waveshare-custom-ha-clock
+    file: tests/fixtures/networking-appliance.yaml
+    substitutions: {test_clock_id: panel_clock}
+    secrets: false
+    contract: networking-appliance
 
   # Deliberately invalid public API values must be rejected, not silently defaulted.
   - id: reject-entity-type
@@ -267,3 +387,62 @@ cases:
     file: tests/fixtures/pins.yaml
     substitutions: {board: esp07, input_pin: GPIO16}
     reject: GPIO Pin 16 does not support pullup pin mode
+  - id: reject-network-mode
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'wfi'} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-network-selector-conflict
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'interfaces': []} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-network-duplicates
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'interfaces': ['wifi', 'wifi']} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-network-string
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'interfaces': 'wifi'} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-network-key
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'timee': {}} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-dual-esp8266
+    file: tests/fixtures/networking.yaml
+    substitutions: {board: esp07}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-offline-api
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'api': {'enabled': true}} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-api-boolean
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'api': {'enabled': 'typo'}} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-offline-ha-time
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'time': {'source': 'homeassistant'}} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-external-time-missing-id
+    file: tests/fixtures/offline.yaml
+    substitutions: {test_networking: "${ {'mode': 'none', 'time': {'source': 'external'}} }"}
+    secrets: false
+    reject: INVALID_NETWORKING_CONFIGURATION
+  - id: reject-offline-tuya-missing-clock
+    file: tests/fixtures/offline-tuya.yaml
+    secrets: false
+    reject: Couldn't find ID 'ha_time'
+  - id: reject-offline-detached-relay
+    file: tests/fixtures/offline-relay.yaml
+    substitutions: {test_control_mode: detached}
+    secrets: false
+    reject: homeassistant.service

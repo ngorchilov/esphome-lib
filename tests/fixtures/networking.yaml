@@ -1,0 +1,38 @@
+substitutions:
+  name: test-networking
+  board_vendor: espressif
+  board: esp32dev
+  test_interfaces: [ethernet, wifi]
+  test_api: true
+  test_ota: true
+  test_mdns: true
+  test_time: {source: homeassistant}
+  test_wifi_on_boot: true
+  test_ethernet_on_boot: true
+packages:
+  - !include
+    file: ../../packages/boards/${board_vendor}/${board}.yaml
+    vars:
+      networking:
+        interfaces: ${test_interfaces}
+        api:
+          enabled: ${test_api}
+        ota:
+          enabled: ${test_ota}
+        mdns:
+          enabled: ${test_mdns}
+        time: ${test_time}
+        wifi:
+          ssid: test-network
+          password: test-password
+          enable_on_boot: ${test_wifi_on_boot}
+        ethernet:
+          type: W5500
+          clk_pin: GPIO18
+          mosi_pin: GPIO23
+          miso_pin: GPIO19
+          cs_pin: GPIO5
+          cs_strapping: true
+          interrupt_pin: GPIO35
+          reset_pin: GPIO33
+          enable_on_boot: ${test_ethernet_on_boot}

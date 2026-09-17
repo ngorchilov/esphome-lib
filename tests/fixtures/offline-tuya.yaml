@@ -1,0 +1,18 @@
+substitutions:
+  test_has_clock: false
+  test_clock:
+    i2c:
+      sda: GPIO21
+      scl: GPIO22
+    time:
+      - platform: ds1307
+        id: ha_time
+packages:
+  - !include offline.yaml
+  - ${ test_clock if test_has_clock | string | lower == 'true' else {} }
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+tuya:
+  time_id: ha_time

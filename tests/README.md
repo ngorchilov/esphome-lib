@@ -47,9 +47,8 @@ processes the original remote source first. Third-party component sources are no
 - `XPASS`: a known bug unexpectedly validates; the run fails until its expectation is reviewed.
 - `FAIL`: a new failure, wrong failure reason, rejected-input acceptance or subprocess timeout.
 
-The remaining `known_failure` entry in `cases.yaml` tracks offline networking (phase 4).
-It records a specific expected error, not just a nonzero exit code.
-Remove its `known_failure` and `reason` when fixing it, keeping the fixture as a passing regression.
+There are currently no `known_failure` cases. Offline networking now passes; devices that explicitly
+need an absent clock or HA actions are covered by rejected-input tests rather than known failures.
 The phase-2 regressions now pass, with resolved-output assertions for optional relay controls,
 EARU sampling/units, packet-radio frequency and Wi-Fi credentials. Partial-secret fixtures supply
 only the missing credential; this prevents an unused fallback secret from masking a regression.
@@ -69,6 +68,12 @@ address/ID/direction, startup and queue guards, synchronization commands, and tr
 These are configuration contracts, not proof of RF reception or physical fan state. When rewriting
 the templates, compare the resolved configurations (including lambda text) before and after; an
 unchanged emitted C++ program does not need a firmware build.
+
+Networking checks cover offline ESP32/ESP8266/Beken/Realtek, local relay control, explicit RTC time
+for Tuya and integrated RTC appliances, both dual-interface priorities, disabled services, interface
+startup policy, distinct IP/MAC diagnostics, and appliance forwarding. Invalid selectors, service
+dependencies, boolean options and missing clocks are rejected. Config validation does not test
+physical cable failover, radio association or HA reconnection; those need hardware verification.
 
 ## C++ And CI
 

@@ -1,6 +1,7 @@
 defaults:
   networking: ${ networking | default({}) }
   networking_ethernet: ${ networking.get("ethernet", {}) }
+  networking_multiple: false
   eth_type: ${ networking_ethernet.get("type", "LAN8720") }
   eth_driver: ${ "spi" if eth_type in ["W5500", "DM9051", "ENC28J60"] else "rmii" }
 
@@ -9,17 +10,19 @@ packages:
     file: ethernet/${eth_driver}.yaml
     vars:
       networking: ${networking}
+  # Older single-interface configurations must not receive this newer schema key.
+  - '${ {"ethernet": {"enable_on_boot": networking_ethernet["enable_on_boot"]}} if "enable_on_boot" in networking_ethernet else {} }'
 
 text_sensor:
   - platform: ethernet_info
     ip_address:
-      name: IP Address
-      id: mcu_ip_address
+      name: ${ 'Ethernet IP Address' if networking_multiple else 'IP Address' }
+      id: ${ 'mcu_ethernet_ip_address' if networking_multiple else 'mcu_ip_address' }
       entity_category: diagnostic
       icon: mdi:ip-network
     mac_address:
-      name: MAC Address
-      id: mcu_mac_address
+      name: ${ 'Ethernet MAC Address' if networking_multiple else 'MAC Address' }
+      id: ${ 'mcu_ethernet_mac_address' if networking_multiple else 'mcu_mac_address' }
       entity_category: diagnostic
       disabled_by_default: true
       icon: mdi:lan

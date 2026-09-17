@@ -320,7 +320,8 @@ component remains responsible for validating the pin's supported modes and physi
 
 ## Networking Framework
 
-`packages/modules/networking.yaml` is included by `base-board.yaml` and chooses the network stack via:
+`packages/modules/networking.yaml` is included by `base-board.yaml`. Select one interface (or no
+network) with `networking.mode`:
 
 ```yaml
 vars:
@@ -330,9 +331,11 @@ vars:
 
 Responsibilities:
 
-- include Wi-Fi support when `networking.mode: wifi`
-- include Ethernet support when `networking.mode: ethernet`
-- expose API, OTA, and mDNS defaults
+- select interfaces through `networking.interfaces` (an ordered list of `wifi`/`ethernet`, or `[]`)
+  or the existing `networking.mode`; specifying both is invalid
+- expose API, OTA, and mDNS defaults only with a network, with individual `enabled` controls
+- own HA time, connectivity status and uptime's clock-dependent form; offline/no-clock uptime is
+  elapsed seconds, with no fabricated clock or implicit network prerequisite
 - use `pin.yaml` for Ethernet pin-number fields
 - disable API and Wi-Fi connection-loss reboots by default with `reboot_timeout: 0s`
 
@@ -359,9 +362,21 @@ packages:
           power_pin: GPIO5
 ```
 
-The networking module selects `networking/${networking_mode}.yaml` through one deferred include.
-Keep that include lazy: preloading all network variants would resolve Wi-Fi secrets even for
-Ethernet-only devices. Validate changes with concrete Wi-Fi and Ethernet configurations.
+The two interface selectors use deferred includes. Keep them lazy: preloading all variants would
+resolve Wi-Fi secrets even for Ethernet-only/offline devices. `networking/settings.yaml` is the
+shared normalization used by the assembler, base-board and appliance-owned HA/RTC hooks; do not
+duplicate those decisions in wrappers. Forward complete networking objects, retaining fixed
+appliance Ethernet wiring. Clock synchronization and API LED hooks must not recreate disabled
+services. Device-level HA actions and explicit clock references remain consumer prerequisites;
+unsupported offline combinations must fail, not silently become no-ops.
+
+Dual-interface mode uses ESPHome's native `network.priority`, requires ESP32/2026.8.0, and keeps
+per-interface IP/MAC diagnostics distinct. Single-interface IDs, names and defaults are preserved.
+Explicit Ethernet `enable_on_boot` also requires 2026.8.0; leave that schema key absent by default
+so existing single-interface packages retain their minimum version.
+Do not implement a custom failover loop. Test both priority orders, offline platforms, disabled
+services, explicit RTC clocks and rejected dependencies. Consumer configuration and accepted
+fields are documented in `packages/modules/networking/README.md`.
 
 ## Relay-Control Framework
 

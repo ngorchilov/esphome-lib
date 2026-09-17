@@ -1,0 +1,15 @@
+substitutions:
+  test_control_mode: local
+packages:
+  - !include offline.yaml
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: channel1
+        power:
+          pin: GPIO4
+        entity:
+          control:
+            mode: ${test_control_mode}
+            entity_id: light.test

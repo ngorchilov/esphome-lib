@@ -1,3 +1,6 @@
+defaults:
+  base_networking_settings: !include ../../modules/networking/settings.yaml
+
 substitutions:
   name: base-board
   friendly_name: Base Board
@@ -15,7 +18,7 @@ esphome:
   friendly_name: ${friendly_name}
 
   # Requires conditional packages and reliable !include vars substitution in lambdas.
-  min_version: 2026.5.0
+  min_version: ${ '2026.8.0' if base_networking_settings.requires_2026_8 else '2026.5.0' }
 
   on_boot:
     - priority: 500
@@ -29,23 +32,6 @@ button:
   - platform: restart
     name: MCU Restart
     id: mcu_restart
-
-sensor:
-  - platform: uptime
-    type: timestamp
-    name: Uptime
-    id: mcu_uptime
-    time_id: ha_time
-    device_class: uptime
-    entity_category: diagnostic
-
-binary_sensor:
-  - platform: status
-    name: Status
-    id: mcu_status
-    device_class: connectivity
-    entity_category: diagnostic
-    disabled_by_default: true
 
 text_sensor:
   - platform: template
@@ -62,7 +48,3 @@ text_sensor:
     entity_category: diagnostic
     hide_timestamp: true
     disabled_by_default: true
-
-time:
-  - platform: homeassistant
-    id: ha_time
