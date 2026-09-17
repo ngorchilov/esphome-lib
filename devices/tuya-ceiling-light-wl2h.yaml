@@ -6,7 +6,7 @@ packages:
   - !include ../packages/boards/tuya/wl2h.yaml
 
 external_components:
-  - source: github://ngorchilov/esphome-lib
+  - source: !include ../packages/component-source.yaml
     components: [ln882h_pwm]
     refresh: 0s
 

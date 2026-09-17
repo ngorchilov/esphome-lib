@@ -1,0 +1,94 @@
+# A known_failure must fail for its documented reason; unexpected success fails CI too.
+cases:
+  - id: esp32-switch
+    file: tests/fixtures/relay.yaml
+  - id: esp32-light
+    file: tests/fixtures/relay.yaml
+    substitutions: {role: light}
+  - id: esp32-valve
+    file: tests/fixtures/relay.yaml
+    substitutions: {role: valve}
+  - id: c3-switch
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp32-c3-devkitm-1}
+  - id: c3-light
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp32-c3-devkitm-1, role: light}
+  - id: c3-valve
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp32-c3-devkitm-1, role: valve}
+  - id: detached-light
+    file: tests/fixtures/relay.yaml
+    substitutions: {role: light, control_mode: detached}
+  - id: no-control-light
+    file: tests/fixtures/relay.yaml
+    substitutions: {role: light, control_mode: none}
+  - id: libretiny-multi
+    file: tests/fixtures/relay-multi.yaml
+  - id: kincony-roles
+    file: tests/fixtures/kincony-roles.yaml
+  - id: waveshare-roles
+    file: tests/fixtures/waveshare-roles.yaml
+  - id: fan-instances
+    file: tests/fixtures/fan-instances.yaml
+
+  # Exercise every own-repository external component without a second source override.
+  - id: source-tuya-product
+    file: devices/jummico-dehumidifier.yaml
+    local_components: [tuya_product]
+  - id: source-magic-switch
+    file: devices/sonoff-basic-r4.yaml
+    local_components: [magic_switch]
+  - id: source-ln882h-pwm
+    file: devices/tuya-ceiling-light-wl2h.yaml
+    local_components: [ln882h_pwm]
+  - id: source-rtl8720c-evse
+    file: devices/evse-feyree-three-phase.yaml
+    local_components: [rtl8720c_uart]
+  - id: source-rtl8720c-fan
+    file: devices/fan-scheeair-nova-100.yaml
+    local_components: [rtl8720c_uart]
+  - id: source-ble
+    file: tests/fixtures/garage-ble.yaml
+    local_components: [bk72xx_ble_server]
+
+  - id: disabled-basic
+    file: tests/fixtures/disabled-basic.yaml
+    known_failure: "Source for extension of ID 'sbr4_after_power_change' was not found"
+    reason: Phase 2 - BASIC R4 hooks reference a disabled relay facade.
+  - id: disabled-2relay
+    file: tests/fixtures/disabled-2relay.yaml
+    known_failure: "Couldn't find ID 'relay_1_power_state'"
+    reason: Phase 2 - the master button references a disabled channel.
+  - id: radio-frequency
+    file: tests/fixtures/radio.yaml
+    known_failure: "'frequency' is a required option"
+    reason: Phase 2 - packet driver drops the appliance frequency.
+  - id: explicit-wifi-no-secrets
+    file: tests/fixtures/explicit-wifi.yaml
+    secrets: false
+    known_failure: Error reading file secrets.yaml
+    reason: Phase 2 - explicit credentials still eagerly load fallback secrets.
+  - id: esp8266-pin
+    file: tests/fixtures/relay.yaml
+    substitutions: {board: esp07}
+    known_failure: '[drive_strength] is an invalid option'
+    reason: Phase 3 - ESP32-only keys in the shared pin wrapper.
+  - id: offline
+    file: tests/fixtures/offline.yaml
+    known_failure: Component api requires component network
+    reason: Phase 4 - base services require a network even in offline mode.
+
+  # Deliberately invalid public API values must be rejected, not silently defaulted.
+  - id: reject-entity-type
+    file: tests/fixtures/relay.yaml
+    substitutions: {role: unsupported}
+    reject: invalid-unsupported.yaml
+  - id: reject-control-mode
+    file: tests/fixtures/relay.yaml
+    substitutions: {control_mode: unsupported}
+    reject: invalid-unsupported.yaml
+  - id: reject-radio-profile
+    file: tests/fixtures/radio.yaml
+    substitutions: {profile: unsupported}
+    reject: INVALID_RADIO_PROFILE_OR_DRIVER

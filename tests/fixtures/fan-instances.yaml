@@ -1,0 +1,20 @@
+substitutions:
+  name: test-rf-fans
+packages:
+  - !include
+    file: ../../devices/fan-control-433.yaml
+    vars:
+      fan433:
+        fans:
+          - address: 0x1234
+            id: supply_fan
+            name: Supply Fan
+          - address: 0x2345
+            id: extract_fan
+            name: Extract Fan
+        combined:
+          members:
+            - address: 0x1234
+              direction: in
+            - address: 0x2345
+              direction: out

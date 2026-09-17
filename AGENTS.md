@@ -576,23 +576,34 @@ after an official fix becomes available.
 
 ## Validation Standards
 
-Run validation from:
+- YAML configuration-only changes: run `esphome config` only. Do not compile firmware for
+  substitutions, metadata, package selection, or other configuration-only changes.
+- C++ changes, including lambda bodies embedded in YAML: run config first, then compile only
+  affected targets. Use focused host tests for behavioral logic. Do not compile the whole fleet.
+- Devices must inherit logger thresholds from the base template. Keep hardware requirements such
+  as `baud_rate: 0`; leave global/per-tag verbosity to the consuming ESPHome dashboard.
+- Do not increment project versions for unpublished edits.
+
+For local development, select checked-out components before ESPHome processes external sources:
 
 ```bash
 cd devices
+ESPHOME_LIB_SOURCE="$(pwd)/../components" esphome config sonoff-basic-r4.yaml
 ```
 
-Run `esphome config` before compile:
+All declarations for this repository's components must include `packages/component-source.yaml`.
+Without the environment variable, it selects the unpinned GitHub repository. Do not add self-repo
+version pins or append a local source after a remote source (that still fetches the remote first).
+
+The isolated regression suite uses dummy secrets and local components; run it with a Python
+interpreter that has ESPHome installed. It performs no firmware compilation:
 
 ```bash
-esphome config sonoff-basic-r4.yaml
+python tests/validate.py
+python tests/validate.py --all
 ```
 
-Compile only after config succeeds:
-
-```bash
-esphome compile sonoff-basic-r4.yaml
-```
+See `tests/README.md` for focused targets, host tests, known failures and CI behavior.
 
 Choose validation targets by impact:
 

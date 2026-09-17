@@ -10,7 +10,7 @@ esphome:
   min_version: 2026.8.0
 
 external_components:
-  - source: github://ngorchilov/esphome-lib@main
+  - source: !include ../../component-source.yaml
     components: [bk72xx_ble_server]
     refresh: 0s
 

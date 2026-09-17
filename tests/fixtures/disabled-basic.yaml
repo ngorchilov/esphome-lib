@@ -1,0 +1,8 @@
+substitutions:
+  name: test-disabled-basic
+packages:
+  - !include
+    file: ../../devices/sonoff-basic-r4.yaml
+    vars:
+      entity:
+        enabled: false

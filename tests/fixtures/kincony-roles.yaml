@@ -1,0 +1,18 @@
+substitutions:
+  name: test-kincony-roles
+packages:
+  - !include
+    file: ../../packages/appliances/kincony-kc868-a6.yaml
+    vars:
+      kincony_kc868_a6:
+        relays:
+          relay1:
+            entity:
+              enabled: false
+          relay2:
+            entity:
+              type: light
+          relay3:
+            entity:
+              type: valve
+              device_class: water

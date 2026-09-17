@@ -1,0 +1,34 @@
+name: Configuration validation
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install ESPHome
+        run: python -m pip install esphome==2026.8.2
+      - name: Test regression runner
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Validate configurations and models
+        run: python tests/validate.py --all
+      - name: Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-validation
+          path: |
+            /tmp/esphome-lib-validation-*/results.json
+            /tmp/esphome-lib-validation-*/logs/
+          if-no-files-found: ignore

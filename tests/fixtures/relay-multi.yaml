@@ -1,0 +1,24 @@
+substitutions:
+  name: test-relay-multi
+packages:
+  - !include ../../packages/boards/tuya/cb2s.yaml
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: channel1
+        entity:
+          type: light
+          name: Channel 1
+        power:
+          pin: GPIO6
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: channel2
+        entity:
+          type: valve
+          name: Channel 2
+        power:
+          pin: GPIO7

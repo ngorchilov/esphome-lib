@@ -3,6 +3,9 @@
 # You can modify this file to suit your needs.
 .*
 !/.gitignore
+!/.github/
+!/.github/workflows/
+!/.github/workflows/*.yaml
 secrets.yaml
 
 # Python bytecode and caches

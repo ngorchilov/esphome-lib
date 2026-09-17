@@ -7,7 +7,7 @@ packages:
   - !include ../packages/modules/tuya-product.yaml
 
 external_components:
-  - source: github://ngorchilov/esphome-lib
+  - source: !include ../packages/component-source.yaml
     components: [rtl8720c_uart]
     refresh: 1d
 

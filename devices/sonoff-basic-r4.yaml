@@ -28,7 +28,7 @@ packages:
           strapping: true
 
 external_components:
-  - source: github://ngorchilov/esphome-lib
+  - source: !include ../packages/component-source.yaml
     components: [magic_switch]
     refresh: 0s
 

@@ -8,7 +8,7 @@ defaults:
   tuya_product_version_name: ${ tuya_product.get("version_name", "Tuya MCU Version") }
 
 external_components:
-  - source: github://ngorchilov/esphome-lib
+  - source: !include ../component-source.yaml
     components: [tuya_product]
     refresh: 0s
 

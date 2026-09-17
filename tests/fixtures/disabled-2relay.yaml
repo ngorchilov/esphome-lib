@@ -1,0 +1,8 @@
+substitutions:
+  name: test-disabled-2relay
+packages:
+  - !include
+    file: ../../devices/tuya-dry-relay-2dc-10a.yaml
+    vars:
+      relay_1_entity:
+        enabled: false

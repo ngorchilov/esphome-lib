@@ -1,0 +1,23 @@
+substitutions:
+  name: test-relay
+  board_vendor: espressif
+  board: esp32dev
+  role: switch
+  control_mode: local
+packages:
+  - !include ../../packages/boards/${board_vendor}/${board}.yaml
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: channel1
+        entity:
+          type: ${role}
+          control:
+            mode: ${control_mode}
+            entity_id: light.test
+        power:
+          pin: GPIO4
+        indicator_led:
+          enabled: true
+          pin: GPIO5

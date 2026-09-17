@@ -1,0 +1,8 @@
+substitutions:
+  name: test-garage-ble
+packages:
+  - !include
+    file: ../../devices/tuya-garage-opener.yaml
+    vars:
+      ble:
+        enabled: true

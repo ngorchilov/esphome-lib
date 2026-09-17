@@ -1,0 +1,17 @@
+substitutions:
+  name: test-radio
+  profile: lilygo
+  driver: sx127x
+packages:
+  - !include
+    file: ../../packages/appliances/radio-transceiver.yaml
+    vars:
+      radio:
+        profile: ${profile}
+        driver: ${driver}
+        frequency: 868.35MHz
+        display:
+          enabled: false
+sx127x:
+  - id: !extend radio_transceiver
+    modulation: FSK
