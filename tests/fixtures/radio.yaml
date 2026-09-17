@@ -15,3 +15,5 @@ packages:
 sx127x:
   - id: !extend radio_transceiver
     modulation: FSK
+    bitsync: true
+    packet_mode: true

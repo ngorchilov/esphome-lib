@@ -1,0 +1,10 @@
+substitutions:
+  name: test-wifi-partial
+  credential: ssid
+  value: explicit-network
+packages:
+  - !include
+    file: ../../packages/boards/espressif/esp32dev.yaml
+    vars:
+      networking:
+        wifi: '${ {credential: value} }'

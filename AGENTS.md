@@ -47,6 +47,14 @@ Do not casually change names, pins, restore modes, or entity names in device fil
 Values like `none`, `None`, quoted booleans, commented pin options, or unusual defaults may be
 intentional for a specific device or for Home Assistant entity behavior.
 
+Keep each device's unique configuration and behavior in its single `devices/<device>.yaml` file.
+Do not create device subdirectories for one-use helpers or notes; keep concise device-specific
+notes in the YAML. Extract includes for actual reuse, not merely to shorten a device file.
+Prefer validated inline conditional blocks for device-only optional behavior. A separate file
+without reuse needs a concrete technical benefit, such as lazy loading of an optional secret
+that ESPHome would otherwise require even when the feature is disabled; explain the exception
+before adding it.
+
 ### Kickstart Firmware
 
 `kickstart/*.yaml` files are temporary board bring-up configurations. Each kickstart should:

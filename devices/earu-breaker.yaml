@@ -43,9 +43,11 @@ substitutions:
   temp_adc_pin: GPIO23
   temp_adc_scale: 100
 
-  # Measurement Update Interval
+  # Acquisition drives software fault checks; HA reporting is throttled separately.
   external_update_interval: 10s
-  internal_update_interval: 0.01s
+  # BL0942 refreshes RMS measurements every 800ms; a reply takes ~48ms at 4800 baud.
+  internal_update_interval: 1s
+  temperature_update_interval: 1s
 
 packages:
   - !include ../packages/boards/tuya/cbu.yaml
@@ -391,7 +393,7 @@ uart:
   baud_rate: ${bl0942_baud_rate}
 
 sensor:
-  # realtime temperature sensor
+  # Sample temperature every second; fault checks run before the HA reporting filter.
   - platform: adc
     pin: ${temp_adc_pin}
     name: Temperature
@@ -399,6 +401,7 @@ sensor:
     device_class: temperature
     state_class: measurement
     unit_of_measurement: °C
+    update_interval: ${temperature_update_interval}
     filters:
       - multiply: ${temp_adc_scale}
       - throttle_average: ${external_update_interval}
@@ -421,7 +424,7 @@ sensor:
                 format: TRIPPING! Temperature %.1f > %.1f
                 args: ['id(raw_temperature)', 'id(max_temperature).state']
 
-  # realtime energy meter sensors (BL0942)
+  # Poll BL0942 at the acquisition interval, then throttle entity reporting to HA.
   - platform: bl0942
     voltage:
       name: Voltage
@@ -509,7 +512,7 @@ sensor:
       id: energy
       device_class: energy
       state_class: total_increasing
-      unit_of_measurement: Wh
+      unit_of_measurement: kWh
       on_raw_value:
         - lambda: id(raw_energy)=x;
       filters:

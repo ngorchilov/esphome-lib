@@ -2,6 +2,55 @@ substitutions:
   name: sonoff-basic-r4
   friendly_name: Sonoff BASIC R4
 
+  # Omit the complete block when the relay's control scripts are disabled.
+  _sbr4_magic_switch_pkg:
+    external_components:
+      - source: !include ../packages/component-source.yaml
+        components: [magic_switch]
+        refresh: 0s
+
+    switch:
+      - platform: template
+        name: ${ (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("name", "Do Not Disturb") }
+        id: sbr4_magic_switch_dnd
+        internal: ${ not (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("enabled", false) }
+        optimistic: true
+        restore_mode: RESTORE_DEFAULT_OFF
+
+    magic_switch:
+      id: sbr4_magic_switch
+      iram_safe_interrupt: true
+      pin:
+        number: GPIO5
+        inverted: false
+        mode:
+          input: true
+          pullup: true
+        ignore_strapping_warning: false
+      min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("min_pulse", "1ms") }
+      max_pulse: ${ (entity | default({})).get("magic_switch", {}).get("max_pulse", "120ms") }
+      detect_missing_pulses: ${ (entity | default({})).get("magic_switch", {}).get("detect_missing_pulses", false) }
+      adaptive_min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_min_pulse", "750us") }
+      adaptive_margin: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_margin", "200us") }
+      phase_tolerance: ${ (entity | default({})).get("magic_switch", {}).get("phase_tolerance", "1ms") }
+      recovery_pulses: ${ (entity | default({})).get("magic_switch", {}).get("recovery_pulses", 2) }
+      recovery_timeout: ${ (entity | default({})).get("magic_switch", {}).get("recovery_timeout", "150ms") }
+      startup_mask: ${ (entity | default({})).get("magic_switch", {}).get("startup_mask", "2s") }
+      debounce: ${ (entity | default({})).get("magic_switch", {}).get("debounce", "250ms") }
+      on_switch:
+        - if:
+            condition:
+              switch.is_off: sbr4_magic_switch_dnd
+            then:
+              - script.execute: sbr4_primary_toggle
+
+    script:
+      - id: !extend sbr4_after_power_change
+        then:
+          - magic_switch.mask:
+              id: sbr4_magic_switch
+              duration: ${ (entity | default({})).get("magic_switch", {}).get("relay_mask", "500ms") }
+
 packages:
   - !include ../packages/boards/espressif/esp32-c3-devkitm-1.yaml
   - !include
@@ -26,50 +75,4 @@ packages:
           pin: GPIO9
           inverted: true
           strapping: true
-
-external_components:
-  - source: !include ../packages/component-source.yaml
-    components: [magic_switch]
-    refresh: 0s
-
-switch:
-  - platform: template
-    name: ${ (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("name", "Do Not Disturb") }
-    id: sbr4_magic_switch_dnd
-    internal: ${ not (entity | default({})).get("magic_switch", {}).get("dnd", {}).get("enabled", false) }
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_OFF
-
-magic_switch:
-  id: sbr4_magic_switch
-  iram_safe_interrupt: true
-  pin:
-    number: GPIO5
-    inverted: false
-    mode:
-      input: true
-      pullup: true
-    ignore_strapping_warning: false
-  min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("min_pulse", "1ms") }
-  max_pulse: ${ (entity | default({})).get("magic_switch", {}).get("max_pulse", "120ms") }
-  detect_missing_pulses: ${ (entity | default({})).get("magic_switch", {}).get("detect_missing_pulses", false) }
-  adaptive_min_pulse: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_min_pulse", "750us") }
-  adaptive_margin: ${ (entity | default({})).get("magic_switch", {}).get("adaptive_margin", "200us") }
-  phase_tolerance: ${ (entity | default({})).get("magic_switch", {}).get("phase_tolerance", "1ms") }
-  recovery_pulses: ${ (entity | default({})).get("magic_switch", {}).get("recovery_pulses", 2) }
-  recovery_timeout: ${ (entity | default({})).get("magic_switch", {}).get("recovery_timeout", "150ms") }
-  startup_mask: ${ (entity | default({})).get("magic_switch", {}).get("startup_mask", "2s") }
-  debounce: ${ (entity | default({})).get("magic_switch", {}).get("debounce", "250ms") }
-  on_switch:
-    - if:
-        condition:
-          switch.is_off: sbr4_magic_switch_dnd
-        then:
-          - script.execute: sbr4_primary_toggle
-
-script:
-  - id: !extend sbr4_after_power_change
-    then:
-      - magic_switch.mask:
-          id: sbr4_magic_switch
-          duration: ${ (entity | default({})).get("magic_switch", {}).get("relay_mask", "500ms") }
+  - ${ _sbr4_magic_switch_pkg if (entity | default({})).get("enabled", true) else {} }

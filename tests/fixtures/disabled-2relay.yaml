@@ -1,8 +1,17 @@
 substitutions:
   name: test-disabled-2relay
+  first_enabled: false
+  second_enabled: true
+  role: switch
 packages:
   - !include
     file: ../../devices/tuya-dry-relay-2dc-10a.yaml
     vars:
       relay_1_entity:
-        enabled: false
+        name: Relay 1
+        enabled: ${first_enabled}
+        type: ${role}
+      relay_2_entity:
+        name: Relay 2
+        enabled: ${second_enabled}
+        type: ${role}

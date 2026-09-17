@@ -118,12 +118,12 @@ def main():
     for case in cases:
         path = work / case["file"]
         secret_file = path.parent / "secrets.yaml"
-        if case.get("secrets", True):
-            secret_file.write_text(yaml.safe_dump(DUMMY_SECRETS))
-        else:
-            # No fallback secret can exist elsewhere in the copied tree either.
-            for old_secret in work.rglob("secrets.yaml"):
-                old_secret.unlink()
+        # Give each case exactly its declared credentials, including partial-secret tests.
+        for old_secret in work.rglob("secrets.yaml"):
+            old_secret.unlink()
+        secrets = case.get("secrets", True)
+        if secrets is not False:
+            secret_file.write_text(yaml.safe_dump(DUMMY_SECRETS if secrets is True else secrets))
         command = [sys.executable, "-m", "esphome"]
         for key, value in case.get("substitutions", {}).items():
             command += ["-s", key, str(value)]
@@ -135,6 +135,13 @@ def main():
                        str(path), *case["local_components"]]
             code, provenance = run(command, path.parent, env, args.timeout)
             output += "\nComponent provenance:\n" + provenance
+            if code:
+                status = "FAIL"
+        if status == "PASS" and case.get("contract"):
+            command = [sys.executable, str(work / "tests/check_contracts.py"), str(path),
+                       case["contract"], json.dumps(case.get("substitutions", {}))]
+            code, contract = run(command, path.parent, env, args.timeout)
+            output += "\nResolved contract:\n" + contract
             if code:
                 status = "FAIL"
         (logs / f"{case['id']}.log").write_text(output)

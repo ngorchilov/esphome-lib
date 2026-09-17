@@ -16,9 +16,6 @@ packages:
 external_components:
   - source: github://echavet/MitsubishiCN105ESPHome
 
-logger:
-  level: INFO
-
 uart:
   id: HP_UART
   baud_rate: 2400

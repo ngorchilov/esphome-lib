@@ -19,11 +19,6 @@ esphome:
 packages:
   - !include ../packages/boards/espressif/esp07.yaml
 
-logger:
-  level: INFO
-  # CN105 uses GPIO1/GPIO3 on UART0, so serial logging must stay disabled.
-  baud_rate: 0
-
 uart:
   id: HP_UART
   baud_rate: 2400

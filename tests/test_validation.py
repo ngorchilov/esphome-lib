@@ -2,7 +2,9 @@
 
 import unittest
 
-from validate import classify, unique_pairs
+import yaml
+
+from validate import ROOT, classify, tracked_files, unique_pairs
 
 
 class ValidationTests(unittest.TestCase):
@@ -28,6 +30,16 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(unique_pairs([("a", 1), ("b", 2)]), {"a": 1, "b": 2})
         with self.assertRaises(ValueError):
             unique_pairs([("a", 1), ("a", 2)])
+
+    def test_devices_inherit_logger_thresholds(self):
+        for path in tracked_files():
+            if path.parts[0] != "devices" or path.suffix != ".yaml":
+                continue
+            with self.subTest(path=str(path)):
+                config = yaml.load((ROOT / path).read_text(), Loader=yaml.BaseLoader)
+                logger = config.get("logger", {})
+                self.assertNotIn("level", logger)
+                self.assertNotIn("logs", logger)
 
 
 if __name__ == "__main__":

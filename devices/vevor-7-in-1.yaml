@@ -25,9 +25,6 @@ esphome:
     name: yepiq.Vevor-7-in-1-Receiver
     version: ${receiver_version}
 
-logger:
-  level: INFO
-
 sx127x:
   - id: !extend radio_transceiver
     auto_cal: true

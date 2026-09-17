@@ -22,6 +22,41 @@ substitutions:
   rf433_pin: GPIO7
   rf433_inverted: false
 
+  relay_1_enabled: ${ (relay_1_entity | default({})).get("enabled", true) }
+  relay_2_enabled: ${ (relay_2_entity | default({})).get("enabled", true) }
+
+  _relay_1_state:
+    - binary_sensor.is_on: relay_1_power_state
+  _relay_2_state:
+    - binary_sensor.is_on: relay_2_power_state
+  _relay_1_on:
+    - script.execute: relay_1_power_on
+  _relay_2_on:
+    - script.execute: relay_2_power_on
+  _relay_1_off:
+    - script.execute: relay_1_power_off
+  _relay_2_off:
+    - script.execute: relay_2_power_off
+
+  # The master button operates only enabled channels and is omitted if neither is enabled.
+  _master_switch_pkg:
+    binary_sensor:
+      - platform: gpio
+        name: Master Switch
+        id: master_switch
+        pin:
+          number: ${master_switch_pin}
+          inverted: ${master_switch_inverted}
+          mode:
+            input: true
+            pullup: ${master_switch_pullup}
+        on_click:
+          - if:
+              condition:
+                or: ${ (_relay_1_state if relay_1_enabled else []) + (_relay_2_state if relay_2_enabled else []) }
+              then: ${ (_relay_1_off if relay_1_enabled else []) + (_relay_2_off if relay_2_enabled else []) }
+              else: ${ (_relay_1_on if relay_1_enabled else []) + (_relay_2_on if relay_2_enabled else []) }
+
 packages:
   - !include ../packages/boards/tuya/cb3s.yaml
   - !include
@@ -67,28 +102,7 @@ packages:
           name: Button 2
           pin: ${button2_pin}
           inverted: ${button2_inverted}
-
-binary_sensor:
-  - platform: gpio
-    name: Master Switch
-    id: master_switch
-    pin:
-      number: ${master_switch_pin}
-      inverted: ${master_switch_inverted}
-      mode:
-        input: true
-        pullup: ${master_switch_pullup}
-    on_click:
-      - if:
-          condition:
-            lambda: |-
-              return id(relay_1_power_state).state || id(relay_2_power_state).state;
-          then:
-            - script.execute: relay_1_power_off
-            - script.execute: relay_2_power_off
-          else:
-            - script.execute: relay_1_power_on
-            - script.execute: relay_2_power_on
+  - ${ _master_switch_pkg if relay_1_enabled or relay_2_enabled else {} }
 
 status_led:
   pin:

@@ -27,9 +27,6 @@ esphome:
       - script.execute: forecast_timer
       - script.execute: swap_timer
 
-logger:
-  level: DEBUG
-
 font:
   - file: gfonts://Inter@400
     id: font_small

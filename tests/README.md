@@ -47,18 +47,31 @@ processes the original remote source first. Third-party component sources are no
 - `XPASS`: a known bug unexpectedly validates; the run fails until its expectation is reviewed.
 - `FAIL`: a new failure, wrong failure reason, rejected-input acceptance or subprocess timeout.
 
-The six temporary `known_failure` entries in `cases.yaml` track disabled BASIC R4/two-relay
-consumers, packet-radio frequency and secret-free Wi-Fi (phase 2), ESP8266 pins (phase 3), and
+The two remaining `known_failure` entries in `cases.yaml` track ESP8266 pins (phase 3) and
 offline networking (phase 4). Each records a specific expected error, not just a nonzero exit code.
 Remove its `known_failure` and `reason` when fixing it, keeping the fixture as a passing regression.
-Configuration validation does not prove actuator behavior or hardware safety; the six-zone valve
-draft in particular must not be deployed even if its configuration validates.
+The phase-2 regressions now pass, with resolved-output assertions for optional relay controls,
+EARU sampling/units, packet-radio frequency and Wi-Fi credentials. Partial-secret fixtures supply
+only the missing credential; this prevents an unused fallback secret from masking a regression.
+Configuration validation does not prove actuator behavior or hardware safety. The invalid six-zone
+valve GPIO draft is no longer tracked; its Tuya model remains in the archive.
 
 ## C++ And CI
 
 YAML configuration-only changes require config validation only. Compile firmware only after
 changing C++, including lambda bodies in YAML, and only for affected targets after config passes.
 Host tests supplement this; they do not replace an affected embedded build or hardware verification.
+
+The garage regression compiles the actual YAML lambdas with ASan/UBSan, checking endpoint guards,
+contact-confirmed close, timeout publication, wraparound and the BLE reboot interlock:
+
+```sh
+python tests/garage_host_test.py
+```
+
+Run it when changing garage C++ behavior, then config/compile both the standalone garage and
+`tests/fixtures/garage-ble.yaml`. These host tests are deliberately separate from the config-only
+CI workflow, so routine YAML configuration edits do not trigger firmware or host compilation.
 
 The existing BLE host suite tests the checked-out implementation with ASan/UBSan and an SDK double:
 

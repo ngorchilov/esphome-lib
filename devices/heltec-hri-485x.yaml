@@ -7,6 +7,3 @@ packages:
     file: ../packages/appliances/heltec-hri-485x.yaml
     vars:
       hri485x: ${ hri485x | default({}) }
-
-logger:
-  level: DEBUG

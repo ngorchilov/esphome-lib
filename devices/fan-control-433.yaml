@@ -286,9 +286,6 @@ esphome:
         - lambda: |-
             ${fan433_state_initializers}
 
-logger:
-  level: DEBUG
-
 remote_receiver:
   - id: !extend radio_receiver
     # Keep ESPHome's built-in raw dumper disabled; otherwise normal RF noise

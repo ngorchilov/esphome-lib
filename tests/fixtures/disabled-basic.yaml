@@ -1,8 +1,11 @@
 substitutions:
   name: test-disabled-basic
+  role: switch
+  entity_enabled: false
 packages:
   - !include
     file: ../../devices/sonoff-basic-r4.yaml
     vars:
       entity:
-        enabled: false
+        enabled: ${entity_enabled}
+        type: ${role}

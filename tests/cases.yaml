@@ -39,6 +39,7 @@ cases:
   - id: source-magic-switch
     file: devices/sonoff-basic-r4.yaml
     local_components: [magic_switch]
+    contract: enabled-basic
   - id: source-ln882h-pwm
     file: devices/tuya-ceiling-light-wl2h.yaml
     local_components: [ln882h_pwm]
@@ -54,21 +55,101 @@ cases:
 
   - id: disabled-basic
     file: tests/fixtures/disabled-basic.yaml
-    known_failure: "Source for extension of ID 'sbr4_after_power_change' was not found"
-    reason: Phase 2 - BASIC R4 hooks reference a disabled relay facade.
+    contract: disabled-basic
+  - id: disabled-basic-light
+    file: tests/fixtures/disabled-basic.yaml
+    substitutions: {role: light}
+    contract: disabled-basic
+  - id: disabled-basic-valve
+    file: tests/fixtures/disabled-basic.yaml
+    substitutions: {role: valve}
+    contract: disabled-basic
+  - id: enabled-basic-switch
+    file: tests/fixtures/disabled-basic.yaml
+    substitutions: {entity_enabled: true}
+    contract: enabled-basic
+  - id: enabled-basic-light
+    file: tests/fixtures/disabled-basic.yaml
+    substitutions: {entity_enabled: true, role: light}
+    contract: enabled-basic
+  - id: enabled-basic-valve
+    file: tests/fixtures/disabled-basic.yaml
+    substitutions: {entity_enabled: true, role: valve}
+    contract: enabled-basic
   - id: disabled-2relay
     file: tests/fixtures/disabled-2relay.yaml
-    known_failure: "Couldn't find ID 'relay_1_power_state'"
-    reason: Phase 2 - the master button references a disabled channel.
+    contract: two-relay
+  - id: disabled-second-relay
+    file: tests/fixtures/disabled-2relay.yaml
+    substitutions: {first_enabled: true, second_enabled: false}
+    contract: two-relay
+  - id: disabled-both-relays
+    file: tests/fixtures/disabled-2relay.yaml
+    substitutions: {first_enabled: false, second_enabled: false}
+    contract: two-relay
+  - id: both-relays
+    file: tests/fixtures/disabled-2relay.yaml
+    substitutions: {first_enabled: true, second_enabled: true}
+    contract: two-relay
+  - id: disabled-relay-light
+    file: tests/fixtures/disabled-2relay.yaml
+    substitutions: {role: light}
+    contract: two-relay
+  - id: disabled-relay-valve
+    file: tests/fixtures/disabled-2relay.yaml
+    substitutions: {role: valve}
+    contract: two-relay
+  - id: garage-no-ble-secret
+    file: devices/tuya-garage-opener.yaml
+    secrets: {wifi_ssid: test-network, wifi_password: test-password}
   - id: radio-frequency
     file: tests/fixtures/radio.yaml
-    known_failure: "'frequency' is a required option"
-    reason: Phase 2 - packet driver drops the appliance frequency.
+    contract: radio-frequency
   - id: explicit-wifi-no-secrets
     file: tests/fixtures/explicit-wifi.yaml
     secrets: false
-    known_failure: Error reading file secrets.yaml
-    reason: Phase 2 - explicit credentials still eagerly load fallback secrets.
+    contract: wifi-explicit
+  - id: open-wifi-no-secrets
+    file: tests/fixtures/wifi-open.yaml
+    secrets: false
+    contract: wifi-open
+  - id: explicit-ssid-only
+    file: tests/fixtures/wifi-partial.yaml
+    secrets: {wifi_password: fallback-password}
+    contract: wifi-ssid
+  - id: explicit-password-only
+    file: tests/fixtures/wifi-partial.yaml
+    substitutions: {credential: password, value: explicit-password}
+    secrets: {wifi_ssid: fallback-network}
+    contract: wifi-password
+  - id: ethernet-no-secrets
+    file: tests/fixtures/ethernet-no-secrets.yaml
+    secrets: false
+  - id: earu-acquisition
+    file: devices/earu-breaker.yaml
+    contract: earu
+  - id: inherited-logger
+    file: devices/pro-breeze-dehumidifier.yaml
+    substitutions: {log_level: WARN}
+    contract: inherited-logger
+  - id: serial-logger-esp07
+    file: kickstart/kickstart-esp07.yaml
+    contract: serial-logger-esp07
+  - id: serial-logger-esp12ef
+    file: kickstart/kickstart-esp12ef.yaml
+    contract: serial-logger-esp12ef
+  - id: serial-logger-melcutter-v2
+    file: devices/melcutter-v2.yaml
+    contract: serial-logger-esp07
+  - id: serial-logger-water-meter
+    file: devices/tuya-8-in-1-water-meter.yaml
+    contract: serial-logger-beken
+  - id: serial-logger-ct16
+    file: devices/tuya-ct-clamp-16em-200a.yaml
+    contract: serial-logger-beken
+  - id: serial-logger-hri4853
+    file: devices/heltec-hri-485x.yaml
+    contract: serial-logger-hri4853
   - id: esp8266-pin
     file: tests/fixtures/relay.yaml
     substitutions: {board: esp07}

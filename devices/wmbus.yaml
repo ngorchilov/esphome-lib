@@ -24,9 +24,6 @@ esp32:
   # ESPHome 2026.7 native ESP-IDF ignores the external component's .cc sources.
   toolchain: platformio
 
-logger:
-  level: INFO
-
 wmbus_radio:
   - id: !extend radio_transceiver
     on_frame:

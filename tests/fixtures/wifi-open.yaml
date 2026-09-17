@@ -1,0 +1,10 @@
+substitutions:
+  name: test-wifi-open
+packages:
+  - !include
+    file: ../../packages/boards/espressif/esp07.yaml
+    vars:
+      networking:
+        wifi:
+          ssid: open-network
+          password: ''

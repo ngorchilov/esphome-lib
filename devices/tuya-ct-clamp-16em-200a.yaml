@@ -103,10 +103,6 @@ time:
           - logger.log: Scheduled daily reboot triggered
           - button.press: mcu_restart
 
-logger:
-  baud_rate: 0
-  level: INFO
-
 uart:
   id: tuya_uart
   rx_pin: P10
