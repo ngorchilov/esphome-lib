@@ -1,20 +1,28 @@
 substitutions:
   name: test-rf-fans
+  test_radio_profile: lilygo
+  test_shorthand: false
+  test_combined: true
+  test_fans: >-
+    ${ [0x0000, 0xFFFF] if test_shorthand | string | lower == 'true' else [
+      {'address': 0x1234, 'id': 'supply_fan', 'name': 'Supply Fan'},
+      {'address': 0x2345, 'id': 'extract_fan', 'name': 'Extract Fan'}
+    ] }
+  test_members: >-
+    ${ [
+      {'address': 0x0000, 'direction': 'in'}, {'address': 0xFFFF, 'direction': 'out'}
+    ] if test_shorthand | string | lower == 'true' else [
+      {'address': 0x1234, 'direction': 'in'}, {'address': 0x2345, 'direction': 'out'}
+    ] }
 packages:
   - !include
     file: ../../devices/fan-control-433.yaml
     vars:
       fan433:
-        fans:
-          - address: 0x1234
-            id: supply_fan
-            name: Supply Fan
-          - address: 0x2345
-            id: extract_fan
-            name: Extract Fan
+        radio:
+          profile: ${test_radio_profile}
+        fans: ${test_fans}
         combined:
-          members:
-            - address: 0x1234
-              direction: in
-            - address: 0x2345
-              direction: out
+          id: ventilation
+          name: Ventilation
+          members: ${ test_members if test_combined | string | lower == 'true' else [] }

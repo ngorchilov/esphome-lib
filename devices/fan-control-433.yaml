@@ -45,41 +45,43 @@ substitutions:
     <% endfor %>
     ${ result }
 
+  # Capture readable lambdas inline; only the per-address entity declarations are generated.
   fan433_entities: |-
     <% set result = [] %>
     <% for fan in fan433_instances %>
-      <% set code = [] %>
-      <% do code.append("const uint16_t address = 0x%04X;" | format(fan["address"])) %>
-      <% do code.append("auto &states = id(fan433_assumed_states);") %>
-      <% do code.append("auto state_it = std::find_if(states.begin(), states.end(), [address](uint32_t value) { return (value >> 8) == address; });") %>
-      <% do code.append("if (state_it == states.end()) return;") %>
-      <% do code.append("const uint8_t assumed = static_cast<uint8_t>(*state_it & 0xFF);") %>
-      <% do code.append("const bool physical_on = (assumed & 0x80) != 0;") %>
-      <% do code.append("const bool physical_out = (assumed & 0x40) == 0;") %>
-      <% do code.append("const int physical_speed = std::max(1, std::min(" ~ fan_speed_count ~ ", static_cast<int>(assumed & 0x0F)));") %>
-      <% do code.append("const bool target_on = id(" ~ fan["id"] ~ ").state;") %>
-      <% do code.append("const bool target_out = id(" ~ fan["id"] ~ ").direction == fan::FanDirection::" ~ fan_direction_out ~ ";") %>
-      <% do code.append("const int target_speed = std::max(1, std::min(" ~ fan_speed_count ~ ", id(" ~ fan["id"] ~ ").speed));") %>
-      <% do code.append("auto enqueue = [address](uint8_t command) { id(fan433_command_queue).push_back((static_cast<uint32_t>(address) << 8) | command); };") %>
-      <% do code.append("if (!target_on) {") %>
-      <% do code.append("  if (physical_on) enqueue(" ~ fan_cmd_off ~ ");") %>
-      <% do code.append("  *state_it = (static_cast<uint32_t>(address) << 8) | (assumed & 0x7F);") %>
-      <% do code.append("  return;") %>
-      <% do code.append("}") %>
-      <% do code.append("if (!physical_on) enqueue(" ~ fan_cmd_on ~ ");") %>
-      <% do code.append("const uint8_t plus_command = target_out ? " ~ fan_cmd_out_plus ~ " : " ~ fan_cmd_in_plus ~ ";") %>
-      <% do code.append("const uint8_t minus_command = target_out ? " ~ fan_cmd_out_minus ~ " : " ~ fan_cmd_in_minus ~ ";") %>
-      <% do code.append("if (target_speed > physical_speed) {") %>
-      <% do code.append("  for (int i = physical_speed; i < target_speed; i++) enqueue(plus_command);") %>
-      <% do code.append("} else if (target_speed < physical_speed) {") %>
-      <% do code.append("  for (int i = physical_speed; i > target_speed; i--) enqueue(minus_command);") %>
-      <% do code.append("} else if (target_out != physical_out) {") %>
-      <% do code.append("  if (target_speed == 1) enqueue(minus_command);") %>
-      <% do code.append("  else if (target_speed == " ~ fan_speed_count ~ ") enqueue(plus_command);") %>
-      <% do code.append("  else { enqueue(plus_command); enqueue(minus_command); }") %>
-      <% do code.append("}") %>
-      <% do code.append("const uint8_t next = 0x80 | (target_out ? 0x00 : 0x40) | target_speed;") %>
-      <% do code.append("*state_it = (static_cast<uint32_t>(address) << 8) | next;") %>
+    <% set code %>
+    const uint16_t address = 0x${ "%04X" | format(fan["address"]) };
+    auto &states = id(fan433_assumed_states);
+    auto state_it = std::find_if(states.begin(), states.end(), [address](uint32_t value) { return (value >> 8) == address; });
+    if (state_it == states.end()) return;
+    const uint8_t assumed = static_cast<uint8_t>(*state_it & 0xFF);
+    const bool physical_on = (assumed & 0x80) != 0;
+    const bool physical_out = (assumed & 0x40) == 0;
+    const int physical_speed = std::max(1, std::min(${fan_speed_count}, static_cast<int>(assumed & 0x0F)));
+    const bool target_on = id(${fan["id"]}).state;
+    const bool target_out = id(${fan["id"]}).direction == fan::FanDirection::${fan_direction_out};
+    const int target_speed = std::max(1, std::min(${fan_speed_count}, id(${fan["id"]}).speed));
+    auto enqueue = [address](uint8_t command) { id(fan433_command_queue).push_back((static_cast<uint32_t>(address) << 8) | command); };
+    if (!target_on) {
+      if (physical_on) enqueue(${fan_cmd_off});
+      *state_it = (static_cast<uint32_t>(address) << 8) | (assumed & 0x7F);
+      return;
+    }
+    if (!physical_on) enqueue(${fan_cmd_on});
+    const uint8_t plus_command = target_out ? ${fan_cmd_out_plus} : ${fan_cmd_in_plus};
+    const uint8_t minus_command = target_out ? ${fan_cmd_out_minus} : ${fan_cmd_in_minus};
+    if (target_speed > physical_speed) {
+      for (int i = physical_speed; i < target_speed; i++) enqueue(plus_command);
+    } else if (target_speed < physical_speed) {
+      for (int i = physical_speed; i > target_speed; i--) enqueue(minus_command);
+    } else if (target_out != physical_out) {
+      if (target_speed == 1) enqueue(minus_command);
+      else if (target_speed == ${fan_speed_count}) enqueue(plus_command);
+      else { enqueue(plus_command); enqueue(minus_command); }
+    }
+    const uint8_t next = 0x80 | (target_out ? 0x00 : 0x40) | target_speed;
+    *state_it = (static_cast<uint32_t>(address) << 8) | next;
+    <% endset %>
       <% do result.append({
         "platform": "template",
         "name": fan["name"],
@@ -91,7 +93,7 @@ substitutions:
           "if": {
             "condition": {"lambda": "return id(fan433_ready);"},
             "then": [
-              {"lambda": code | join("\n")},
+              {"lambda": code | trim},
               {"if": {
                 "condition": {"lambda": "return !id(fan433_batch_active) && !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
                 "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
@@ -111,11 +113,11 @@ substitutions:
     <% if members | length > 0 %>
       <% set aggregate_id = aggregate.get("id", "combined_fan") %>
       <% set aggregate_name = aggregate.get("name", "None") %>
-      <% set code = [] %>
-      <% do code.append("const bool target_on = id(" ~ aggregate_id ~ ").state;") %>
-      <% do code.append("const int target_speed = std::max(1, std::min(" ~ fan_speed_count ~ ", id(" ~ aggregate_id ~ ").speed));") %>
-      <% do code.append("id(fan433_batch_active) = true;") %>
-      <% for member in members %>
+    <% set code %>
+    const bool target_on = id(${aggregate_id}).state;
+    const int target_speed = std::max(1, std::min(${fan_speed_count}, id(${aggregate_id}).speed));
+    id(fan433_batch_active) = true;
+    <% for member in members %>
         <% set address = member.get("address") %>
         <% set member_id = namespace(value=member.get("id", "fan_%04x" | format(address))) %>
         <% for fan in fan433_instances %>
@@ -124,15 +126,16 @@ substitutions:
           <% endif %>
         <% endfor %>
         <% set member_direction = fan_direction_out if member.get("direction", "out") == "out" else fan_direction_in %>
-        <% do code.append("{") %>
-        <% do code.append("  auto call = id(" ~ member_id.value ~ ").make_call();") %>
-        <% do code.append("  call.set_state(target_on);") %>
-        <% do code.append("  call.set_speed(target_speed);") %>
-        <% do code.append("  call.set_direction(fan::FanDirection::" ~ member_direction ~ ");") %>
-        <% do code.append("  call.perform();") %>
-        <% do code.append("}") %>
-      <% endfor %>
-      <% do code.append("id(fan433_batch_active) = false;") %>
+    {
+      auto call = id(${member_id.value}).make_call();
+      call.set_state(target_on);
+      call.set_speed(target_speed);
+      call.set_direction(fan::FanDirection::${member_direction});
+      call.perform();
+    }
+    <% endfor %>
+    id(fan433_batch_active) = false;
+    <% endset %>
       <% do result.append({
         "platform": "template",
         "name": aggregate_name,
@@ -143,7 +146,7 @@ substitutions:
           "if": {
             "condition": {"lambda": "return id(fan433_ready);"},
             "then": [
-              {"lambda": code | join("\n")},
+              {"lambda": code | trim},
               {"if": {
                 "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
                 "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]
@@ -162,33 +165,34 @@ substitutions:
     <% set sync_command = fan_cmd_out_minus if sync_out and sync_min else fan_cmd_out_plus if sync_out else fan_cmd_in_minus if sync_min else fan_cmd_in_plus %>
     <% set result = [] %>
     <% for fan in fan433_instances %>
-      <% set code = [] %>
-      <% do code.append("const uint16_t address = 0x%04X;" | format(fan["address"])) %>
-      <% do code.append("const bool target_on = id(" ~ fan["id"] ~ ").state;") %>
-      <% do code.append("const bool target_out = id(" ~ fan["id"] ~ ").direction == fan::FanDirection::" ~ fan_direction_out ~ ";") %>
-      <% do code.append("const int target_speed = std::max(1, std::min(" ~ fan_speed_count ~ ", id(" ~ fan["id"] ~ ").speed));") %>
-      <% do code.append("auto enqueue = [address](uint8_t command) { id(fan433_command_queue).push_back((static_cast<uint32_t>(address) << 8) | command); };") %>
-      <% do code.append("enqueue(" ~ fan_cmd_on ~ ");") %>
-      <% do code.append("for (int i = 0; i < " ~ fan_sync_saturation_count ~ "; i++) enqueue(" ~ sync_command ~ ");") %>
-      <% do code.append("const bool anchor_out = " ~ ("true" if sync_out else "false") ~ ";") %>
-      <% do code.append("const int anchor_speed = " ~ sync_speed ~ ";") %>
-      <% do code.append("const uint8_t plus_command = target_out ? " ~ fan_cmd_out_plus ~ " : " ~ fan_cmd_in_plus ~ ";") %>
-      <% do code.append("const uint8_t minus_command = target_out ? " ~ fan_cmd_out_minus ~ " : " ~ fan_cmd_in_minus ~ ";") %>
-      <% do code.append("if (target_speed > anchor_speed) {") %>
-      <% do code.append("  for (int i = anchor_speed; i < target_speed; i++) enqueue(plus_command);") %>
-      <% do code.append("} else if (target_speed < anchor_speed) {") %>
-      <% do code.append("  for (int i = anchor_speed; i > target_speed; i--) enqueue(minus_command);") %>
-      <% do code.append("} else if (target_out != anchor_out) {") %>
-      <% do code.append("  if (target_speed == 1) enqueue(minus_command);") %>
-      <% do code.append("  else if (target_speed == " ~ fan_speed_count ~ ") enqueue(plus_command);") %>
-      <% do code.append("  else { enqueue(plus_command); enqueue(minus_command); }") %>
-      <% do code.append("}") %>
-      <% do code.append("if (!target_on) enqueue(" ~ fan_cmd_off ~ ");") %>
-      <% do code.append("const uint8_t next = (target_on ? 0x80 : 0x00) | (target_out ? 0x00 : 0x40) | target_speed;") %>
-      <% do code.append("auto &states = id(fan433_assumed_states);") %>
-      <% do code.append("auto state_it = std::find_if(states.begin(), states.end(), [address](uint32_t value) { return (value >> 8) == address; });") %>
-      <% do code.append("const uint32_t packed = (static_cast<uint32_t>(address) << 8) | next;") %>
-      <% do code.append("if (state_it == states.end()) states.push_back(packed); else *state_it = packed;") %>
+    <% set code %>
+    const uint16_t address = 0x${ "%04X" | format(fan["address"]) };
+    const bool target_on = id(${fan["id"]}).state;
+    const bool target_out = id(${fan["id"]}).direction == fan::FanDirection::${fan_direction_out};
+    const int target_speed = std::max(1, std::min(${fan_speed_count}, id(${fan["id"]}).speed));
+    auto enqueue = [address](uint8_t command) { id(fan433_command_queue).push_back((static_cast<uint32_t>(address) << 8) | command); };
+    enqueue(${fan_cmd_on});
+    for (int i = 0; i < ${fan_sync_saturation_count}; i++) enqueue(${sync_command});
+    const bool anchor_out = ${ "true" if sync_out else "false" };
+    const int anchor_speed = ${sync_speed};
+    const uint8_t plus_command = target_out ? ${fan_cmd_out_plus} : ${fan_cmd_in_plus};
+    const uint8_t minus_command = target_out ? ${fan_cmd_out_minus} : ${fan_cmd_in_minus};
+    if (target_speed > anchor_speed) {
+      for (int i = anchor_speed; i < target_speed; i++) enqueue(plus_command);
+    } else if (target_speed < anchor_speed) {
+      for (int i = anchor_speed; i > target_speed; i--) enqueue(minus_command);
+    } else if (target_out != anchor_out) {
+      if (target_speed == 1) enqueue(minus_command);
+      else if (target_speed == ${fan_speed_count}) enqueue(plus_command);
+      else { enqueue(plus_command); enqueue(minus_command); }
+    }
+    if (!target_on) enqueue(${fan_cmd_off});
+    const uint8_t next = (target_on ? 0x80 : 0x00) | (target_out ? 0x00 : 0x40) | target_speed;
+    auto &states = id(fan433_assumed_states);
+    auto state_it = std::find_if(states.begin(), states.end(), [address](uint32_t value) { return (value >> 8) == address; });
+    const uint32_t packed = (static_cast<uint32_t>(address) << 8) | next;
+    if (state_it == states.end()) states.push_back(packed); else *state_it = packed;
+    <% endset %>
       <% do result.append({
         "platform": "template",
         "name": fan["name"] ~ " Synchronize",
@@ -196,7 +200,7 @@ substitutions:
         "icon": "mdi:sync",
         "entity_category": "config",
         "on_press": [
-          {"lambda": code | join("\n")},
+          {"lambda": code | trim},
           {"if": {
             "condition": {"lambda": "return !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"},
             "then": [{"script.execute": {"id": "fan433_transmit_queue"}}]

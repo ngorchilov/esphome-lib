@@ -62,6 +62,14 @@ drive strength and strapping flags, and number-only mappings through ESPHome's p
 validator. Concrete Ethernet devices exercise number-only consumers in the full sweep. Invalid
 schema names and unsupported ESP8266 pullups must fail; ESP8266 relay roles must now pass.
 
+The RF fan matrix covers SX127x and CC1101, explicit IDs and shorthand addresses, combined fan
+membership, individual-only and learn-only configurations, all four synchronization anchors, and
+custom protocol settings. Resolved-output assertions check entity metadata, each member's generated
+address/ID/direction, startup and queue guards, synchronization commands, and transmission timing.
+These are configuration contracts, not proof of RF reception or physical fan state. When rewriting
+the templates, compare the resolved configurations (including lambda text) before and after; an
+unchanged emitted C++ program does not need a firmware build.
+
 ## C++ And CI
 
 YAML configuration-only changes require config validation only. Compile firmware only after

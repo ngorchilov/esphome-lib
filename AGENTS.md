@@ -575,6 +575,11 @@ Known fragile patterns:
 If a templating approach is required for reusable infrastructure, validate it with `esphome config`
 on concrete ESPHome and LibreTiny devices when applicable.
 
+The RF fan device keeps its per-address entity generation and captured C++ blocks inline. Prefer
+readable template blocks to assembling C++ one quoted line at a time. For template-only rewrites,
+compare resolved configuration and lambda text to confirm that emitted C++ is unchanged; the RF
+consumer matrix in `tests/cases.yaml` covers both radios and the supported fan composition options.
+
 ## Dependency Workarounds
 
 When a defect is traced to ESPHome, LibreTiny, PlatformIO, an SDK, or another dependency, do not

@@ -21,8 +21,107 @@ def enabled(value):
     return str(value).lower() == "true"
 
 
+def check_fan433(config, substitutions):
+    learn_only = config["esphome"]["name"] == "fan-control-433"
+    if learn_only:
+        fans = []
+    elif enabled(substitutions.get("test_shorthand", False)):
+        fans = [(0x0000, "fan_0000", "Fan 0000"), (0xFFFF, "fan_ffff", "Fan FFFF")]
+    else:
+        fans = [(0x1234, "supply_fan", "Supply Fan"), (0x2345, "extract_fan", "Extract Fan")]
+    combined = not learn_only and enabled(substitutions.get("test_combined", True))
+    expected_ids = {name for _, name, _ in fans} | ({"ventilation"} if combined else set())
+    assert ids(config, "fan") == expected_ids
+    assert {str(item["id"]) for item in config["button"] if str(item.get("id", "")).endswith("_synchronize")} == {
+        f"{name}_synchronize" for _, name, _ in fans
+    }
+
+    speed_count = substitutions.get("fan_speed_count", 6)
+    direction_out = substitutions.get("fan_direction_out", "FORWARD")
+    direction_in = substitutions.get("fan_direction_in", "REVERSE")
+    commands = {name: substitutions.get(f"fan_cmd_{name}", default) for name, default in {
+        "on": 0x0A, "off": 0x0D, "out_plus": 0x0B, "out_minus": 0x0C,
+        "in_plus": 0x0E, "in_minus": 0x0F,
+    }.items()}
+    sync_direction = substitutions.get("fan_sync_direction", "out")
+    sync_min = substitutions.get("fan_sync_endpoint", "min") == "min"
+    sync_command = commands[f"{sync_direction}_{'minus' if sync_min else 'plus'}"]
+    boot = next(hook for hook in config["esphome"]["on_boot"] if hook["priority"] == -100)["then"][0]["lambda"].value
+    assert f"static_assert(fan::FanDirection::{direction_out} != fan::FanDirection::{direction_in});" in boot
+    assert boot.rstrip().endswith("id(fan433_ready) = true;")
+    for address, name, label in fans:
+        fan = entity(config, "fan", name)
+        assert fan["name"] == label and fan["has_direction"]
+        assert fan["speed_count"] == speed_count
+        assert fan["restore_mode"] == substitutions.get("fan_restore_mode", "RESTORE_DEFAULT_OFF")
+        action = fan["on_state"][0]["then"][0]["if"]
+        assert action["condition"]["lambda"].value == "return id(fan433_ready);"
+        transmit = action["then"][1]["if"]
+        assert transmit["condition"]["lambda"].value == (
+            "return !id(fan433_batch_active) && !id(fan433_command_queue).empty() && !id(fan433_transmit_active);"
+        )
+        assert str(transmit["then"][0]["script.execute"]["id"]) == "fan433_transmit_queue"
+        body = action["then"][0]["lambda"].value
+        synchronize = entity(config, "button", f"{name}_synchronize")
+        assert synchronize["name"] == f"{label} Synchronize"
+        assert synchronize["entity_category"] == "config"
+        sync = synchronize["on_press"][0]["then"][0]["lambda"].value
+        for code in (body, sync, boot):
+            assert f"const uint16_t address = 0x{address:04X};" in code
+            assert f"std::min({speed_count}, id({name}).speed)" in code
+            assert f"id({name}).direction == fan::FanDirection::{direction_out}" in code
+        for code in (body, sync):
+            assert f"const bool target_on = id({name}).state;" in code
+            assert f"const uint8_t plus_command = target_out ? {commands['out_plus']} : {commands['in_plus']};" in code
+            assert f"const uint8_t minus_command = target_out ? {commands['out_minus']} : {commands['in_minus']};" in code
+            assert "else { enqueue(plus_command); enqueue(minus_command); }" in code
+        assert f"if (physical_on) enqueue({commands['off']});" in body
+        assert f"if (!physical_on) enqueue({commands['on']});" in body
+        assert f"enqueue({commands['on']});" in sync
+        assert f"for (int i = 0; i < {substitutions.get('fan_sync_saturation_count', 6)}; i++) enqueue({sync_command});" in sync
+        assert f"const bool anchor_out = {'true' if sync_direction == 'out' else 'false'};" in sync
+        assert f"const int anchor_speed = {1 if sync_min else speed_count};" in sync
+        assert f"if (!target_on) enqueue({commands['off']});" in sync
+
+    if combined:
+        aggregate = entity(config, "fan", "ventilation")
+        assert aggregate["name"] == "Ventilation" and not aggregate["has_direction"]
+        assert aggregate["speed_count"] == speed_count
+        body = aggregate["on_state"][0]["then"][0]["if"]["then"][0]["lambda"].value
+        assert "const bool target_on = id(ventilation).state;" in body
+        assert body.index("id(fan433_batch_active) = true;") < body.index("auto call =")
+        assert body.endswith("id(fan433_batch_active) = false;")
+        calls = body.split("  auto call = ")[1:]
+        assert len(calls) == len(fans)
+        for (_, name, _), direction, call in zip(fans, (direction_in, direction_out), calls):
+            assert call.startswith(f"id({name}).make_call();")
+            assert "call.set_state(target_on);" in call and "call.set_speed(target_speed);" in call
+            assert f"call.set_direction(fan::FanDirection::{direction});" in call
+
+    transmitter = entity(config, "remote_transmitter", "radio_transmitter")
+    assert transmitter["non_blocking"]
+    complete = transmitter["on_complete"]["then"]
+    pause_ms = int(substitutions.get("fan_command_pause", "100ms").removesuffix("ms"))
+    assert next(item["delay"] for item in complete if "delay" in item).total_milliseconds == pause_ms
+    assert "queue.erase(queue.begin());" in complete[1]["lambda"].value
+    assert complete[3]["lambda"].value == "id(fan433_transmit_active) = false;"
+    transmit = entity(config, "script", "fan433_transmit_queue")["then"][0]["if"]["then"][1]["remote_transmitter.transmit_raw"]
+    assert str(transmit["transmitter_id"]) == "radio_transmitter"
+    assert transmit["repeat"]["times"] == substitutions.get("fan_repeat_count", 4)
+    assert transmit["repeat"]["wait_time"].total_microseconds == substitutions.get("fan_gap_us", 11900)
+    assert f"const uint16_t short_us = {substitutions.get('fan_short_us', 400)};" in transmit["code"].value
+    assert f"const uint16_t long_us = {substitutions.get('fan_long_us', 1200)};" in transmit["code"].value
+    backend = "cc1101" if substitutions.get("test_radio_profile") == "esp32dev_cc1101" else "sx127x"
+    assert "radio_transceiver" in ids(config, backend)
+    for domain in ("fan", "button"):
+        for item in config.get(domain, []):
+            assert "${" not in str(item) and "<%" not in str(item)
+
+
 def check(config, contract, substitutions):
-    if contract == "esp8266-relay-pin":
+    if contract == "fan433":
+        check_fan433(config, substitutions)
+    elif contract == "esp8266-relay-pin":
         pin = entity(config, "output", "channel1_power_output")["pin"]
         assert pin["number"] == 4 and pin["mode"]["output"]
         assert not pin["inverted"] and not pin["allow_other_uses"]

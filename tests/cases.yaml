@@ -31,6 +31,54 @@ cases:
     file: tests/fixtures/waveshare-roles.yaml
   - id: fan-instances
     file: tests/fixtures/fan-instances.yaml
+    contract: fan433
+  - id: fan-cc1101
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {test_radio_profile: esp32dev_cc1101}
+    contract: fan433
+  - id: fan-shorthand
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {test_shorthand: true}
+    contract: fan433
+  - id: fan-without-combined
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {test_combined: false}
+    contract: fan433
+  - id: fan-sync-out-max
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {fan_sync_endpoint: max}
+    contract: fan433
+  - id: fan-sync-in-min
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {fan_sync_direction: in}
+    contract: fan433
+  - id: fan-sync-in-max
+    file: tests/fixtures/fan-instances.yaml
+    substitutions: {fan_sync_direction: in, fan_sync_endpoint: max}
+    contract: fan433
+  - id: fan-custom-protocol
+    file: tests/fixtures/fan-instances.yaml
+    contract: fan433
+    substitutions:
+      fan_speed_count: 4
+      fan_restore_mode: ALWAYS_ON
+      fan_direction_out: REVERSE
+      fan_direction_in: FORWARD
+      fan_cmd_on: 0x21
+      fan_cmd_off: 0x22
+      fan_cmd_out_plus: 0x23
+      fan_cmd_out_minus: 0x24
+      fan_cmd_in_plus: 0x25
+      fan_cmd_in_minus: 0x26
+      fan_sync_saturation_count: 8
+      fan_short_us: 450
+      fan_long_us: 1350
+      fan_gap_us: 12000
+      fan_repeat_count: 5
+      fan_command_pause: 150ms
+  - id: fan-learn-only
+    file: devices/fan-control-433.yaml
+    contract: fan433
 
   # Exercise every own-repository external component without a second source override.
   - id: source-tuya-product
