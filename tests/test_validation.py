@@ -58,7 +58,7 @@ substitutions:
         declarations = []
         for name in sorted(set(result.stdout.split("\0")) - {""}):
             path = Path(name)
-            if path.suffix not in (".yaml", ".yml"):
+            if path.suffix not in (".yaml", ".yml") or not (ROOT / path).is_file():
                 continue
             node = yaml.compose((ROOT / path).read_text())
             declarations.extend((path, line) for line in min_version_lines(node))

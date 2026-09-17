@@ -105,6 +105,59 @@ cases:
     file: devices/tuya-ceiling-light-v2-cbu.yaml
     substitutions: {chip: unsupported}
     reject: tuya-ceiling-light-v2/unsupported.yaml
+  - id: ct2-default
+    file: devices/tuya-ct-clamp-2em-80a.yaml
+    contract: ct2
+  - id: ct2-cb2s
+    file: tests/fixtures/device-family.yaml
+    contract: ct2
+  - id: ct2-t1m
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_profile: t1m}
+    contract: ct2
+  - id: ct2-custom-names
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_profile: t1m, test_channel_a_name: Grid, test_channel_b_name: Solar}
+    contract: ct2
+  - id: ct2-serial-overrides
+    file: tests/fixtures/device-family.yaml
+    substitutions: {uart_tx_pin: GPIO10, uart_rx_pin: GPIO11, uart_baud_rate: 19200}
+    contract: ct2
+  - id: reject-ct2-profile
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_profile: cbu}
+    reject: unsupported-ct-clamp-profile
+  - id: strip4-default
+    file: devices/tuya-strip-4pm.yaml
+    contract: strip4
+  - id: strip4-cbu
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_family: strip-4pm, test_profile: cbu}
+    contract: strip4
+  - id: strip4-t1u
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_family: strip-4pm, test_profile: t1u}
+    contract: strip4
+  - id: strip4-custom-relay
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_family: strip-4pm, test_profile: t1u, relay1_id: desk, relay1_name: Desk}
+    contract: strip4
+  - id: strip4-offline
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_family: strip-4pm, test_profile: cbu, test_networking: "${ {'interfaces': []} }"}
+    secrets: false
+    contract: strip4
+  - id: strip4-energy-overrides
+    file: tests/fixtures/device-family.yaml
+    substitutions:
+      test_family: strip-4pm
+      test_profile: t1u
+      test_energy: "${ {'baud_rate': 9600, 'update_interval': '5s'} }"
+    contract: strip4
+  - id: reject-strip4-profile
+    file: tests/fixtures/device-family.yaml
+    substitutions: {test_family: strip-4pm, test_profile: cb2s}
+    reject: unsupported-power-strip-profile
   - id: source-rtl8720c-evse
     file: devices/evse-feyree-three-phase.yaml
     local_components: [rtl8720c_uart]

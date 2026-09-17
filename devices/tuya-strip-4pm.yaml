@@ -1,41 +1,48 @@
+# power_strip.profile: cbu | t1u. Four sockets and one switched USB supply.
 substitutions:
-  name: tuya-strip-4pm-cbu
-  friendly_name: Tuya Strip 4PM (CBU)
+  name: tuya-strip-4pm
+  friendly_name: Tuya Strip 4PM
+  power_strip_profile: ${ (power_strip | default({})).get("profile", "cbu") }
+  power_strip_board: ${ power_strip_profile if power_strip_profile in ['cbu', 't1u'] else 'unsupported-power-strip-profile' }
+  power_strip_pins: >-
+    ${ {'cbu': {'led': 'GPIO20', 'relays': ['GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO26']},
+        't1u': {'led': 'GPIO23', 'relays': ['GPIO26', 'GPIO9', 'GPIO24', 'GPIO21', 'GPIO6']}}
+        .get(power_strip_profile, {}) }
 
-  led_pin: GPIO20
+  led_pin: ${power_strip_pins.led}
   led_inverted: false
 
   button_pin: GPIO22
   button_pullup: true
   button_inverted: true
 
-  relay1_pin: GPIO6
+  relay1_pin: ${power_strip_pins.relays[0]}
   relay1_inverted: false
   relay1_id: socket_1
   relay1_name: Socket 1
 
-  relay2_pin: GPIO7
+  relay2_pin: ${power_strip_pins.relays[1]}
   relay2_inverted: false
   relay2_id: socket_2
   relay2_name: Socket 2
 
-  relay3_pin: GPIO8
+  relay3_pin: ${power_strip_pins.relays[2]}
   relay3_inverted: false
   relay3_id: socket_3
   relay3_name: Socket 3
 
-  relay4_pin: GPIO9
+  relay4_pin: ${power_strip_pins.relays[3]}
   relay4_inverted: false
   relay4_id: socket_4
   relay4_name: Socket 4
 
-  relay5_pin: GPIO26
+  relay5_pin: ${power_strip_pins.relays[4]}
   relay5_inverted: false
   relay5_id: relay_usb
   relay5_name: Relay USB
 
 packages:
-  - !include ../packages/boards/tuya/cbu.yaml
+  - !include ../packages/boards/tuya/${power_strip_board}.yaml
   - !include
     file: ../packages/modules/relay-control.yaml
     vars:

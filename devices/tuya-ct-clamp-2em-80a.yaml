@@ -1,6 +1,173 @@
+# ct_clamp.profile: cb2s | t1m. Only the T1-M variant exposes alarm datapoints.
 substitutions:
-  name: tuya-ct-clamp-2em-80a-t1m
-  friendly_name: Tuya CT Clamp 2EM 80A (T1-M)
+  name: tuya-ct-clamp-2em-80a
+  friendly_name: Tuya CT Clamp 2EM 80A
+  ct_clamp_profile: ${ (ct_clamp | default({})).get("profile", "cb2s") }
+  ct_clamp_board: ${ ct_clamp_profile if ct_clamp_profile in ['cb2s', 't1m'] else 'unsupported-ct-clamp-profile' }
+  ct_clamp_alarm_package:
+    esphome:
+      on_boot:
+        priority: 800
+        then:
+          - lambda: |-
+              id(alarm_overvoltage).publish_state(false);
+              id(alarm_undervoltage).publish_state(false);
+              id(alarm_overcurrent_a).publish_state(false);
+              id(alarm_overpower_a).publish_state(false);
+              id(alarm_overcurrent_b).publish_state(false);
+              id(alarm_overpower_b).publish_state(false);
+
+    number:
+      - platform: tuya
+        name: Overvoltage Alarm Threshold
+        number_datapoint: 137
+        min_value: 80
+        max_value: 260
+        step: 1
+        multiply: 10
+        unit_of_measurement: V
+        device_class: voltage
+        entity_category: config
+        mode: box
+
+      - platform: tuya
+        name: Undervoltage Alarm Threshold
+        number_datapoint: 138
+        min_value: 80
+        max_value: 260
+        step: 1
+        multiply: 10
+        unit_of_measurement: V
+        device_class: voltage
+        entity_category: config
+        mode: box
+
+      - platform: tuya
+        name: Overcurrent Alarm Threshold ${channel_a_name}
+        number_datapoint: 139
+        min_value: 0
+        max_value: 150
+        step: 0.5
+        multiply: 1000
+        unit_of_measurement: A
+        device_class: current
+        entity_category: config
+        mode: box
+
+      - platform: tuya
+        name: Overpower Alarm Threshold ${channel_a_name}
+        number_datapoint: 140
+        min_value: 0.1
+        max_value: 60000
+        step: 10
+        multiply: 10
+        unit_of_measurement: W
+        device_class: power
+        entity_category: config
+        mode: box
+
+      - platform: tuya
+        name: Overcurrent Alarm Threshold ${channel_b_name}
+        number_datapoint: 145
+        min_value: 0
+        max_value: 150
+        step: 0.5
+        multiply: 1000
+        unit_of_measurement: A
+        device_class: current
+        entity_category: config
+        mode: box
+
+      - platform: tuya
+        name: Overpower Alarm Threshold ${channel_b_name}
+        number_datapoint: 146
+        min_value: 0.1
+        max_value: 60000
+        step: 10
+        multiply: 10
+        unit_of_measurement: W
+        device_class: power
+        entity_category: config
+        mode: box
+
+    switch:
+      - platform: tuya
+        name: Buzzer
+        switch_datapoint: 132
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Overvoltage Alarm
+        switch_datapoint: 133
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Undervoltage Alarm
+        switch_datapoint: 134
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Overcurrent Alarm ${channel_a_name}
+        switch_datapoint: 135
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Overpower Alarm ${channel_a_name}
+        switch_datapoint: 136
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Overcurrent Alarm ${channel_b_name}
+        switch_datapoint: 149
+        entity_category: config
+
+      - platform: tuya
+        name: Enable Overpower Alarm ${channel_b_name}
+        switch_datapoint: 150
+        entity_category: config
+
+    binary_sensor:
+      - platform: tuya
+        name: Alarm Overvoltage
+        id: alarm_overvoltage
+        sensor_datapoint: 141
+        device_class: problem
+        entity_category: diagnostic
+
+      - platform: tuya
+        name: Alarm Undervoltage
+        id: alarm_undervoltage
+        sensor_datapoint: 142
+        device_class: problem
+        entity_category: diagnostic
+
+      - platform: tuya
+        name: Alarm Overcurrent ${channel_a_name}
+        id: alarm_overcurrent_a
+        sensor_datapoint: 143
+        device_class: problem
+        entity_category: diagnostic
+
+      - platform: tuya
+        name: Alarm Overpower ${channel_a_name}
+        id: alarm_overpower_a
+        sensor_datapoint: 144
+        device_class: problem
+        entity_category: diagnostic
+
+      - platform: tuya
+        name: Alarm Overcurrent ${channel_b_name}
+        id: alarm_overcurrent_b
+        sensor_datapoint: 147
+        device_class: problem
+        entity_category: diagnostic
+
+      - platform: tuya
+        name: Alarm Overpower ${channel_b_name}
+        id: alarm_overpower_b
+        sensor_datapoint: 148
+        device_class: problem
+        entity_category: diagnostic
 
   uart_tx_pin: GPIO11
   uart_rx_pin: GPIO10
@@ -16,20 +183,9 @@ substitutions:
   current_scale: 0.001 # DP 113, 114
 
 packages:
-  - !include ../packages/boards/tuya/t1m.yaml
+  - !include ../packages/boards/tuya/${ct_clamp_board}.yaml
   - !include ../packages/modules/tuya-product.yaml
-
-esphome:
-  on_boot:
-    priority: 800
-    then:
-      - lambda: |-
-          id(alarm_overvoltage).publish_state(false);
-          id(alarm_undervoltage).publish_state(false);
-          id(alarm_overcurrent_a).publish_state(false);
-          id(alarm_overpower_a).publish_state(false);
-          id(alarm_overcurrent_b).publish_state(false);
-          id(alarm_overpower_b).publish_state(false);
+  - ${ ct_clamp_alarm_package if ct_clamp_profile == 't1m' else {} }
 
 uart:
   id: tuya_uart
@@ -179,157 +335,6 @@ number:
     unit_of_measurement: s
     mode: box
     device_class: duration
-
-  - platform: tuya
-    name: Overvoltage Alarm Threshold
-    number_datapoint: 137
-    min_value: 80
-    max_value: 260
-    step: 1
-    multiply: 10
-    unit_of_measurement: V
-    device_class: voltage
-    entity_category: config
-    mode: box
-
-  - platform: tuya
-    name: Undervoltage Alarm Threshold
-    number_datapoint: 138
-    min_value: 80
-    max_value: 260
-    step: 1
-    multiply: 10
-    unit_of_measurement: V
-    device_class: voltage
-    entity_category: config
-    mode: box
-
-  - platform: tuya
-    name: Overcurrent Alarm Threshold ${channel_a_name}
-    number_datapoint: 139
-    min_value: 0
-    max_value: 150
-    step: 0.5
-    multiply: 1000
-    unit_of_measurement: A
-    device_class: current
-    entity_category: config
-    mode: box
-
-  - platform: tuya
-    name: Overpower Alarm Threshold ${channel_a_name}
-    number_datapoint: 140
-    min_value: 0.1
-    max_value: 60000
-    step: 10
-    multiply: 10
-    unit_of_measurement: W
-    device_class: power
-    entity_category: config
-    mode: box
-
-  - platform: tuya
-    name: Overcurrent Alarm Threshold ${channel_b_name}
-    number_datapoint: 145
-    min_value: 0
-    max_value: 150
-    step: 0.5
-    multiply: 1000
-    unit_of_measurement: A
-    device_class: current
-    entity_category: config
-    mode: box
-
-  - platform: tuya
-    name: Overpower Alarm Threshold ${channel_b_name}
-    number_datapoint: 146
-    min_value: 0.1
-    max_value: 60000
-    step: 10
-    multiply: 10
-    unit_of_measurement: W
-    device_class: power
-    entity_category: config
-    mode: box
-
-switch:
-  - platform: tuya
-    name: Buzzer
-    switch_datapoint: 132
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Overvoltage Alarm
-    switch_datapoint: 133
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Undervoltage Alarm
-    switch_datapoint: 134
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Overcurrent Alarm ${channel_a_name}
-    switch_datapoint: 135
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Overpower Alarm ${channel_a_name}
-    switch_datapoint: 136
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Overcurrent Alarm ${channel_b_name}
-    switch_datapoint: 149
-    entity_category: config
-
-  - platform: tuya
-    name: Enable Overpower Alarm ${channel_b_name}
-    switch_datapoint: 150
-    entity_category: config
-
-binary_sensor:
-  - platform: tuya
-    name: Alarm Overvoltage
-    id: alarm_overvoltage
-    sensor_datapoint: 141
-    device_class: problem
-    entity_category: diagnostic
-
-  - platform: tuya
-    name: Alarm Undervoltage
-    id: alarm_undervoltage
-    sensor_datapoint: 142
-    device_class: problem
-    entity_category: diagnostic
-
-  - platform: tuya
-    name: Alarm Overcurrent ${channel_a_name}
-    id: alarm_overcurrent_a
-    sensor_datapoint: 143
-    device_class: problem
-    entity_category: diagnostic
-
-  - platform: tuya
-    name: Alarm Overpower ${channel_a_name}
-    id: alarm_overpower_a
-    sensor_datapoint: 144
-    device_class: problem
-    entity_category: diagnostic
-
-  - platform: tuya
-    name: Alarm Overcurrent ${channel_b_name}
-    id: alarm_overcurrent_b
-    sensor_datapoint: 147
-    device_class: problem
-    entity_category: diagnostic
-
-  - platform: tuya
-    name: Alarm Overpower ${channel_b_name}
-    id: alarm_overpower_b
-    sensor_datapoint: 148
-    device_class: problem
-    entity_category: diagnostic
 
 tuya:
   uart_id: tuya_uart

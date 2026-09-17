@@ -23,7 +23,7 @@ DUMMY_SECRETS = {
 def tracked_files():
     result = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT,
                             text=True, capture_output=True, check=True)
-    return [Path(name) for name in result.stdout.split("\0") if name]
+    return [Path(name) for name in result.stdout.split("\0") if name and (ROOT / name).is_file()]
 
 
 def snapshot(destination):

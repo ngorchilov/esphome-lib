@@ -6,7 +6,7 @@ Tuya MCU devices.
 
 ## File Convention
 
-- Match each filename to the corresponding device configuration under `devices/`.
+- Match each filename to the corresponding device or device family under `devices/`.
 - When one product has distinct hardware/cloud variants, append a short module suffix such as
   `-cb2s` or `-t1m` and keep one snapshot per variant.
 - Store the canonical decoded model object with `modelId` and `services` at the top level.
@@ -18,11 +18,13 @@ Tuya MCU devices.
 For example:
 
 ```text
-devices/tuya-ct-clamp-2em-80a-cb2s.yaml
-devices/tuya-ct-clamp-2em-80a-t1m.yaml
+devices/tuya-ct-clamp-2em-80a.yaml
 data-models/tuya/things-data-model/tuya-ct-clamp-2em-80a-cb2s.json
 data-models/tuya/things-data-model/tuya-ct-clamp-2em-80a-t1m.json
 ```
+
+The CT device selects its module through `ct_clamp.profile: cb2s | t1m`; the archived models retain
+their module suffixes because the T1-M MCU has additional alarm datapoints.
 
 ## Cloud Response Normalization
 

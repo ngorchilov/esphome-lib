@@ -1,0 +1,22 @@
+substitutions:
+  name: test-device-family
+  friendly_name: Test Device Family
+  test_family: ct-clamp-2em-80a
+  test_profile: cb2s
+  test_channel_a_name: Channel A
+  test_channel_b_name: Channel B
+  test_networking: {}
+  test_energy: {}
+packages:
+  - !include
+    file: ../../devices/tuya-${test_family}.yaml
+    vars:
+      networking: ${test_networking}
+      energy: ${test_energy}
+      ct_clamp:
+        profile: ${test_profile}
+        channels:
+          a_name: ${test_channel_a_name}
+          b_name: ${test_channel_b_name}
+      power_strip:
+        profile: ${test_profile}

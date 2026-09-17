@@ -66,6 +66,11 @@ V2 board selection, RGB/white pin mappings, PWM frequency and driver, full outpu
 shared white mixing. The chip substitution is exercised independently of the device filename;
 an unsupported module must fail configuration.
 
+The device-family cases cover CB2S/T1-M CT meters and CBU/T1-U 4PM strips, including standalone
+defaults, include vars, channel names, UART overrides and custom relay IDs. Assertions preserve
+Tuya datapoints/scaling, T1-M-only alarms, fixed wiring, relay restoration and master-button/power-cycle
+commands. Unsupported profiles are rejected even when their names identify another valid board.
+
 The RF fan matrix covers SX127x and CC1101, explicit IDs and shorthand addresses, combined fan
 membership, individual-only and learn-only configurations, all four synchronization anchors, and
 custom protocol settings. Resolved-output assertions check entity metadata, each member's generated

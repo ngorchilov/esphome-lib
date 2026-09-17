@@ -55,6 +55,16 @@ without reuse needs a concrete technical benefit, such as lazy loading of an opt
 that ESPHome would otherwise require even when the feature is disabled; explain the exception
 before adding it.
 
+Hardware-only variants with the same device behavior belong in one device definition with an
+explicit profile selector. `tuya-ct-clamp-2em-80a.yaml` uses `ct_clamp.profile` (`cb2s` or `t1m`),
+with T1-M-only alarms kept in an inline conditional package. `tuya-strip-4pm.yaml` uses
+`power_strip.profile` (`cbu` or `t1u`) with inline wiring data. Preserve the established substitutions,
+entity IDs and metadata when consolidating variants. Unsupported profiles must fail validation.
+Test both standalone device defaults and dashboard includes; root-device package selection needs
+substitution helpers, whereas include-only modules can normalize their vars using `defaults`.
+MELcutter versions and Feyree chargers remain separate products, not hardware profiles.
+Consumer parameters and dashboard examples are in `devices/README.md`.
+
 ### Kickstart Firmware
 
 `kickstart/*.yaml` files are temporary board bring-up configurations. Each kickstart should:

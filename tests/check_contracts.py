@@ -21,6 +21,105 @@ def enabled(value):
     return str(value).lower() == "true"
 
 
+def check_ct2(config, substitutions):
+    profile = substitutions.get("test_profile", "cb2s")
+    assert config["bk72xx"]["board"] == ("t1-m" if profile == "t1m" else "cb2s")
+    uart = entity(config, "uart", "tuya_uart")
+    for key, default in (("tx_pin", "GPIO11"), ("rx_pin", "GPIO10")):
+        assert uart[key]["number"] == int(substitutions.get(f"uart_{key}", default).removeprefix("GPIO"))
+    assert uart["baud_rate"] == int(substitutions.get("uart_baud_rate", 9600))
+    assert str(config["tuya"]["uart_id"]) == "tuya_uart"
+    assert str(config["tuya"]["time_id"]) == "ha_time"
+    channels = {c: substitutions.get(f"test_channel_{c}_name", f"Channel {c.upper()}") for c in "ab"}
+    for channel, label in channels.items():
+        assert entity(config, "text_sensor", f"current_flow_{channel}")["name"] == f"Flow Direction {label}"
+        for prefix, name, unit, decimals, device_class, state_class in (
+            ("power", "Power", "W", 1, "power", "measurement"),
+            ("current", "Current", "A", 3, "current", "measurement"),
+            ("power_factor", "Power Factor", "%", 0, "power_factor", "measurement"),
+            ("energy_consumed", "Energy Consumed", "kWh", 2, "energy", "total_increasing"),
+            ("energy_produced", "Energy Produced", "kWh", 2, "energy", "total_increasing"),
+        ):
+            sensor = entity(config, "sensor", f"{prefix}_{channel}")
+            assert sensor["name"] == f"{name} {label}"
+            assert (sensor["unit_of_measurement"], sensor["accuracy_decimals"]) == (unit, decimals)
+            assert (sensor["device_class"], sensor["state_class"]) == (device_class, state_class)
+    callbacks = {item["sensor_datapoint"]: item for item in config["tuya"]["on_datapoint_update"]}
+    scaled = {101: ("power_a", "power_scale"), 105: ("power_b", "power_scale"),
+              106: ("energy_consumed_a", "energy_scale"), 107: ("energy_produced_a", "energy_scale"),
+              108: ("energy_consumed_b", "energy_scale"), 109: ("energy_produced_b", "energy_scale"),
+              111: ("frequency", "frequency_scale"), 112: ("voltage", "voltage_scale"),
+              113: ("current_a", "current_scale"), 114: ("current_b", "current_scale"),
+              115: ("total_power", "power_scale"), 130: ("energy_consumed", "energy_scale"),
+              131: ("energy_produced", "energy_scale")}
+    assert callbacks.keys() == scaled.keys() | {102, 104, 110, 121}
+    for dp, (name, scale) in scaled.items():
+        assert callbacks[dp]["datapoint_type"] == "int"
+        body = callbacks[dp]["then"][0]["lambda"].value
+        assert body == f"id({name}).publish_state(x * {config['substitutions'][scale]});"
+    for dp, channel in ((102, "a"), (104, "b")):
+        body = callbacks[dp]["then"][0]["lambda"].value
+        assert callbacks[dp]["datapoint_type"] == "enum" and "if (x == 0)" in body
+        assert f'id(current_flow_{channel}).publish_state("Forward");' in body
+        assert f'id(current_flow_{channel}).publish_state("Reverse");' in body
+    for dp, channel in ((110, "a"), (121, "b")):
+        assert callbacks[dp]["then"][0]["lambda"].value == f"id(power_factor_{channel}).publish_state(x);"
+    numbers = {item["number_datapoint"]: item for item in config["number"]}
+    assert (numbers[129]["min_value"], numbers[129]["max_value"], numbers[129]["step"]) == (3, 60, 1)
+    alarms = [item for item in config["binary_sensor"] if item["platform"] == "tuya"]
+    switches = [item for item in config.get("switch", []) if item["platform"] == "tuya"]
+    if profile == "t1m":
+        assert numbers.keys() == {129, 137, 138, 139, 140, 145, 146}
+        assert {item["sensor_datapoint"] for item in alarms} == {141, 142, 143, 144, 147, 148}
+        assert {item["switch_datapoint"] for item in switches} == {132, 133, 134, 135, 136, 149, 150}
+        assert all(item["entity_category"] == "config" for dp, item in numbers.items() if dp != 129)
+        assert all(item["entity_category"] == "config" for item in switches)
+        assert all(item["entity_category"] == "diagnostic" and item["device_class"] == "problem" for item in alarms)
+        boot = next(item for item in config["esphome"]["on_boot"] if item["priority"] == 800)
+        body = boot["then"][0]["lambda"].value
+        assert all(f"id({item['id']}).publish_state(false);" in body for item in alarms)
+    else:
+        assert numbers.keys() == {129} and not alarms and not switches
+        assert not any(item["priority"] == 800 for item in config["esphome"]["on_boot"])
+
+
+def check_strip4(config, substitutions):
+    profile = substitutions.get("test_profile", "cbu")
+    is_cbu = profile == "cbu"
+    assert config["bk72xx"]["board"] == ("cbu" if is_cbu else "t1-u")
+    pins = [6, 7, 8, 9, 26] if is_cbu else [26, 9, 24, 21, 6]
+    relays = [substitutions.get(f"relay{i}_id", f"socket_{i}" if i < 5 else "relay_usb") for i in range(1, 6)]
+    for i, (prefix, pin) in enumerate(zip(relays, pins), 1):
+        output = entity(config, "output", f"{prefix}_power_output")
+        assert output["pin"]["number"] == pin and not output["pin"]["inverted"]
+        relay = entity(config, "switch", f"{prefix}_power_relay")
+        assert relay["name"] == substitutions.get(f"relay{i}_name", f"Socket {i}" if i < 5 else "Relay USB")
+        assert relay["restore_mode"] == "RESTORE_DEFAULT_OFF"
+        assert {f"{prefix}_power_{command}" for command in ("on", "off", "cycle")} <= ids(config, "script")
+    led = entity(config, "output", "led_output")
+    assert led["pin"]["number"] == (20 if is_cbu else 23) and not led["inverted"]
+    status = entity(config, "binary_sensor", "power_status")
+    assert status["name"] == "Power Status"
+    assert "".join(status["lambda"].value.split()) == "return" + "||".join(f"id({r}_power_state).state" for r in relays) + ";"
+    button = next(item for item in config["binary_sensor"] if item["platform"] == "gpio")
+    assert button["pin"]["number"] == 22 and button["pin"]["inverted"] and button["pin"]["mode"]["pullup"]
+    action = button["on_press"][0]["then"][0]["if"]
+    assert str(action["condition"]["binary_sensor.is_on"]["id"]) == "power_status"
+    for branch, command in (("then", "off"), ("else", "on")):
+        assert [str(item["script.execute"]["id"]) for item in action[branch]] == [f"{r}_power_{command}" for r in relays]
+    reboot = next(item for item in config["button"] if item["name"] == "Reboot All Relays")
+    assert [str(item["script.execute"]["id"]) for item in reboot["on_press"][0]["then"]] == [f"{r}_power_cycle" for r in relays]
+    energy = config["substitutions"].get("test_energy", {})
+    meter = entity(config, "sensor", "energy_monitor")
+    assert meter["platform"] == "bl0942"
+    assert meter["update_interval"] == cv.positive_time_period_milliseconds(energy.get("update_interval", "30s"))
+    assert meter["energy"]["unit_of_measurement"] == "kWh"
+    assert config["uart"][0]["baud_rate"] == energy.get("baud_rate", 4800)
+    assert (config["uart"][0]["tx_pin"]["number"], config["uart"][0]["rx_pin"]["number"]) == (11, 10)
+    if "test_networking" in substitutions:
+        assert not {"wifi", "ethernet", "network", "api", "ota", "mdns"} & config.keys()
+
+
 def check_fan433(config, substitutions):
     learn_only = config["esphome"]["name"] == "fan-control-433"
     if learn_only:
@@ -129,6 +228,12 @@ def check(config, contract, substitutions):
     if "expected_min_version" in substitutions:
         assert config["esphome"]["min_version"] == substitutions["expected_min_version"]
     if contract == "versions":
+        return
+    if contract == "ct2":
+        check_ct2(config, substitutions)
+        return
+    if contract == "strip4":
+        check_strip4(config, substitutions)
         return
     if contract == "ceiling-light-v2":
         chip = config["substitutions"]["chip"]
