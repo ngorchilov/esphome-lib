@@ -35,6 +35,9 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Validate configurations and models
         run: python tests/validate.py ${{ matrix.targets }}
+      - name: Validate consumer documentation examples
+        if: matrix.esphome == '2026.8.2'
+        run: python tests/docs_config.py
       - name: Upload validation results
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,4 +46,6 @@ jobs:
           path: |
             /tmp/esphome-lib-validation-*/results.json
             /tmp/esphome-lib-validation-*/logs/
+            /tmp/esphome-lib-docs-*/results.json
+            /tmp/esphome-lib-docs-*/logs/
           if-no-files-found: ignore

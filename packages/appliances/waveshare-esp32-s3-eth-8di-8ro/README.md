@@ -44,6 +44,35 @@ load selection must follow the manufacturer's electrical-safety guidance.
 
 ## Usage
 
+For an ESPHome dashboard configuration:
+
+```yaml
+substitutions:
+  name: ethernet-controller
+  friendly_name: Ethernet Controller
+
+packages:
+  - url: https://github.com/ngorchilov/esphome-lib
+    ref: main
+    refresh: 0d
+    files:
+      - path: packages/appliances/waveshare-esp32-s3-eth-8di-8ro.yaml
+        vars:
+          waveshare_8di8ro:
+            relays:
+              relay1:
+                entity:
+                  type: valve
+                  name: Garden Valve
+                  device_class: water
+```
+
+Use one appliance per firmware; it supplies the board and fixed buses. Parameters belong in the
+`waveshare_8di8ro` object. Besides channel fields below, it accepts `networking`
+([shared settings](../../modules/networking/README.md), Ethernet by default), `rs485.id`,
+`rs485.baud_rate` (9600), `rs485.data_bits` (8), `rs485.parity` (NONE), `rs485.stop_bits` (1),
+and `rtc.id`. Pins, expanders and onboard RGB/buzzer hardware are not selectable profiles.
+
 The defaults expose all relay and digital-input channels, use Ethernet, and configure RS485 as
 9600-8-N-1. Relay switch facades use `ALWAYS_OFF` so every firmware boot starts with all loads off.
 

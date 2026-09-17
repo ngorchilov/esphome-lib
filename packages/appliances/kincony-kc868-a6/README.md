@@ -44,6 +44,35 @@ separate behavioral decision, not part of the package refactor.
 
 ## Usage
 
+For the ESPHome dashboard, start with a complete remote include:
+
+```yaml
+substitutions:
+  name: io-controller
+  friendly_name: IO Controller
+
+packages:
+  - url: https://github.com/ngorchilov/esphome-lib
+    ref: main
+    refresh: 0d
+    files:
+      - path: packages/appliances/kincony-kc868-a6.yaml
+        vars:
+          kincony_kc868_a6:
+            rs485:
+              baud_rate: 19200
+              parity: EVEN
+            relays:
+              relay1:
+                entity:
+                  type: valve
+                  name: Garden Valve
+                  device_class: water
+```
+
+Include this appliance once per firmware. It supplies the board and fixed peripheral buses;
+do not include an additional board package. The following local example shows further overrides.
+
 The defaults expose every channel, use Wi-Fi, configure both serial ports as 9600-8-N-1, preserve
 the existing relay-switch `RESTORE_DEFAULT_OFF` behavior, poll analog inputs every second, and
 restore analog output values.
@@ -107,9 +136,23 @@ state and restoration. Existing flat `enabled`, `id`, `name`, `internal`, `disab
 `restore_mode` fields remain fallback values for existing callers, while nested `entity` fields take
 precedence.
 
-Digital inputs accept `enabled`, `id`, `name`, `internal`, and `disabled_by_default`. Analog inputs
-also accept `update_interval`; analog outputs also accept `restore_value`. Setting `enabled: false`
-on an input or analog channel removes that complete channel.
+Channel fields are not interchangeable:
+
+| Channel object | Accepted fields |
+| --- | --- |
+| `digital_inputs.input1` through `input6` | `enabled`, `id`, `name`, `internal`, `disabled_by_default` |
+| `analog_inputs.input1` through `input4` | `enabled`, `name`, `internal`, `disabled_by_default`, `update_interval` (default `1s`) |
+| `analog_outputs.output1` through `output2` | `enabled`, `name`, `internal`, `disabled_by_default`, `restore_value` (default `true`) |
+
+`enabled` defaults to `true`; `internal` and `disabled_by_default` default to `false`.
+Setting `enabled: false` removes that complete input or analog channel. Analog IDs are fixed:
+`ai1` through `ai4`, `ao1`/`ao2`, and their `ao1_dac`/`ao2_dac` backing outputs. There is no analog
+`id` override in this API.
+
+Both `rs485` and `rs232` accept `id`, `baud_rate` (9600), `data_bits` (8), `parity` (`NONE`) and
+`stop_bits` (1). `rtc` accepts `id` (default `rtc_time`). `networking` accepts the shared
+[networking object](../../modules/networking/README.md). The board owns all physical pins.
+Pass optional original-ESP32 `esp32_advanced` alongside `kincony_kc868_a6`, not inside it.
 
 Existing infrastructure IDs are preserved for compatibility:
 

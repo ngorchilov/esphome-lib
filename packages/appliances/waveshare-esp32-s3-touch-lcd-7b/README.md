@@ -84,6 +84,33 @@ The display, touchscreen, and backlight entity ids may be replaced through the
 corresponding `waveshare_lcd7b` objects. Display drawing applications can also
 set `display.update_interval` and `display.auto_clear_enabled`.
 
+## Parameters
+
+The `waveshare_lcd7b` object accepts only the settings below; physical pins/timings remain fixed.
+
+| Field | Default |
+| --- | --- |
+| `display.id` | `waveshare_lcd7b_display` |
+| `display.update_interval` | `never` |
+| `display.auto_clear_enabled` | `false` |
+| `touchscreen.id` | `waveshare_lcd7b_touchscreen` |
+| `backlight.id` | `waveshare_lcd7b_backlight` |
+| `backlight.name` | `Backlight` |
+| `backlight.restore_mode` | `RESTORE_DEFAULT_ON` |
+| `backlight.transition_length` | `250ms` |
+| `networking` | Shared [networking settings](../../modules/networking/README.md); Wi-Fi by default. |
+
+## GT911 Initialization Workaround
+
+I2C deliberately runs at **50 kHz with `scan: false`**. At 400 kHz, the panel has exhibited
+intermittent GT911 startup failures, an address change from `0x5D` to `0x14`, and `Calibration error`.
+The lower bus rate is a temporary mitigation for [ESPHome issue #15019](https://github.com/esphome/issues/issues/15019).
+Do not add a second I2C bus or a 400 kHz override when consuming this appliance.
+
+Revisit the rate only after an upstream GT911 fix is available and repeated cold boots/restarts
+on this board confirm reliable initialization at 400 kHz. Keep scanning disabled. The YAML retains
+the same workaround comment next to the setting so the reason is visible during configuration.
+
 ## Fixed Wiring
 
 | Function | Connection |

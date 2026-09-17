@@ -660,6 +660,11 @@ after an official fix becomes available.
 
 ## Validation Standards
 
+- Consumer README changes: run `python tests/docs_config.py` for complete examples and
+  `python -m unittest discover -s tests -p 'test_*.py'` for local links/catalog coverage.
+  The README runner mirrors this repository to checked-out packages and uses local components.
+  Partial snippets still need their documented context; never treat an HA script as ESPHome YAML.
+
 - YAML configuration-only changes: run `esphome config` only. Do not compile firmware for
   substitutions, metadata, package selection, or other configuration-only changes.
 - C++ changes, including lambda bodies embedded in YAML: run config first, then compile only

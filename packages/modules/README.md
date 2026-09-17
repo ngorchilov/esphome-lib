@@ -1,5 +1,155 @@
 # Shared Behavior Modules
 
+Start with the [device reference](../../devices/README.md) when firmware already exists for your
+hardware. The following contracts are for composing an application from modules. A board package
+must provide the shared firmware foundations. Native ESPHome component settings are not implicitly
+accepted as package parameters: use the fields listed here, or a native `!extend` override.
+
+## Relay Control
+
+[`relay-control.yaml`](relay-control.yaml) accepts one `rc` object. It creates a physical binary
+output, a state owner and an optional user-facing switch, light or valve. Use a unique `rc.id` for
+each include. For example, this complete firmware describes a bare ESP32 with a relay on GPIO4;
+it is not a pin map for an arbitrary retail product:
+
+```yaml
+substitutions:
+  name: workshop-relay
+  friendly_name: Workshop Relay
+
+packages:
+  - url: https://github.com/ngorchilov/esphome-lib
+    ref: main
+    refresh: 0d
+    files:
+      - packages/boards/espressif/esp32dev.yaml
+      - path: packages/modules/relay-control.yaml
+        vars:
+          rc:
+            id: workshop
+            entity:
+              type: switch
+              name: None
+            power:
+              pin: GPIO4
+            power_cycle:
+              enabled: true
+              delay: 3s
+```
+
+| `rc` field | Default / meaning |
+| --- | --- |
+| `id` | `rc1`; unique prefix for infrastructure IDs. |
+| `power.provider` | `gpio`; `external` instead uses an output you create. |
+| `power.pin`, `power.inverted`, `power.strapping` | `GPIO0`, false, false; set the actual wiring. GPIO provider only. |
+| `power.output_id` | `<id>_power_output`; required to identify the supplied output for an external provider. |
+| `power.restore_mode` | `RESTORE_DEFAULT_OFF`; fallback for entity restore settings. |
+| `control` | Same fields as `entity.control` below; entity fields take precedence. |
+| `power_cycle.enabled`, `.name`, `.delay` | false, `Power Cycle`, `3s`. |
+
+### Entity Fields
+
+`rc.entity` is also the `entity` object accepted by single-relay devices:
+
+| Field | Default / meaning |
+| --- | --- |
+| `enabled` | true; false leaves only the physical output, without state/command scripts or optional features. |
+| `type` | `switch`; also `light` or `valve`. |
+| `id` | `<rc.id>_power_relay`, `<rc.id>_control_light` or `<rc.id>_control_valve`, according to role. Hardware profiles may supply another default. |
+| `name` | `None`, meaning device name; profiles can choose a channel name. |
+| `icon` | Empty; use the native entity/device-class icon. |
+| `internal`, `disabled_by_default` | false; hide from HA, or offer disabled in HA, respectively. |
+| `restore_mode` | `RESTORE_DEFAULT_OFF`; native restore mode for the selected state owner. |
+| `device_class` | Empty; valves can use `water` or `gas`. |
+| `control.mode` | `local`; also `detached` (HA actions) or `none` (no action). |
+| `control.entity_id` | Empty; HA target required for useful detached control. |
+| `control.service_on`, `.service_off`, `.service_toggle` | `light.turn_on`, `light.turn_off`, `light.toggle`; change for another HA domain. |
+| `power.exposed` | true for switches, false for lights/valves; separately exposes physical POWER when needed. |
+| `power.id`, `.name`, `.icon`, `.disabled_by_default` | `<rc.id>_power_relay`, `Power`, empty, false for a separate backing switch. |
+| `power.restore_mode` | Overrides `entity.restore_mode`, which overrides `rc.power.restore_mode`. |
+
+A local light owns its output directly unless separate POWER exposure is requested. Valves and
+other roles needing a backing switch keep restoration there. Do not assume a backing switch ID
+exists for every role. `power.internal` at the `rc` level is a low-level override of backing-switch
+visibility; prefer the entity's visibility and `entity.power.exposed` in consumer configurations.
+Profile authors can set `rc.default_name`, `default_entity_id`, `default_enabled`,
+`default_internal` and `default_disabled_by_default` without overriding explicit entity choices.
+
+### Inputs And Indicators
+
+| Object under `rc` | Fields and defaults |
+| --- | --- |
+| `indicator_led` | `enabled: false`, `pin: GPIO0`, `inverted: false`, `strapping: false`, `name: Relay LED`, `internal: true`. Follows physical POWER. |
+| `integrated_button` | `enabled: false`, `pin: GPIO0`, `inverted: true`, `strapping: false`, `name: Integrated Button`, `internal: false`. Toggles physical POWER. |
+| `external_switch` | `enabled: false`, `pin: GPIO0`, `inverted: false`, `strapping: false`, `name: External Switch`, `mode: rocker`, `startup_delay: 1s`. `momentary` toggles on press; `rocker` toggles on either edge. Initial publication is ignored. |
+| `external_magic` | `enabled: false`, `source_id: external_magic_source`, `state_internal: false`. Requires an existing binary sensor that emits presses, for example from a Magic Switch component. |
+
+External inputs operate PRIMARY (the selected entity/control target). Detached HA control needs
+an API connection and permission to perform HA actions. Physical POWER remains independently
+controllable. Setting a detached target does not turn the physical relay into an HA state mirror.
+
+Stable integration points for enabled instances:
+
+- `<id>_power_output`: physical binary output.
+- `<id>_power_state`: internal binary sensor, independent of the selected state owner.
+- `<id>_power_on`, `_power_off`, `_power_toggle`: scripts for the physical output/state owner.
+- `<id>_primary_on`, `_primary_off`, `_primary_toggle`: scripts for the selected entity.
+- `<id>_after_power_on`, `_after_power_off`, `_after_power_change`: scripts you may extend with
+  device-specific state hooks.
+- `<id>_power_cycle`: script when power cycling is enabled.
+
+## Pins
+
+[`pin.yaml`](pin.yaml) is an inline GPIO schema include, not a `packages` entry. The board supplies
+`firmware_platform`/`firmware_family`; the wrapper emits only fields that platform accepts.
+
+```yaml
+pin: !include
+  file: ../packages/modules/pin.yaml
+  vars:
+    pin:
+      number: GPIO4
+      inverted: false
+      mode:
+        output: true
+```
+
+`pin.schema` is `gpio` (default) or `number`. GPIO fields are `number` (default GPIO0, normally
+always set it), `inverted` (false), `allow_other_uses` (false), and `mode.input`, `output`, `pullup`,
+`pulldown`, `open_drain` (all false). ESP32-only fields are `drive_strength` (20mA),
+`ignore_strapping_warning` (false) and `ignore_pin_validation_error` (false); they are omitted on
+ESP8266 and LibreTiny. Native platform validation still decides which pins/modes are legal.
+`schema: number` omits GPIO mode/inversion fields for consumers such as Ethernet. This wrapper
+does not create GPIO expanders or IDs and can be included as many times as needed.
+
+## Energy Monitoring
+
+Include **one energy monitor per firmware**. Both modules use fixed IDs `energy_monitor`, `voltage`,
+`current`, `power` and `energy`; BL0942 also uses `frequency`. Including both modules or either
+twice causes collisions. They do not own relays or protection logic.
+
+| Module | `energy` fields and defaults |
+| --- | --- |
+| [BL0937](energy-monitoring-bl0937.yaml) | `cf_pin: GPIO6`, `cf1_pin: GPIO8`, `sel_pin: GPIO11`, `voltage_divider: 775`, `current_resistor: 0.00104 ohm`, `current_multiply: 1`, `update_interval: 30s`. |
+| [BL0942](energy-monitoring-bl0942.yaml) | `tx_pin: GPIO11`, `rx_pin: GPIO10`, `baud_rate: 4800`, `update_interval: 30s`. Creates its UART. |
+
+Calibration and pins in complete device packages can override module defaults. An `energy` object
+is not permission to change unmeasured electrical characteristics or to share an occupied UART.
+
+## QWater Meters
+
+[`wmbus/qwater-meter.yaml`](wmbus/qwater-meter.yaml) accepts `meter.id` (default `water_meter`),
+`name` (`Water`), `meter_id` (required radio ID), and `radio_id` (`radio_transceiver`). The receiver
+must already provide that `wmbus_radio` and the external wMBus components; the complete wMBus device
+does so. Each include registers the QWater driver automatically.
+
+Every generated ID is prefixed by `meter.id`, so multiple meters are supported. Volume is m3;
+derived consumption is litres. End-of-month/year dates are date entities. Last Update is a UTC
+timestamp; the meter's timezone-free local clock remains text. See the
+[complete dashboard example](../../devices/README.md#wmbus).
+
+## Behavior Helpers
+
 Complete devices already include the helpers they need. You only need these APIs when composing
 your own firmware. Each example below is an entry in a remote package's `files:` list:
 

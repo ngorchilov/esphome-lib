@@ -28,6 +28,42 @@ modbus:
     uart_id: hri485x_rs485_uart
 ```
 
+## ESPHome Dashboard
+
+```yaml
+substitutions:
+  name: serial-gateway
+  friendly_name: Serial Gateway
+
+packages:
+  - url: https://github.com/ngorchilov/esphome-lib
+    ref: main
+    refresh: 0d
+    files:
+      - path: packages/appliances/heltec-hri-485x.yaml
+        vars:
+          hri485x:
+            profile: hri4853
+            networking:
+              mode: ethernet
+            rs485:
+              baud_rate: 19200
+              parity: EVEN
+```
+
+The `hri485x` object accepts:
+
+| Field | Default / meaning |
+| --- | --- |
+| `profile` | `hri4853`; only implemented profile. |
+| `networking` | [Networking settings](../../modules/networking/README.md); Wi-Fi if omitted. Ethernet pin/type settings are supplied by the hardware profile. |
+| `rs485.baud_rate`, `.data_bits`, `.parity`, `.stop_bits` | `9600`, `8`, `NONE`, `1`. |
+| `rs485.power.name`, `.restore_mode` | `MAX3485 Power`, `RESTORE_DEFAULT_ON`. |
+
+The UART ID and pins are fixed, not caller parameters. Use one HRI appliance per firmware. The
+HRI-4853 profile supplies its own verified `sram1_as_iram` setting rather than accepting a board
+replacement through `hri485x`. Cellular/LTE support is not implemented by this package.
+
 ## Family Matrix
 
 | Model | MCU | RS485 terminal | Network/radio capability | Appliance profile |

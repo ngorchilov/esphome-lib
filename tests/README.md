@@ -11,6 +11,7 @@ python tests/validate.py --all                        # Also every tracked devic
 python tests/validate.py source-tuya-product c3-light  # Named cases from cases.yaml
 python tests/validate.py devices/jummico-dehumidifier.yaml
 python -m unittest discover -s tests -p 'test_*.py'    # Runner and source-policy tests
+python tests/docs_config.py                          # Complete consumer README examples
 ```
 
 The runner invokes `esphome config`, never `esphome compile`. It copies working-tree content
@@ -20,6 +21,13 @@ discovery for `--all` uses Git-tracked files; new public consumer combinations b
 Logs, the snapshot and `results.json` remain at the printed artifact path for inspection.
 Third-party components and fonts can require network access. `ESPHOME_DATA_DIR` may select a
 dedicated reusable test cache; otherwise the cache is temporary too.
+
+The documentation runner reads complete YAML examples (with `substitutions.name` and `packages`)
+from the root, device, package, module, networking and appliance READMEs. It mirrors this library's
+remote package entries to an isolated working-tree copy, preserves include vars/custom tags, and
+uses local custom components. This tests the example against the code being reviewed, not a stale
+GitHub checkout. Partial snippets and the HA script example are not standalone ESPHome firmware;
+they require their documented context. Unit tests also check local links and device catalog coverage.
 
 ## Local Components
 
@@ -52,8 +60,10 @@ need an absent clock or HA actions are covered by rejected-input tests rather th
 The phase-2 regressions now pass, with resolved-output assertions for optional relay controls,
 EARU sampling/units, packet-radio frequency and Wi-Fi credentials. Partial-secret fixtures supply
 only the missing credential; this prevents an unused fallback secret from masking a regression.
-Configuration validation does not prove actuator behavior or hardware safety. The invalid six-zone
-valve GPIO draft is no longer tracked; its Tuya model remains in the archive.
+Configuration validation does not prove actuator behavior or hardware safety. The six-zone valve
+controller is a tracked shift-register bench draft again. Its YAML explicitly records pending
+loaded-output polarity measurements and the unfinished button UX; its cloud model is not evidence
+of a serial Tuya MCU.
 
 The pin matrix covers ESP32 (classic, C3 and S3), ESP8266, Beken, Realtek and Lightning. It checks
 the resolved GPIO options, explicit true/false values, shared inputs, open-drain outputs, ESP32

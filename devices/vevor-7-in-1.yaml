@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Decoder derived from rtl_433/src/devices/vevor_7in1.c.
+# Copyright (C) 2024 Bruno OCTAU (ProfBoc75).
+# ESPHome adaptations are described in ../THIRD_PARTY_NOTICES.md.
 substitutions:
   name: vevor-7-in-1
   friendly_name: Vevor 7-in-1
