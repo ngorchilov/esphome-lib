@@ -1,0 +1,31 @@
+# Fan facade over an existing power switch. Feedback and speed/oscillation protocols stay local.
+defaults:
+  fan_sync_id: ${fan_sync.id}
+  fan_sync_power_id: ${fan_sync.power_id}
+  fan_sync_running_actions: ${fan_sync.on_running}
+
+fan:
+  - platform: template
+    name: ${ fan_sync.get("name", "") }
+    id: ${fan_sync_id}
+    speed_count: ${fan_sync.speed_count}
+    has_oscillating: ${ fan_sync.get("has_oscillating", false) }
+    restore_mode: ${ fan_sync.get("restore_mode", "RESTORE_DEFAULT_OFF") }
+    on_state:
+      - if:
+          condition: >-
+            ${ fan_sync.get("command_condition", {'lambda': 'return true;'}) }
+          then:
+            - if:
+                condition:
+                  lambda: return x->state;
+                then: >-
+                  ${ [{'if': {'condition': {'switch.is_off': fan_sync_power_id},
+                              'then': [{'switch.turn_on': fan_sync_power_id}]}}]
+                     + fan_sync_running_actions }
+                else:
+                  - if:
+                      condition:
+                        switch.is_on: ${fan_sync_power_id}
+                      then:
+                        - switch.turn_off: ${fan_sync_power_id}

@@ -240,6 +240,16 @@ Important modules:
 - `homekit.yaml` adds HAP-ESPHome support and ESP32 framework options.
 - `radio/driver.yaml` and `radio/display.yaml` provide the capability layers used by the radio appliance.
 - `wmbus/qwater-meter.yaml` exposes one complete QWater meter entity profile per include.
+- `relay-group.yaml` aggregates existing relay-control POWER states and commands. Physical wiring,
+  member grouping, and the indicator light remain device-owned.
+- `fan-power-sync.yaml` shares a template fan's power-switch command flow. MCU feedback, speed
+  mappings, guards and oscillation commands remain explicit in each consuming device.
+- `tuya-ct16-channel.yaml` is the CT16 product's repeated channel entity profile. Do not move its
+  raw decoder or infer a common protocol for unrelated meters from this profile.
+
+These helpers have consumer contracts in `packages/modules/README.md`. Keep all existing explicit
+IDs, names, categories and restoration behavior when adopting them. The fan helper does not make
+Pro Breeze and JUMMICO interchangeable protocols; test their different feedback policies separately.
 
 Prefer a module over copy/paste device logic when the behavior is reusable. Prefer device-local YAML
 when the behavior is unique, experimental, or depends on one physical product.

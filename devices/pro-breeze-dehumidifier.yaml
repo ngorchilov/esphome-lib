@@ -7,6 +7,43 @@ substitutions:
 packages:
   - !include ../packages/boards/espressif/esp07.yaml
   - !include ../packages/modules/tuya-product.yaml
+  - !include
+    file: ../packages/modules/fan-power-sync.yaml
+    vars:
+      fan_sync:
+        id: pb_fan
+        power_id: pb_power_dp
+        speed_count: 2
+        has_oscillating: true
+        on_running:
+          - lambda: |-
+              const bool want_osc = x->oscillating;
+              const int want_speed = (int) x->speed;
+
+              if (id(pb_swing_dp).state != want_osc) {
+                if (want_osc) {
+                  id(pb_swing_dp).turn_on();
+                } else {
+                  id(pb_swing_dp).turn_off();
+                }
+              }
+
+              // DP6: 0=High, 1=Low. Unspecified speed leaves the MCU unchanged.
+              if (want_speed == 1 || want_speed == 2) {
+                const int dp6 = (want_speed == 1) ? 1 : 0;
+                const int cur_dp6 = (int) lroundf(id(pb_fan_speed_dp).state);
+
+                if (cur_dp6 != dp6) {
+                  ESP_LOGD("pb", "fan.on_state: applying speed=%d -> DP6=%d (cur=%d)", want_speed, dp6, cur_dp6);
+                  auto c = id(pb_fan_speed_dp).make_call();
+                  c.set_value((float) dp6);
+                  c.perform();
+                } else {
+                  ESP_LOGD("pb", "fan.on_state: speed already applied (DP6=%d)", cur_dp6);
+                }
+              } else {
+                ESP_LOGD("pb", "fan.on_state: speed not provided (x->speed=%d) -> leaving DP6 unchanged", want_speed);
+              }
 
 esphome:
   project:
@@ -105,70 +142,6 @@ tuya:
             if (s.empty()) s = "None";
 
             id(pb_faults_text).publish_state(s);
-
-# --- Pro Breeze 30L Compressor Dehumidifier (Tuya MCU) ---
-
-fan:
-  - platform: template
-    id: pb_fan
-    name: None
-    speed_count: 2
-    has_oscillating: true
-    restore_mode: RESTORE_DEFAULT_OFF
-    on_state:
-      - lambda: |-
-          // Apply desired fan state/speed/oscillation using the values provided by the Fan call (x).
-          //
-          // Note: x->speed is expected to be 1..speed_count, but HA can send 0/unspecified
-          // when toggling ON from the collapsed fan UI.
-          const bool want_on = x->state;
-          const bool want_osc = x->oscillating;
-          const int want_speed = (int) x->speed;  // 1..2 expected; 0 means "not provided"
-
-          ESP_LOGD("pb", "fan.on_state: state=%s speed=%d osc=%s", want_on ? "ON" : "OFF", want_speed, want_osc ? "ON" : "OFF");
-
-          // OFF: only cut power (DP1) if it's currently on.
-          if (!want_on) {
-            if (id(pb_power_dp).state) {
-              id(pb_power_dp).turn_off();
-            }
-            return;
-          }
-
-          // ON: power first (DP1) - only write if changed.
-          if (!id(pb_power_dp).state) {
-            id(pb_power_dp).turn_on();
-          }
-
-          // Oscillation (DP8) - only write if changed.
-          if (id(pb_swing_dp).state != want_osc) {
-            if (want_osc) {
-              id(pb_swing_dp).turn_on();
-            } else {
-              id(pb_swing_dp).turn_off();
-            }
-          }
-
-          // Speed (DP6 enum: 0=High, 1=Low). Only act if speed is explicitly provided.
-          // IMPORTANT: this unit appears to boot in LOW after DP1 OFF->ON even if the speed attribute is still HIGH.
-          // On an OFF->ON transition, force a DP6 write even if the last known DP6 matches.
-          if (want_speed == 1 || want_speed == 2) {
-            const int dp6 = (want_speed == 1) ? 1 : 0;
-            const int cur_dp6 = (int) lroundf(id(pb_fan_speed_dp).state);
-
-            const bool force = false;
-
-            if (cur_dp6 != dp6) {
-              ESP_LOGD("pb", "fan.on_state: applying speed=%d -> DP6=%d (cur=%d)", want_speed, dp6, cur_dp6);
-              auto c = id(pb_fan_speed_dp).make_call();
-              c.set_value((float) dp6);
-              c.perform();
-            } else {
-              ESP_LOGD("pb", "fan.on_state: speed already applied (DP6=%d)", cur_dp6);
-            }
-          } else {
-            ESP_LOGD("pb", "fan.on_state: speed not provided (x->speed=%d) -> leaving DP6 unchanged", want_speed);
-          }
 
 switch:
   - platform: tuya

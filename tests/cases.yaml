@@ -158,6 +158,69 @@ cases:
     file: tests/fixtures/device-family.yaml
     substitutions: {test_family: strip-4pm, test_profile: cb2s}
     reject: unsupported-power-strip-profile
+  - id: strip3x2
+    file: devices/tuya-strip-3x2-cb2s.yaml
+    contract: strip3x2
+  - id: relay-groups
+    file: tests/fixtures/relay-groups.yaml
+    secrets: false
+    contract: relay-groups
+  - id: reject-relay-group-empty
+    file: tests/fixtures/relay-groups.yaml
+    substitutions: {test_members: '${ [] }'}
+    secrets: false
+    reject: INVALID_RELAY_GROUP
+  - id: reject-relay-group-duplicates
+    file: tests/fixtures/relay-groups.yaml
+    substitutions: {test_members: "${ ['r1', 'r1'] }"}
+    secrets: false
+    reject: INVALID_RELAY_GROUP
+  - id: reject-relay-group-string
+    file: tests/fixtures/relay-groups.yaml
+    substitutions: {test_members: r1}
+    secrets: false
+    reject: INVALID_RELAY_GROUP
+  - id: reject-relay-group-missing-member
+    file: tests/fixtures/relay-groups.yaml
+    substitutions: {test_members: "${ ['missing'] }"}
+    secrets: false
+    reject: Couldn't find ID 'missing_power_off'
+  - id: fan-power-sync
+    file: tests/fixtures/fan-power-sync.yaml
+    secrets: false
+    contract: fan-power-sync
+  - id: reject-fan-power-id
+    file: tests/fixtures/fan-power-sync.yaml
+    substitutions: {test_power_id: missing}
+    secrets: false
+    reject: Couldn't find ID 'missing'
+  - id: dehumidifier-pro-breeze
+    file: devices/pro-breeze-dehumidifier.yaml
+    contract: dehumidifier
+  - id: dehumidifier-jummico
+    file: devices/jummico-dehumidifier.yaml
+    contract: dehumidifier
+  - id: ct16-channels
+    file: devices/tuya-ct-clamp-16em-200a.yaml
+    contract: ct16
+  - id: ct16-channel-overrides
+    file: devices/tuya-ct-clamp-16em-200a.yaml
+    substitutions: {c01_name: Laundry, c16_name: Garage, c02_internal: true, c16_internal: true, energy_scale: 0.02}
+    contract: ct16
+  - id: ct16-solar-hidden
+    file: devices/tuya-ct-clamp-16em-200a.yaml
+    substitutions: {sol_internal: true}
+    contract: ct16
+  - id: reject-ct16-channel-zero
+    file: tests/fixtures/ct16-channel.yaml
+    substitutions: {test_channel: 0}
+    secrets: false
+    reject: INVALID_CT16_CHANNEL
+  - id: reject-ct16-channel-seventeen
+    file: tests/fixtures/ct16-channel.yaml
+    substitutions: {test_channel: 17}
+    secrets: false
+    reject: INVALID_CT16_CHANNEL
   - id: source-rtl8720c-evse
     file: devices/evse-feyree-three-phase.yaml
     local_components: [rtl8720c_uart]

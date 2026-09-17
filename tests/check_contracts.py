@@ -83,6 +83,26 @@ def check_ct2(config, substitutions):
         assert not any(item["priority"] == 800 for item in config["esphome"]["on_boot"])
 
 
+def check_relay_group(config, group, relays, state_id, indicator_id):
+    status = entity(config, "binary_sensor", state_id)
+    assert "".join(status["lambda"].value.split()) == "return" + "||".join(f"id({r}_power_state).state" for r in relays) + ";"
+    indicator = status["on_state"][0]["then"][0]["if"]
+    assert str(indicator["condition"]["binary_sensor.is_on"]["id"]) == state_id
+    assert str(indicator["then"][0]["light.turn_on"]["id"]) == indicator_id
+    assert str(indicator["else"][0]["light.turn_off"]["id"]) == indicator_id
+    boot = next(hook["then"][0]["if"] for hook in config["esphome"]["on_boot"]
+                if hook["priority"] == -100 and "if" in hook["then"][0]
+                and str(hook["then"][0]["if"].get("condition", {}).get("binary_sensor.is_on", {}).get("id")) == state_id)
+    assert str(boot["then"][0]["light.turn_on"]["id"]) == indicator_id
+    assert str(boot["else"][0]["light.turn_off"]["id"]) == indicator_id
+    action = entity(config, "script", f"{group}_toggle")["then"][0]["if"]
+    assert str(action["condition"]["binary_sensor.is_on"]["id"]) == state_id
+    for branch, command in (("then", "off"), ("else", "on")):
+        assert [str(item["script.execute"]["id"]) for item in action[branch]] == [f"{r}_power_{command}" for r in relays]
+    reboot = entity(config, "button", f"{group}_cycle")
+    assert [str(item["script.execute"]["id"]) for item in reboot["on_press"][0]["then"]] == [f"{r}_power_cycle" for r in relays]
+
+
 def check_strip4(config, substitutions):
     profile = substitutions.get("test_profile", "cbu")
     is_cbu = profile == "cbu"
@@ -100,15 +120,10 @@ def check_strip4(config, substitutions):
     assert led["pin"]["number"] == (20 if is_cbu else 23) and not led["inverted"]
     status = entity(config, "binary_sensor", "power_status")
     assert status["name"] == "Power Status"
-    assert "".join(status["lambda"].value.split()) == "return" + "||".join(f"id({r}_power_state).state" for r in relays) + ";"
+    check_relay_group(config, "strip_power", relays, "power_status", "status_led")
     button = next(item for item in config["binary_sensor"] if item["platform"] == "gpio")
     assert button["pin"]["number"] == 22 and button["pin"]["inverted"] and button["pin"]["mode"]["pullup"]
-    action = button["on_press"][0]["then"][0]["if"]
-    assert str(action["condition"]["binary_sensor.is_on"]["id"]) == "power_status"
-    for branch, command in (("then", "off"), ("else", "on")):
-        assert [str(item["script.execute"]["id"]) for item in action[branch]] == [f"{r}_power_{command}" for r in relays]
-    reboot = next(item for item in config["button"] if item["name"] == "Reboot All Relays")
-    assert [str(item["script.execute"]["id"]) for item in reboot["on_press"][0]["then"]] == [f"{r}_power_cycle" for r in relays]
+    assert str(button["on_press"][0]["then"][0]["script.execute"]["id"]) == "strip_power_toggle"
     energy = config["substitutions"].get("test_energy", {})
     meter = entity(config, "sensor", "energy_monitor")
     assert meter["platform"] == "bl0942"
@@ -118,6 +133,76 @@ def check_strip4(config, substitutions):
     assert (config["uart"][0]["tx_pin"]["number"], config["uart"][0]["rx_pin"]["number"]) == (11, 10)
     if "test_networking" in substitutions:
         assert not {"wifi", "ethernet", "network", "api", "ota", "mdns"} & config.keys()
+
+
+def check_ct16(config, substitutions):
+    for number in range(1, 17):
+        name = substitutions.get(f"c{number:02d}_name", f"C{number:02d}")
+        internal = enabled(substitutions.get(f"c{number:02d}_internal", False))
+        for suffix, label, unit, device_class, decimals in (
+            ("current", "Current", "A", "current", 3), ("power", "Power", "W", "power", 0),
+        ):
+            sensor = entity(config, "sensor", f"circuit_{number}_{suffix}")
+            assert sensor["name"] == f"{name} {label}" and sensor["internal"] == internal
+            assert (sensor["unit_of_measurement"], sensor["device_class"], sensor["accuracy_decimals"]) == (unit, device_class, decimals)
+            assert sensor["state_class"] == "measurement"
+        energy = next(item for item in config["sensor"] if item.get("sensor_datapoint") == 114 + number)
+        assert energy["name"] == f"{name} Energy" and energy["internal"] == internal
+        assert str(energy["tuya_id"]) == "my_meter"
+        assert (energy["unit_of_measurement"], energy["state_class"], energy["accuracy_decimals"]) == ("kWh", "total_increasing", 2)
+        assert energy["filters"][0]["multiply"] == float(substitutions.get("energy_scale", 0.01))
+        assert energy["filters"][1]["clamp"]["min_value"] == 0
+        assert energy["filters"][1]["clamp"]["max_value"] == 20000000
+        detected = entity(config, "binary_sensor", f"circuit_{number}_ct_detected")
+        solar = entity(config, "binary_sensor", f"circuit_{number}_solar_configured")
+        assert detected["name"] == f"{name} CT Clamp" and detected["internal"] == internal
+        assert solar["name"] == f"{name} Solar Mode"
+        assert solar["internal"] == (internal or enabled(substitutions.get("sol_internal", False)))
+        assert detected["entity_category"] == solar["entity_category"] == "diagnostic"
+        assert detected["device_class"] == "plug" and solar["icon"] == "mdi:solar-power"
+    assert len([s for s in config["sensor"] if s.get("sensor_datapoint", 0) in range(115, 131)]) == 16
+    uart = entity(config, "uart", "tuya_uart")
+    assert uart["baud_rate"] == 115200 and uart["rx_buffer_size"] == 1024
+
+
+def check_fan_power(config, fan_id, power_id, condition):
+    fan = entity(config, "fan", fan_id)
+    action = fan["on_state"][0]["then"][0]["if"]
+    assert action["condition"]["lambda"].value == condition
+    power = action["then"][0]["if"]
+    assert power["condition"]["lambda"].value == "return x->state;"
+    for branch, state, command in (("then", "off", "on"), ("else", "on", "off")):
+        change = power[branch][0]["if"]
+        assert str(change["condition"][f"switch.is_{state}"]["id"]) == power_id
+        assert str(change["then"][0][f"switch.turn_{command}"]["id"]) == power_id
+    assert len(power["else"]) == 1
+    return power["then"][1:]
+
+
+def check_dehumidifier(config):
+    jummico = "jummico_fan" in ids(config, "fan")
+    prefix = "jummico" if jummico else "pb"
+    fan = entity(config, "fan", f"{prefix}_fan")
+    assert fan["name"] == "" and not fan.get("internal", False) and fan["speed_count"] == 2
+    assert fan["has_oscillating"] == (not jummico)
+    assert fan["restore_mode"] == "RESTORE_DEFAULT_OFF"
+    running = check_fan_power(config, f"{prefix}_fan", f"{prefix}_power_dp",
+                              "return !id(jummico_syncing_fan);" if jummico else "return true;")
+    assert len(running) == 1 and "const int want_speed" in running[0]["lambda"].value
+    callbacks = {dp["sensor_datapoint"]: dp for dp in config["tuya"]["on_datapoint_update"]}
+    assert callbacks.keys() == ({1, 4, 19} if jummico else {1, 6, 8, 11})
+    assert callbacks[1]["datapoint_type"] == "bool"
+    assert callbacks[4 if jummico else 6]["datapoint_type"] == "enum"
+    for label in ("Mode", "Countdown"):
+        assert next(s for s in config["select"] if s["name"] == label)["entity_category"] == "config"
+    assert next(s for s in config["switch"] if s["name"] == "Child Lock")["entity_category"] == "config"
+    power = entity(config, "switch", f"{prefix}_power_dp")
+    assert power["internal"] and power["switch_datapoint"] == 1
+    faults = [s for s in config["binary_sensor"] if s.get("name", "").startswith("Fault:")]
+    assert len(faults) == (8 if jummico else 6)
+    assert all(s["entity_category"] == "diagnostic" and s["device_class"] == "problem" for s in faults)
+    assert config["esphome"]["project"]["version"] == ("0.1.0" if jummico else "0.9.0")
+    assert config["logger"]["level"] == "INFO" and config["logger"]["baud_rate"] == 0
 
 
 def check_fan433(config, substitutions):
@@ -234,6 +319,42 @@ def check(config, contract, substitutions):
         return
     if contract == "strip4":
         check_strip4(config, substitutions)
+        return
+    if contract == "strip3x2":
+        assert config["bk72xx"]["board"] == "cb2s"
+        relays = ["socket_1_2", "socket_3_4", "socket_5_6", "relay_usb"]
+        check_relay_group(config, "strip_power", relays, "power_status", "status_led")
+        for relay, pin in zip(relays, (6, 7, 8, 26)):
+            assert entity(config, "output", f"{relay}_power_output")["pin"]["number"] == pin
+            assert entity(config, "switch", f"{relay}_power_relay")["restore_mode"] == "RESTORE_DEFAULT_OFF"
+        assert entity(config, "output", "led_output")["pin"]["number"] == 10
+        assert entity(config, "output", "led_output")["inverted"]
+        button = next(s for s in config["binary_sensor"] if s["platform"] == "gpio")
+        assert button["pin"]["number"] == 11 and button["pin"]["inverted"] and button["pin"]["mode"]["pullup"]
+        assert str(button["on_press"][0]["then"][0]["script.execute"]["id"]) == "strip_power_toggle"
+        assert config["web_server"]["version"] == 3
+        return
+    if contract == "relay-groups":
+        check_relay_group(config, "first", ["r1"], "first_power_status", "first_led")
+        check_relay_group(config, "second", ["r2"], "custom_status", "second_led")
+        assert entity(config, "binary_sensor", "custom_status")["name"] == "Second Power"
+        assert entity(config, "button", "second_cycle")["name"] == "Restart Second"
+        return
+    if contract == "ct16":
+        check_ct16(config, substitutions)
+        return
+    if contract == "dehumidifier":
+        check_dehumidifier(config)
+        return
+    if contract == "fan-power-sync":
+        assert not check_fan_power(config, "first_fan", "first_power", "return true;")
+        assert len(check_fan_power(config, "second_fan", "second_power", "return false;")) == 1
+        first = entity(config, "fan", "first_fan")
+        second = entity(config, "fan", "second_fan")
+        assert first["name"] == "" and first["speed_count"] == 2 and not first["has_oscillating"]
+        assert first["restore_mode"] == "RESTORE_DEFAULT_OFF"
+        assert second["name"] == "Extract" and second["speed_count"] == 3 and second["has_oscillating"]
+        assert second["restore_mode"] == "ALWAYS_OFF"
         return
     if contract == "ceiling-light-v2":
         chip = config["substitutions"]["chip"]

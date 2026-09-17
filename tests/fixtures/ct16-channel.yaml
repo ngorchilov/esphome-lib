@@ -1,0 +1,27 @@
+substitutions:
+  name: ct16-channel-test
+  friendly_name: CT16 Channel Test
+  test_channel: 1
+
+packages:
+  - !include
+    file: ../../packages/boards/tuya/cbu.yaml
+    vars:
+      networking:
+        mode: none
+  - !include
+    file: ../../packages/modules/tuya-ct16-channel.yaml
+    vars:
+      ct16_channel:
+        number: ${test_channel}
+        name: Circuit
+        energy_scale: 0.01
+        tuya_id: my_meter
+
+uart:
+  tx_pin: GPIO11
+  rx_pin: GPIO10
+  baud_rate: 115200
+
+tuya:
+  id: my_meter

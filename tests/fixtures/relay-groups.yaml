@@ -1,0 +1,68 @@
+substitutions:
+  name: relay-groups-test
+  friendly_name: Relay Groups Test
+  test_members: [r1]
+
+packages:
+  - !include
+    file: ../../packages/boards/espressif/esp07.yaml
+    vars:
+      networking:
+        mode: none
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: r1
+        entity:
+          name: Relay One
+        power:
+          pin: GPIO4
+        power_cycle:
+          enabled: true
+          name: Restart One
+  - !include
+    file: ../../packages/modules/relay-control.yaml
+    vars:
+      rc:
+        id: r2
+        entity:
+          name: Relay Two
+        power:
+          pin: GPIO5
+        power_cycle:
+          enabled: true
+          name: Restart Two
+  - !include
+    file: ../../packages/modules/relay-group.yaml
+    vars:
+      relay_group:
+        id: first
+        members: ${test_members}
+        indicator_id: first_led
+  - !include
+    file: ../../packages/modules/relay-group.yaml
+    vars:
+      relay_group:
+        id: second
+        members: [r2]
+        state_id: custom_status
+        state_name: Second Power
+        cycle_name: Restart Second
+        indicator_id: second_led
+
+output:
+  - platform: gpio
+    id: first_led_output
+    pin: GPIO12
+  - platform: gpio
+    id: second_led_output
+    pin: GPIO13
+
+light:
+  - platform: binary
+    id: first_led
+    output: first_led_output
+  - platform: binary
+    id: second_led
+    output: second_led_output

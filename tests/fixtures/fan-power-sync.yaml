@@ -1,0 +1,42 @@
+substitutions:
+  name: fan-power-test
+  friendly_name: Fan Power Test
+  test_speed_count: 2
+  test_power_id: first_power
+
+packages:
+  - !include
+    file: ../../packages/boards/espressif/esp07.yaml
+    vars:
+      networking:
+        mode: none
+  - !include
+    file: ../../packages/modules/fan-power-sync.yaml
+    vars:
+      fan_sync:
+        id: first_fan
+        power_id: ${test_power_id}
+        speed_count: ${test_speed_count}
+        on_running: []
+  - !include
+    file: ../../packages/modules/fan-power-sync.yaml
+    vars:
+      fan_sync:
+        id: second_fan
+        name: Extract
+        power_id: second_power
+        speed_count: 3
+        has_oscillating: true
+        restore_mode: ALWAYS_OFF
+        command_condition:
+          lambda: return false;
+        on_running:
+          - logger.log: Extract speed command
+
+switch:
+  - platform: template
+    id: first_power
+    optimistic: true
+  - platform: template
+    id: second_power
+    optimistic: true

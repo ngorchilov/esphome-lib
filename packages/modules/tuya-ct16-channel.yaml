@@ -1,0 +1,57 @@
+# CT16-specific entity profile. The device owns raw decoding and publishes circuit_N_* states.
+defaults:
+  ct16_channel_id: circuit_${ct16_channel.number}
+  ct16_channel_name: ${ct16_channel.name}
+  ct16_channel_internal: ${ ct16_channel.get("internal", false) }
+
+packages:
+  - >-
+    ${ {} if ct16_channel.number | string in range(1, 17) | map('string') | list
+       else {'INVALID_CT16_CHANNEL': 'number must be an integer from 1 through 16'} }
+
+sensor:
+  - platform: tuya
+    name: ${ct16_channel_name} Energy
+    internal: ${ct16_channel_internal}
+    tuya_id: ${ct16_channel.tuya_id}
+    sensor_datapoint: ${ 114 + (ct16_channel.number | int) }
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+    accuracy_decimals: 2
+    filters:
+      - multiply: ${ct16_channel.energy_scale}
+      - clamp: { min_value: 0, max_value: 20000000 }
+
+  - platform: template
+    name: ${ct16_channel_name} Current
+    id: ${ct16_channel_id}_current
+    internal: ${ct16_channel_internal}
+    unit_of_measurement: A
+    device_class: current
+    state_class: measurement
+    accuracy_decimals: 3
+
+  - platform: template
+    name: ${ct16_channel_name} Power
+    id: ${ct16_channel_id}_power
+    internal: ${ct16_channel_internal}
+    unit_of_measurement: W
+    device_class: power
+    state_class: measurement
+    accuracy_decimals: 0
+
+binary_sensor:
+  - platform: template
+    name: ${ct16_channel_name} CT Clamp
+    id: ${ct16_channel_id}_ct_detected
+    internal: ${ct16_channel_internal}
+    entity_category: diagnostic
+    device_class: plug
+
+  - platform: template
+    name: ${ct16_channel_name} Solar Mode
+    id: ${ct16_channel_id}_solar_configured
+    internal: ${ (ct16_channel_internal | string | lower == 'true') or (ct16_channel.get('solar_internal', false) | string | lower == 'true') }
+    entity_category: diagnostic
+    icon: mdi:solar-power

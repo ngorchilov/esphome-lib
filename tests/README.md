@@ -71,6 +71,11 @@ defaults, include vars, channel names, UART overrides and custom relay IDs. Asse
 Tuya datapoints/scaling, T1-M-only alarms, fixed wiring, relay restoration and master-button/power-cycle
 commands. Unsupported profiles are rejected even when their names identify another valid board.
 
+Shared-behavior cases cover both strip products, isolated relay groups and fan facades in one
+firmware, missing prerequisites, invalid group membership, both dehumidifier interfaces and all
+16 CT16 channels. Channel overrides exercise names, scaling, per-channel visibility and solar
+visibility. The CT16 raw decoder stays device-local and unchanged by the channel extraction.
+
 The RF fan matrix covers SX127x and CC1101, explicit IDs and shorthand addresses, combined fan
 membership, individual-only and learn-only configurations, all four synchronization anchors, and
 custom protocol settings. Resolved-output assertions check entity metadata, each member's generated
@@ -103,6 +108,18 @@ checks, not a claim that every device supports every tested release.
 YAML configuration-only changes require config validation only. Compile firmware only after
 changing C++, including lambda bodies in YAML, and only for affected targets after config passes.
 Host tests supplement this; they do not replace an affected embedded build or hardware verification.
+
+The fan synchronization test resolves the current device packages in an isolated snapshot with
+dummy secrets and local components. It translates the small supported YAML action subset to host
+C++, executes the actual device lambdas with ASan/UBSan, and checks 224 command combinations plus
+MCU readback, feedback suppression, boot-speed behavior and unavailable-speed handling:
+
+```sh
+python tests/fan_sync_host_test.py
+```
+
+Run this when changing fan command behavior, followed by config/compile of Pro Breeze and JUMMICO.
+The host doubles do not simulate UART timing or the physical appliances.
 
 The garage regression compiles the actual YAML lambdas with ASan/UBSan, checking endpoint guards,
 contact-confirmed close, timeout publication, wraparound and the BLE reboot interlock:

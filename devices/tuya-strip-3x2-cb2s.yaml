@@ -95,18 +95,18 @@ packages:
         power_cycle:
           enabled: true
           name: Reboot ${relay4_name}
-
-esphome:
-  on_boot:
-    - priority: -100
-      then:
-        - if:
-            condition:
-              binary_sensor.is_on: power_status
-            then:
-              - light.turn_on: status_led
-            else:
-              - light.turn_off: status_led
+  - !include
+    file: ../packages/modules/relay-group.yaml
+    vars:
+      relay_group:
+        id: strip_power
+        members:
+          - ${relay1_id}
+          - ${relay2_id}
+          - ${relay3_id}
+          - ${relay4_id}
+        state_id: power_status
+        indicator_id: status_led
 
 web_server:
   version: 3
@@ -123,22 +123,6 @@ light:
     output: led_output
 
 binary_sensor:
-  - platform: template
-    id: power_status
-    name: Power Status
-    lambda: |-
-      return id(${relay1_id}_power_state).state || id(${relay2_id}_power_state).state ||
-             id(${relay3_id}_power_state).state || id(${relay4_id}_power_state).state;
-    on_state:
-      then:
-        - if:
-            condition:
-              binary_sensor.is_on: power_status
-            then:
-              - light.turn_on: status_led
-            else:
-              - light.turn_off: status_led
-
   - platform: gpio
     name: Button
     pin:
@@ -148,26 +132,4 @@ binary_sensor:
         pullup: ${button_pullup}
       inverted: ${button_inverted}
     on_press:
-      then:
-        - if:
-            condition:
-              binary_sensor.is_on: power_status
-            then:
-              - script.execute: ${relay1_id}_power_off
-              - script.execute: ${relay2_id}_power_off
-              - script.execute: ${relay3_id}_power_off
-              - script.execute: ${relay4_id}_power_off
-            else:
-              - script.execute: ${relay1_id}_power_on
-              - script.execute: ${relay2_id}_power_on
-              - script.execute: ${relay3_id}_power_on
-              - script.execute: ${relay4_id}_power_on
-
-button:
-  - platform: template
-    name: Reboot All Relays
-    on_press:
-      - script.execute: ${relay1_id}_power_cycle
-      - script.execute: ${relay2_id}_power_cycle
-      - script.execute: ${relay3_id}_power_cycle
-      - script.execute: ${relay4_id}_power_cycle
+      - script.execute: strip_power_toggle

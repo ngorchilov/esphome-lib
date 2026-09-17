@@ -1,0 +1,75 @@
+# Aggregate POWER state and commands for relay-control members; no physical wiring.
+defaults:
+  relay_group_id: ${relay_group.id}
+  relay_group_members: ${relay_group.members}
+  relay_group_state_id: ${ relay_group.get("state_id", relay_group_id ~ "_power_status") }
+  relay_group_indicator_id: ${relay_group.indicator_id}
+
+packages:
+  - >-
+    ${ {} if relay_group_members is sequence and relay_group_members is not string
+       and relay_group_members is not mapping and relay_group_members | length > 0
+       and relay_group_members | unique | list | length == relay_group_members | length
+       else {'INVALID_RELAY_GROUP': 'members must be a nonempty list of unique relay-control IDs'} }
+
+esphome:
+  on_boot:
+    - priority: -100
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: ${relay_group_state_id}
+            then:
+              - light.turn_on: ${relay_group_indicator_id}
+            else:
+              - light.turn_off: ${relay_group_indicator_id}
+
+binary_sensor:
+  - platform: template
+    name: ${ relay_group.get("state_name", "Power Status") }
+    id: ${relay_group_state_id}
+    lambda: |-
+      <% set states = [] %>
+      <% for member in relay_group_members %>
+        <% do states.append('id(' ~ member ~ '_power_state).state') %>
+      <% endfor %>
+      return ${ states | join(' || ') };
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: ${relay_group_state_id}
+            then:
+              - light.turn_on: ${relay_group_indicator_id}
+            else:
+              - light.turn_off: ${relay_group_indicator_id}
+
+script:
+  - id: ${relay_group_id}_toggle
+    then:
+      - if:
+          condition:
+            binary_sensor.is_on: ${relay_group_state_id}
+          then: |-
+            <% set actions = [] %>
+            <% for member in relay_group_members %>
+              <% do actions.append({'script.execute': member ~ '_power_off'}) %>
+            <% endfor %>
+            ${ actions | list }
+          else: |-
+            <% set actions = [] %>
+            <% for member in relay_group_members %>
+              <% do actions.append({'script.execute': member ~ '_power_on'}) %>
+            <% endfor %>
+            ${ actions | list }
+
+button:
+  - platform: template
+    name: ${ relay_group.get("cycle_name", "Reboot All Relays") }
+    id: ${relay_group_id}_cycle
+    on_press: |-
+      <% set actions = [] %>
+      <% for member in relay_group_members %>
+        <% do actions.append({'script.execute': member ~ '_power_cycle'}) %>
+      <% endfor %>
+      ${ actions | list }

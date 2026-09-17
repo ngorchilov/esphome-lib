@@ -13,6 +13,24 @@ substitutions:
 packages:
   - !include ../packages/boards/espressif/esp07.yaml
   - !include ../packages/modules/tuya-product.yaml
+  - !include
+    file: ../packages/modules/fan-power-sync.yaml
+    vars:
+      fan_sync:
+        id: jummico_fan
+        power_id: jummico_power_dp
+        speed_count: 2
+        command_condition:
+          lambda: return !id(jummico_syncing_fan);
+        on_running:
+          - lambda: |-
+              const int want_speed = static_cast<int>(x->speed);
+              if (want_speed == 1 || want_speed == 2) {
+                const uint8_t datapoint_value = want_speed - 1;
+                if (id(jummico_fan_speed_dp) != datapoint_value) {
+                  id(jummico_tuya).set_enum_datapoint_value(4, datapoint_value);
+                }
+              }
 
 esphome:
   project:
@@ -103,40 +121,6 @@ tuya:
             if (faults.empty()) faults = "None";
 
             id(jummico_faults).publish_state(faults);
-
-fan:
-  - platform: template
-    name: None
-    id: jummico_fan
-    speed_count: 2
-    restore_mode: RESTORE_DEFAULT_OFF
-    on_state:
-      - lambda: |-
-          if (id(jummico_syncing_fan)) return;
-
-          const bool want_on = x->state;
-          const int want_speed = static_cast<int>(x->speed);
-
-          ESP_LOGD("jummico", "fan.on_state: state=%s speed=%d",
-                   want_on ? "ON" : "OFF", want_speed);
-
-          if (!want_on) {
-            if (id(jummico_power_dp).state) {
-              id(jummico_power_dp).turn_off();
-            }
-            return;
-          }
-
-          if (!id(jummico_power_dp).state) {
-            id(jummico_power_dp).turn_on();
-          }
-
-          if (want_speed == 1 || want_speed == 2) {
-            const uint8_t datapoint_value = want_speed - 1;
-            if (id(jummico_fan_speed_dp) != datapoint_value) {
-              id(jummico_tuya).set_enum_datapoint_value(4, datapoint_value);
-            }
-          }
 
 switch:
   - platform: tuya
