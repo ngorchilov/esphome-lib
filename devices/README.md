@@ -176,9 +176,12 @@ not a request to change mains wiring. See the [component reference](../component
 
 ## Garage Opener
 
-The opener has one closed-position contact. Closed is contact-confirmed; open and travel progress
-are estimates. Set travel time for the actual installation and retain the opener's physical safety
-systems. A toggle relay cannot establish direction from an unknown position.
+The opener has one closed-position contact. CLOSED is contact-confirmed; OPEN means not closed,
+not a measured fully open endpoint. Commands use this contact even after a reboot or an external
+remote operation. Travel time bounds the movement guard; a closing timeout leaves the door reported
+as not closed and allows another explicit CLOSE command. Set travel time for the actual installation
+and retain the opener's physical safety systems. From a partial stop, relay-toggle direction depends
+on the opener.
 
 | Substitution | Default |
 | --- | --- |

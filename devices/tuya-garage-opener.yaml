@@ -75,32 +75,19 @@ globals:
     type: uint32_t
     restore_value: no
     initial_value: '0'
-  # A single closed contact cannot prove an open endpoint. Never restore this estimate.
-  - id: garage_open_estimated
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-  - id: garage_unknown_motion
-    type: bool
-    restore_value: no
-    initial_value: 'false'
 
-# The contact proves CLOSED only; OPEN is estimated after Door Travel Time.
-# OPEN commands require the closed contact; CLOSE requires a completed opening estimate.
-# Restart away from the contact or an unconfirmed close inhibits direction commands.
-# Explicit TOGGLE remains available from unknown positions: observe the door when using it.
-# Commands during movement/pulses are ignored; unknown toggles also block BLE recovery reboots
-# until the contact closes or travel time expires. No automatic retry or reversal is issued.
-# HA may show "open" for any non-closed state, not proof of a fully open endpoint.
-# External remotes, obstructions and safety reversals can invalidate the opening estimate.
-# This is not a safety interlock: verify travel time, contact polarity and opener behavior on site.
+# Binary state: CLOSED is contact-confirmed; OPEN means not closed, not fully open.
+# Commands use the contact, never restored state or a previous opening estimate.
+# Travel time bounds the motion guard; it never confirms a closed endpoint.
+# Commands and BLE recovery reboots wait for movement/pulses to finish. No automatic retry.
+# The relay is a toggle input: from a partial stop, actual direction depends on the opener.
 cover:
   - platform: template
     name: Door
     id: garage_door
     device_class: garage
     optimistic: false
-    assumed_state: true
+    assumed_state: false
     restore_mode: NO_RESTORE
     lambda: |-
       if (!id(magnetic_contact).has_state()) return {};
@@ -108,76 +95,58 @@ cover:
       const uint32_t travel_time = (uint32_t)(id(door_travel_time_sensor).state * 1000UL);
       const bool closed = id(magnetic_contact).state;
 
-      if (operation != COVER_OPERATION_IDLE || id(garage_unknown_motion)) {
-        const bool confirmed_close = closed &&
-            (operation == COVER_OPERATION_CLOSING || id(garage_unknown_motion));
-        if (!confirmed_close && (uint32_t)(::millis() - id(op_start)) < travel_time)
-          return {};
-
-        id(garage_open_estimated) = operation == COVER_OPERATION_OPENING && !closed;
-        id(garage_unknown_motion) = false;
+      if (operation != COVER_OPERATION_IDLE &&
+          ((operation == COVER_OPERATION_CLOSING && closed) ||
+           (uint32_t)(::millis() - id(op_start)) >= travel_time)) {
         id(op_start) = 0;
         id(garage_door).current_operation = COVER_OPERATION_IDLE;
-        // 0.5 is an unknown/intermediate sentinel, not a measured percentage.
-        id(garage_door).position = closed ? COVER_CLOSED :
-            (id(garage_open_estimated) ? COVER_OPEN : 0.5f);
+        id(garage_door).position = closed ? COVER_CLOSED : COVER_OPEN;
+        // Publish IDLE even if the contact (and therefore position) did not change.
         id(garage_door).publish_state(false);
         if (operation == COVER_OPERATION_CLOSING && !closed)
-          ESP_LOGW("cover", "Closing timed out without the closed contact; position unknown");
+          ESP_LOGW("cover", "Closing timed out without the closed contact; door is not closed");
         if (operation == COVER_OPERATION_OPENING && closed)
           ESP_LOGW("cover", "Opening timed out with the closed contact still active");
         return {};
       }
 
-      if (closed) id(garage_open_estimated) = false;
-      return closed ? COVER_CLOSED : (id(garage_open_estimated) ? COVER_OPEN : 0.5f);
+      return closed ? COVER_CLOSED : COVER_OPEN;
 
     open_action:
       - lambda: |-
           if (id(garage_door).current_operation != COVER_OPERATION_IDLE ||
-              id(garage_unknown_motion) || id(pulse_relay).is_running()) return;
+              id(pulse_relay).is_running()) return;
           if (!id(magnetic_contact).has_state() || !id(magnetic_contact).state) {
             ESP_LOGD("cover", "Ignoring OPEN: closed endpoint is not confirmed");
             return;
           }
-          id(garage_open_estimated) = false;
           id(garage_door).current_operation = COVER_OPERATION_OPENING;
-          id(garage_door).position = 0.5f;
+          id(garage_door).position = COVER_CLOSED;
           id(op_start) = ::millis();
           id(pulse_relay).execute();
           id(garage_door).publish_state(false);
     close_action:
       - lambda: |-
           if (id(garage_door).current_operation != COVER_OPERATION_IDLE ||
-              id(garage_unknown_motion) || id(pulse_relay).is_running()) return;
-          if (!id(magnetic_contact).has_state() || id(magnetic_contact).state ||
-              !id(garage_open_estimated)) {
-            ESP_LOGD("cover", "Ignoring CLOSE: already closed or open endpoint is unknown");
+              id(pulse_relay).is_running()) return;
+          if (!id(magnetic_contact).has_state() || id(magnetic_contact).state) {
+            ESP_LOGD("cover", "Ignoring CLOSE: contact unavailable or already closed");
             return;
           }
-          id(garage_open_estimated) = false;
           id(garage_door).current_operation = COVER_OPERATION_CLOSING;
-          id(garage_door).position = 0.5f;
+          id(garage_door).position = COVER_OPEN;
           id(op_start) = ::millis();
           id(pulse_relay).execute();
           id(garage_door).publish_state(false);
     toggle_action:
       - lambda: |-
           if (id(garage_door).current_operation != COVER_OPERATION_IDLE ||
-              id(garage_unknown_motion) || id(pulse_relay).is_running() ||
+              id(pulse_relay).is_running() ||
               !id(magnetic_contact).has_state()) return;
           if (id(magnetic_contact).state) {
             id(garage_door).make_call().set_command_open().perform();
-          } else if (id(garage_open_estimated)) {
-            id(garage_door).make_call().set_command_close().perform();
           } else {
-            // Deliberate toggle remains available when the opener's direction is unknown.
-            ESP_LOGW("cover", "Explicit TOGGLE from unknown position; direction is not known");
-            id(garage_unknown_motion) = true;
-            id(op_start) = ::millis();
-            id(garage_door).position = 0.5f;
-            id(pulse_relay).execute();
-            id(garage_door).publish_state(false);
+            id(garage_door).make_call().set_command_close().perform();
           }
 
 binary_sensor:

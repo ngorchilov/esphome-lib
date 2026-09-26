@@ -131,8 +131,9 @@ python tests/fan_sync_host_test.py
 Run this when changing fan command behavior, followed by config/compile of Pro Breeze and JUMMICO.
 The host doubles do not simulate UART timing or the physical appliances.
 
-The garage regression compiles the actual YAML lambdas with ASan/UBSan, checking endpoint guards,
-contact-confirmed close, timeout publication, wraparound and the BLE reboot interlock:
+The garage regression compiles the actual YAML lambdas with ASan/UBSan, checking commands after
+boot/external operation, contact-confirmed close, explicit retries after timeouts, endpoint/pulse
+guards, timeout publication, wraparound and the BLE reboot interlock:
 
 ```sh
 python tests/garage_host_test.py
