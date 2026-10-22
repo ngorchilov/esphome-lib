@@ -100,6 +100,11 @@ Board packages may define platform facts such as `firmware_family` through the b
 Keep base-board packages broad and boring. If a behavior is not useful across many devices, it
 probably belongs in a device file or a functional module instead.
 
+The shared ESP32-family template accepts `esp32_advanced.flash_chip` through the board include's
+vars. It forwards this option only when explicitly supplied, with no library default. Use the
+vendor recommended by the device's boot log; never assume one flash vendor across all boards.
+This setting applies across ESP32 variants, independently of the original-ESP32-only options below.
+
 Original ESP32 boards include `base-board-esphome-esp32-classic.yaml` between their concrete board
 package and the shared ESP32-family template. It exposes original-ESP32-only build settings through
 an optional `esp32_advanced:` vars object:

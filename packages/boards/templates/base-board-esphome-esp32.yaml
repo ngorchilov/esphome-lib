@@ -3,8 +3,20 @@ substitutions:
   friendly_name: Base Board ESPHome (ESP32)
   firmware_platform: esp32
 
+defaults:
+  esp32_advanced: ${ esp32_advanced | default({}) }
+  esp32_advanced_has_flash_chip: ${ "flash_chip" in esp32_advanced }
+  esp32_advanced_flash_chip: ${ esp32_advanced.get("flash_chip", "") }
+
+  _esp32_advanced_flash_chip_pkg:
+    esp32:
+      framework:
+        advanced:
+          flash_chip: ${esp32_advanced_flash_chip}
+
 packages:
   - !include base-board-esphome.yaml
+  - ${ _esp32_advanced_flash_chip_pkg if esp32_advanced_has_flash_chip else {} }
 
 esphome:
   # The firmware-slot diagnostic also needs this when OTA/safe_mode is absent.

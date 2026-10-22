@@ -111,10 +111,21 @@ Pass the [networking object](../packages/modules/networking/README.md) under the
 `vars` for network/service settings. Additional minimum ESPHome requirements use the
 [additive requirements list](../packages/README.md), not a direct `esphome.min_version` override.
 
-The same identity/logging convention applies to all devices. For original ESP32 targets only,
-`vars.esp32_advanced` accepts `minimum_chip_revision` and `sram1_as_iram`; neither has a library
-default. Do not use these on ESP32-C3/S3, ESP8266 or LibreTiny targets. Keep hardware-specific
-serial logging disabled where the package requires it.
+The same identity/logging convention applies to all devices. On ESP32 targets,
+`vars.esp32_advanced.flash_chip` selects the flash vendor driver using the value recommended by
+that device's boot log. It has no library default; do not assume every board uses the same vendor.
+For example, a device reporting `Set flash_chip: winbond` can use:
+
+```yaml
+vars:
+  esp32_advanced:
+    flash_chip: winbond
+```
+
+For original ESP32 targets only, the same object also accepts `minimum_chip_revision` and
+`sram1_as_iram`; neither has a library default. Do not use those two options on ESP32-C3/S3, or any
+of these ESP32 options on ESP8266 or LibreTiny targets. Keep hardware-specific serial logging
+disabled where the package requires it.
 
 ## Relay Devices
 
