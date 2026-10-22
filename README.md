@@ -149,6 +149,7 @@ their own native entities rather than that relay API.
 | [Vevor 7-in-1](devices/vevor-7-in-1.yaml) | LilyGO/Heltec receiver; tune frequency to the station. |
 | [wMBus](devices/wmbus.yaml) | Heltec/LilyGO receiver; add [meter profiles](devices/README.md#wmbus). |
 | [BLE Advertising Proxy](devices/ble-advertising-proxy.yaml) | Select a supported ESP32 board. |
+| [ESP-07 Serial Bridge](devices/esp07-serial-bridge.yaml) | Standalone Wi-Fi TCP/UART adapter; [connection settings](devices/README.md#esp-07-serial-bridge). |
 | [Weather ePaper Panel](devices/weather-epaper-panel.yaml) | HA weather/forecast dependency; verify physical display wiring. |
 | [Six-Zone Irrigation Controller](devices/tuya-6-zone-valve-controller.yaml) | **Bench draft.** Output polarity/load checks and final button behavior pending. |
 

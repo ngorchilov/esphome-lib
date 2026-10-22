@@ -1,5 +1,12 @@
 # A known_failure must fail for its documented reason; unexpected success fails CI too.
 cases:
+  - id: esp07-serial-bridge
+    file: devices/esp07-serial-bridge.yaml
+    contract: serial-bridge
+  - id: esp07-serial-bridge-overrides
+    file: devices/esp07-serial-bridge.yaml
+    substitutions: {uart_baud_rate: 9600, tcp_port: 1234}
+    contract: serial-bridge
   - id: esp32-switch
     file: tests/fixtures/relay.yaml
   - id: rf-receiver-esp32

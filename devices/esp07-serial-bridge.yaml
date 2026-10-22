@@ -1,0 +1,35 @@
+# ESP-07 serial Wi-Fi adapter: raw TCP <-> hardware UART, not RFC2217.
+# Set the adapter's switch to UART. Connect TX to target RX, RX to target TX, and GND.
+# The board disables serial logging; the ESP8266 ROM still emits startup bytes on TX.
+
+substitutions:
+  name: esp07-serial-bridge
+  friendly_name: ESP-07 Serial Bridge
+  uart_baud_rate: 115200
+  tcp_port: 6638
+
+packages:
+  - !include
+    file: ../packages/boards/espressif/esp07.yaml
+    vars:
+      networking:
+        # Keep API and OTA defaults, including API reboot_timeout: 0s.
+        # Elapsed uptime needs no Home Assistant clock.
+        time:
+          source: none
+
+uart:
+  id: serial_uart
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: ${uart_baud_rate}
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  rx_buffer_size: 1024
+
+uart_tcp:
+  id: serial_bridge
+  uart_id: serial_uart
+  role: server
+  port: ${tcp_port}

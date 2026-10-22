@@ -569,6 +569,24 @@ def check(config, contract, substitutions):
     elif contract == "inherited-logger":
         assert config["logger"]["level"] == "WARN"
         assert config["logger"]["baud_rate"] == 0
+    elif contract == "serial-bridge":
+        assert config["esp8266"]["board"] == "esp07"
+        assert config["logger"]["baud_rate"] == 0
+        assert config["api"]["reboot_timeout"].total_milliseconds == 0
+        assert config["wifi"]["reboot_timeout"].total_milliseconds == 0
+        assert any(item["platform"] == "esphome" for item in config["ota"])
+        assert "time" not in config
+        assert entity(config, "sensor", "mcu_uptime")["type"] == "seconds"
+        uart = entity(config, "uart", "serial_uart")
+        assert (uart["tx_pin"]["number"], uart["rx_pin"]["number"]) == (1, 3)
+        assert uart["baud_rate"] == int(substitutions.get("uart_baud_rate", 115200))
+        assert (uart["data_bits"], uart["parity"], uart["stop_bits"]) == (8, "NONE", 1)
+        server = entity(config, "uart_tcp", "serial_bridge")
+        assert server["role"] == "server"
+        assert "stream_server" not in config and "external_components" not in config
+        assert config["esp8266"]["toolchain"] == "arduino"
+        assert str(server["uart_id"]) == "serial_uart"
+        assert server["port"] == int(substitutions.get("tcp_port", 6638))
     elif contract.startswith("serial-logger-"):
         expected = {
             "serial-logger-esp07": (0, "UART0"),

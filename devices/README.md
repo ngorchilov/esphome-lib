@@ -219,6 +219,23 @@ reporting, and software temperature protection is not a substitute for hardware 
 CT16 retains a daily reboot workaround for observed CRC failures; its YAML documents the unresolved
 cause and the condition for removing the workaround.
 
+## ESP-07 Serial Bridge
+
+Include `devices/esp07-serial-bridge.yaml` and set `name` and `friendly_name` as usual.
+The substitutions `uart_baud_rate` (115200) and `tcp_port` (6638) select the UART speed and
+TCP listening port. UART framing is 8N1, with TX on GPIO1 and RX on GPIO3. Set the adapter's
+switch to UART and cross TX/RX to the target, with a shared ground.
+
+Wi-Fi uses the usual `wifi_ssid` and `wifi_password` secrets. Home Assistant API and OTA remain
+enabled, but the bridge needs neither an HA connection nor an HA clock. Connection-loss reboots
+are disabled by the shared networking defaults. Uptime reports elapsed seconds.
+
+Connect with `nc esp07-serial-bridge.local 6638` (substitute your chosen name or IP).
+Native [UART TCP](https://esphome.io/components/uart_tcp/) carries raw TCP bytes with one client
+connected at a time. UART data received while disconnected is discarded. The bridge does not use
+Telnet or RFC2217; clients cannot change baud rate remotely. ESPHome serial logging is disabled,
+but the ESP8266 ROM still transmits startup bytes on TX during reset.
+
 ## Climate And Air Quality
 
 Pro Breeze, JUMMICO, SCHEEAIR Nova 100 and MT-29 need no product-specific include object for normal
