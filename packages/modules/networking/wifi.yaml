@@ -17,6 +17,16 @@ wifi:
   reboot_timeout: ${wifi_reboot_timeout}
   enable_on_boot: ${ networking_wifi.get("enable_on_boot", true) }
 
+button:
+  - platform: template
+    name: WiFi Roam
+    id: mcu_wifi_roam
+    entity_category: config
+    disabled_by_default: true
+    icon: mdi:wifi-refresh
+    on_press:
+      - wifi.roam:
+
 sensor:
   - platform: wifi_signal
     name: WiFi Signal

@@ -73,6 +73,10 @@ Single-interface diagnostic IDs and names are unchanged. With both interfaces co
 diagnostics use separate `mcu_wifi_ip_address`, `mcu_wifi_mac_address`, `mcu_ethernet_ip_address`,
 and `mcu_ethernet_mac_address` IDs, with WiFi/Ethernet-prefixed names.
 
+Wi-Fi configurations also provide a `WiFi Roam` configuration button (`mcu_wifi_roam`), disabled by
+default in Home Assistant. Pressing it requests an immediate roaming scan through `wifi.roam`.
+It is included in both Wi-Fi-only and dual-interface configurations.
+
 ## Services And Time
 
 | Option | Default / accepted values |
