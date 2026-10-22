@@ -251,6 +251,10 @@ capabilities. Both accept `default_remote_temperature_entity` (default empty str
 HA sensor entity ID used for external temperature. A restored text setting takes precedence after
 first boot. The sensor must report Celsius.
 
+MELcutter V2 exposes a native `Vertical Vane` selector (`Auto`, positions `1`–`5`, `Swing`) and
+climate swing modes for off, vertical, horizontal, and both axes. Fixed horizontal vane positions
+remain deferred until ESPHome provides a built-in horizontal selector.
+
 For external temperature, allow the ESPHome integration to perform HA actions and provide
 `script.get_sensor_value`. The firmware calls it with `entity_id` and expects response data
 `{"value": <number>}`. This example belongs in Home Assistant's `scripts.yaml`, **not** ESPHome:

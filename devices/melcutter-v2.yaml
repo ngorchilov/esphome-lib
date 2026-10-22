@@ -51,6 +51,7 @@ climate:
     id: hp
     name: Heat Pump
     mitsubishi_cn105_id: hp_protocol
+    supported_swing_modes: BOTH
     visual:
       min_temperature: 16
       max_temperature: 31
@@ -58,18 +59,28 @@ climate:
         target_temperature: 1
         current_temperature: 0.5
 
+select:
+  - platform: mitsubishi_cn105
+    mitsubishi_cn105_id: hp_protocol
+    vertical_vane_direction:
+      name: Vertical Vane
+      id: vertical_vane
+      disabled_by_default: false
+      icon: mdi:pan-vertical
+
 # Native mitsubishi_cn105 does not use these external-component options:
-# - fahrenheit_compatibility: Home Assistant handles unit display.
+# - fahrenheit_compatibility: native use_fahrenheit remains disabled for Celsius.
 # - debounce_delay: no native equivalent.
 # - remote_temperature_timeout: recreated below with globals plus clear_remote_temperature.
 #
 # These external-component sub-entities are not exposed as YAML entities by the
-# native component in ESPHome 2026.5.0:
+# native component in ESPHome 2026.10.0:
 # - compressor_frequency_sensor, outside_air_temperature_sensor, isee_sensor
 # - stage_sensor, sub_mode_sensor, auto_sub_mode_sensor
 # - input_power_sensor, kwh_sensor, runtime_hours_sensor
 # - night_mode_switch, air_purifier_switch, circulator_switch
-# - vertical_vane_select, horizontal_vane_select, airflow_control_select
+# - horizontal_vane_select, airflow_control_select
+# Wait for a built-in horizontal vane select before adding fixed horizontal positions.
 
 text:
   # External Temp Sensor Entity ID
