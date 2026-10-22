@@ -662,6 +662,18 @@ mechanism against the relevant source and actual toolchain before recommending o
 Document the upstream issue, any version-specific assumptions, and how to remove the workaround
 after an official fix becomes available.
 
+### Pending: Remove The Realtek Reboot Workaround
+
+During ESPHome upgrades, check the LibreTiny version actually selected for RTL8720C builds.
+[LibreTiny PR #397](https://github.com/libretiny-eu/libretiny/pull/397), released in 1.14.0,
+changes `lt_reboot()` to call `sys_reset()`.
+
+Once the library's supported ESPHome baseline selects LibreTiny 1.14.0 or later with that fix,
+remove `-Wl,--wrap=lt_reboot` and `-Wl,--defsym=__wrap_lt_reboot=sys_reset` from
+`packages/boards/templates/base-board-libretiny-realtek.yaml`. Run configuration validation and
+compile an affected WBR3/RTL8720C target, such as `devices/fan-scheeair-nova-100.yaml`, confirming
+the resolved framework version and absence of both flags. Remove this pending note when complete.
+
 ## Validation Standards
 
 - Consumer README changes: run `python tests/docs_config.py` for complete examples and
@@ -716,6 +728,9 @@ When validation fails, report the first real error block and the file involved.
 - Do not rename, move, or reorganize packages unless explicitly asked.
 
 ## Reporting Back
+
+Commit messages should describe the resulting change and relevant validation. Omit conversation
+history, commit-splitting mechanics, and references to unpublished work in other commits.
 
 When reporting changes:
 
