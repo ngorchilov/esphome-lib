@@ -2,7 +2,9 @@ defaults:
   relay: ${ relay | default({}) }
   relay_config: ${ relay.get("config", {}) }
   relay_output_id: ${ relay_config.get("output_id", relay.get("output_id")) }
-  relay_control_module: !include
+
+packages:
+  - !include
     file: ../../modules/appliance-relay.yaml
     vars:
       appliance_relay:
@@ -11,9 +13,6 @@ defaults:
         name: ${ relay.get("name") }
         restore_mode: RESTORE_DEFAULT_OFF
         config: ${ relay_config }
-
-packages:
-  - ${ relay_control_module }
 
 output:
   - platform: gpio

@@ -22,10 +22,8 @@ packages:
   - !include ../packages/boards/tuya/cbu.yaml
   # Load the garage command secret only in the enabled package.
   - !include
-    file: ../packages/modules/${ 'tuya-garage-opener-ble' if (ble_enabled | string | lower) == 'true' else 'bk72xx-ble-pulse' }.yaml
-    vars:
-      ble_pulse:
-        enabled: ${ble_enabled}
+    file: ../packages/modules/tuya-garage-opener-ble.yaml
+    condition: ${ble_enabled}
 
 number:
   - platform: template

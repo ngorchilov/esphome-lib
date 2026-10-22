@@ -168,8 +168,8 @@ Modbus registers, LVGL pages or radio protocols.
 
 ## Validation And Status
 
-The config-test baseline is ESPHome **2026.8.2**; that is not a universal minimum. Minimum tool
-version, successful configuration validation, successful firmware compilation, hardware verification
+The library requires ESPHome **2026.10.0** for native conditional includes; CI uses the same release.
+Minimum tool version, successful configuration validation, successful firmware compilation, hardware verification
 and a product's published firmware version are separate facts. An unpublished edit does not imply
 a new release number. A passing configuration or build is never proof that a valve, relay or motor
 will behave correctly on a particular board.

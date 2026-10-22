@@ -152,7 +152,10 @@ but leaves the physical output available for your own application.
 The 2DC dry relay accepts `relay_1_entity` and `relay_2_entity`; the 4DC accepts those plus
 `relay_3_entity` and `relay_4_entity`. Each uses the same entity schema. The 4DC also accepts
 `enabled_channels` (default `[1, 2, 3, 4]`) to select exposed channels. Both dry-relay devices' optional `rf433`
-object accepts `enabled` (false), `buffer_size` (4kb), `filter` (150us) and `idle` (4ms).
+object accepts `enabled` (false), `buffer_size` (16kb), `filter` (150us) and `idle` (4ms).
+ESPHome 2026.10 interprets the buffer as bytes on these LibreTiny devices. The new default preserves
+the previous pulse capacity. Multiply an existing custom pre-2026.10 buffer value by four to keep
+its former capacity; explicit values are passed through as bytes.
 
 The 3x2 strip uses substitutions `relay1_id` through `relay4_id` (defaults `socket_1_2`,
 `socket_3_4`, `socket_5_6`, `relay_usb`) and corresponding `relay1_name` through `relay4_name`.

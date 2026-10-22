@@ -5,6 +5,15 @@ hardware. The following contracts are for composing an application from modules.
 must provide the shared firmware foundations. Native ESPHome component settings are not implicitly
 accepted as package parameters: use the fields listed here, or a native `!extend` override.
 
+## RF Receiver
+
+[`remote-receiver-rc-switch.yaml`](remote-receiver-rc-switch.yaml) accepts a `receiver` object:
+`enabled` (false), `id` (`rc_switch_receiver`), `pin` (`GPIO0`), `inverted` (false),
+`buffer_size`, `filter` (`150us`) and `idle` (`4ms`). Disabled receivers contribute no components.
+The buffer is measured in bytes: the default is `4kb` on supported ESP32 RMT targets and `16kb`
+on ESP8266/LibreTiny. Multiply custom pre-2026.10 ESP8266/LibreTiny values by four to preserve
+their previous pulse capacity. Explicit buffer values are forwarded without scaling.
+
 ## Relay Control
 
 [`relay-control.yaml`](relay-control.yaml) accepts one `rc` object. It creates a physical binary

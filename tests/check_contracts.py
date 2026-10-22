@@ -356,6 +356,17 @@ def check(config, contract, substitutions):
         assert second["name"] == "Extract" and second["speed_count"] == 3 and second["has_oscillating"]
         assert second["restore_mode"] == "ALWAYS_OFF"
         return
+    if contract == "rf-receiver":
+        if not enabled(substitutions.get("receiver_enabled", True)):
+            assert "remote_receiver" not in config
+            return
+        receivers = config["remote_receiver"]
+        receiver = receivers[0] if isinstance(receivers, list) else receivers
+        expected = 4000 if "esp32" in config else 16000
+        if substitutions.get("receiver_buffer") == "8kb":
+            expected = 8000
+        assert receiver["buffer_size"] == expected
+        return
     if contract == "ceiling-light-v2":
         chip = config["substitutions"]["chip"]
         is_cbu = chip == "cbu"
@@ -384,7 +395,7 @@ def check(config, contract, substitutions):
         assert sources.count("fixture.repeated") == 2
         assert "fixture.first" in sources and "fixture.second" in sources
         assert ("fixture.optional" in sources) == enabled(substitutions.get("test_optional", False))
-        assert config["esphome"]["min_version"] == substitutions.get("expected_min_version", "2026.7.0")
+        assert config["esphome"]["min_version"] == substitutions.get("expected_min_version", "2026.10.0")
         return
     if "esp32" in config:
         assert "<esp_ota_ops.h>" in config["esphome"]["includes"]
@@ -409,10 +420,7 @@ def check(config, contract, substitutions):
         assert ("wifi" in config) != ("ethernet" in config)
         ethernet = "ethernet" in config
         api_enabled = enabled(substitutions.get("test_api", True))
-        minimum = "2026.6.0" if api_enabled else "2026.5.0"
-        if ethernet and "test_ethernet_on_boot" in substitutions:
-            minimum = "2026.8.0"
-        assert config["esphome"]["min_version"] == minimum
+        assert config["esphome"]["min_version"] == "2026.10.0"
         info = next(sensor for sensor in config["text_sensor"] if sensor["platform"] == ("ethernet_info" if ethernet else "wifi_info"))
         assert str(info["mac_address"]["id"]) == "mcu_mac_address"
         ip_id = "mcu_ip_address" if ethernet else "mcu_ip"
@@ -428,7 +436,7 @@ def check(config, contract, substitutions):
         interfaces = config["substitutions"]["test_interfaces"]
         assert [item["interface"] for item in config["network"]["priority"]] == interfaces
         assert {"wifi", "ethernet"} <= config.keys()
-        assert config["esphome"]["min_version"] == "2026.8.0"
+        assert config["esphome"]["min_version"] == "2026.10.0"
         api_enabled = enabled(substitutions.get("test_api", True))
         assert ("api" in config) == api_enabled
         if api_enabled:
@@ -564,11 +572,26 @@ def check(config, contract, substitutions):
     elif contract.startswith("serial-logger-"):
         expected = {
             "serial-logger-esp07": (0, "UART0"),
+            "serial-logger-cn105": (0, "UART0"),
             "serial-logger-esp12ef": (0, "UART0"),
             "serial-logger-beken": (115200, "DEFAULT"),
             "serial-logger-hri4853": (0, "UART0"),
         }[contract]
         assert (config["logger"]["baud_rate"], config["logger"]["hardware_uart"]) == expected
+        if contract == "serial-logger-cn105":
+            hub = config["mitsubishi_cn105"]
+            assert str(hub["id"]) == "hp_protocol"
+            assert str(hub["uart_id"]) == "HP_UART"
+            assert hub["update_interval"].total_milliseconds == 2000
+            assert hub["telemetry_request_min_interval"].total_milliseconds == 2000
+            climate = entity(config, "climate", "hp")
+            assert climate["name"] == "Heat Pump"
+            assert str(climate["mitsubishi_cn105_id"]) == "hp_protocol"
+            remote = entity(config, "sensor", "remote_temperature")
+            action = remote["on_value"][0]["then"][1]["mitsubishi_cn105.set_remote_temperature"]
+            assert str(action["id"]) == "hp_protocol"
+            fallback = config["interval"][0]["then"][0]["if"]["then"][1]
+            assert str(fallback["mitsubishi_cn105.clear_remote_temperature"]["id"]) == "hp_protocol"
         if contract == "serial-logger-beken":
             uart = entity(config, "uart", "tuya_uart")
             assert uart["tx_pin"]["number"] == 11

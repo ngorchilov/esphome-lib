@@ -1,6 +1,6 @@
 substitutions:
   name: base-board-esp12ef
-  friendly_name: Base Board ESP12E/F
+  friendly_name: Base Board ESP12EF
 
 packages:
   - !include ../templates/base-board-esphome-esp8266.yaml

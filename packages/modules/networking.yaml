@@ -35,11 +35,13 @@ defaults:
 packages:
   # Keep each interface lazy: Ethernet-only and offline builds must not load Wi-Fi secrets.
   - !include
-    file: networking/${ 'wifi' if 'wifi' in networking_settings.interfaces else 'none' }.yaml
+    file: networking/wifi.yaml
+    condition: ${ 'wifi' in networking_settings.interfaces }
     vars:
       networking_multiple: ${networking_settings.multiple}
   - !include
-    file: networking/${ 'ethernet' if 'ethernet' in networking_settings.interfaces else 'none' }.yaml
+    file: networking/ethernet.yaml
+    condition: ${ 'ethernet' in networking_settings.interfaces }
     vars:
       networking_multiple: ${networking_settings.multiple}
   - '${ {"INVALID_NETWORKING_CONFIGURATION": networking_settings.errors} if networking_settings.errors else {} }'

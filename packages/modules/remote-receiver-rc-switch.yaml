@@ -1,7 +1,8 @@
 defaults:
   receiver: ${ receiver | default({}) }
   receiver_enabled: ${ receiver.get("enabled", false) }
-  _receiver_core_pkg: !include remote-receiver-rc-switch/core.yaml
 
 packages:
-  - ${ receiver_enabled and _receiver_core_pkg or {} }
+  - !include
+    file: remote-receiver-rc-switch/core.yaml
+    condition: ${receiver_enabled}

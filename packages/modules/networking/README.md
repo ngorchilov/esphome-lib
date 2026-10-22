@@ -55,7 +55,8 @@ Choose **one** selector:
 Duplicate/unknown interfaces, a non-list `interfaces` value, and combining `mode` with `interfaces`
 are configuration errors. Interface options do not enable an interface by themselves.
 
-Dual-interface operation requires **ESP32 and ESPHome 2026.8.0 or later**. The list becomes ESPHome's
+Dual-interface operation requires **ESP32** and uses native support introduced in ESPHome 2026.8.0
+(the library now requires 2026.10.0). The list becomes ESPHome's
 native `network.priority`. The first connected interface in that order carries outgoing traffic, with
 native failover/failback and DNS selection. Each interface has its own address; this is not bridging
 or link aggregation. See [ESPHome's multi-interface documentation](https://esphome.io/components/network/#multi-interface-support).

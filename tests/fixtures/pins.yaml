@@ -3,8 +3,8 @@ substitutions:
   board_vendor: espressif
   board: esp32dev
   output_pin: GPIO4
-  input_pin: GPIO5
-  tx_pin: GPIO12
+  input_pin: ${ 'GPIO18' if board == 'esp32dev' else 'GPIO5' }
+  tx_pin: ${ 'GPIO23' if board == 'esp32dev' else 'GPIO12' }
   rx_pin: GPIO13
   pin_schema: gpio
   drive_strength: 40mA

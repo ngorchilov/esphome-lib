@@ -1,0 +1,26 @@
+substitutions:
+  name: test-rf-receiver
+  board_vendor: espressif
+  board: esp32dev
+  receiver_pin: GPIO27
+  receiver_enabled: true
+  receiver_buffer: ''
+  test_device: ''
+
+packages:
+  - !include
+    file: ../../packages/boards/${board_vendor}/${board}.yaml
+    condition: ${ test_device == '' }
+  - !include
+    file: ../../devices/${test_device}.yaml
+    condition: ${ test_device != '' }
+    vars:
+      rf433:
+        enabled: ${receiver_enabled}
+  - !include
+    file: ../../packages/modules/remote-receiver-rc-switch.yaml
+    condition: ${ test_device == '' }
+    vars:
+      receiver: >-
+        ${ dict({'id': 'fixture_receiver', 'enabled': receiver_enabled, 'pin': receiver_pin},
+                **({'buffer_size': receiver_buffer} if receiver_buffer else {})) }

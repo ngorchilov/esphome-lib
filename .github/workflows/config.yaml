@@ -16,13 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - esphome: 2026.5.0
-            targets: offline wifi-services-disabled
-          - esphome: 2026.6.0
-            targets: ethernet-legacy-defaults explicit-wifi-no-secrets offline-external-time
-          - esphome: 2026.7.0
-            targets: version-order version-reverse-order version-disabled-future-feature version-lcd-wifi
-          - esphome: 2026.8.2
+          - esphome: 2026.10.0
             targets: --all
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +30,6 @@ jobs:
       - name: Validate configurations and models
         run: python tests/validate.py ${{ matrix.targets }}
       - name: Validate consumer documentation examples
-        if: matrix.esphome == '2026.8.2'
         run: python tests/docs_config.py
       - name: Upload validation results
         if: always()

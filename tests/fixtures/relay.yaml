@@ -20,4 +20,4 @@ packages:
           pin: GPIO4
         indicator_led:
           enabled: true
-          pin: GPIO5
+          pin: ${ 'GPIO18' if board == 'esp32dev' else 'GPIO5' }

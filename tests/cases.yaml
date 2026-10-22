@@ -2,6 +2,33 @@
 cases:
   - id: esp32-switch
     file: tests/fixtures/relay.yaml
+  - id: rf-receiver-esp32
+    file: tests/fixtures/rf-receiver.yaml
+    contract: rf-receiver
+  - id: rf-receiver-beken
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {board_vendor: tuya, board: cb3s, receiver_pin: GPIO7}
+    contract: rf-receiver
+  - id: rf-receiver-esp8266
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {board: esp07, receiver_pin: GPIO4}
+    contract: rf-receiver
+  - id: rf-receiver-explicit-bytes
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {board_vendor: tuya, board: cb3s, receiver_pin: GPIO7, receiver_buffer: 8kb}
+    contract: rf-receiver
+  - id: rf-receiver-disabled
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {receiver_enabled: false, receiver_pin: UNUSED_INVALID_PIN}
+    contract: rf-receiver
+  - id: rf-relay2
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {test_device: tuya-dry-relay-2dc-10a}
+    contract: rf-receiver
+  - id: rf-relay4
+    file: tests/fixtures/rf-receiver.yaml
+    substitutions: {test_device: tuya-dry-relay-4dc-10a}
+    contract: rf-receiver
   - id: esp32-light
     file: tests/fixtures/relay.yaml
     substitutions: {role: light}
@@ -229,7 +256,7 @@ cases:
     local_components: [rtl8720c_uart]
   - id: source-ble
     file: tests/fixtures/garage-ble.yaml
-    substitutions: {expected_min_version: 2026.8.0}
+    substitutions: {expected_min_version: 2026.10.0}
     local_components: [bk72xx_ble_server]
 
   - id: disabled-basic
@@ -319,7 +346,7 @@ cases:
     contract: serial-logger-esp12ef
   - id: serial-logger-melcutter-v2
     file: devices/melcutter-v2.yaml
-    contract: serial-logger-esp07
+    contract: serial-logger-cn105
   - id: serial-logger-water-meter
     file: devices/tuya-8-in-1-water-meter.yaml
     contract: serial-logger-beken
@@ -346,7 +373,7 @@ cases:
     contract: pins
   - id: pins-esp32-strapping
     file: tests/fixtures/pins.yaml
-    substitutions: {output_pin: GPIO0, ignore_strapping: true}
+    substitutions: {output_pin: GPIO0, input_pin: GPIO5, tx_pin: GPIO12, ignore_strapping: true}
     contract: pins
   - id: pins-c3
     file: tests/fixtures/pins.yaml
@@ -508,7 +535,7 @@ cases:
     contract: version-composition
   - id: version-enabled-feature
     file: tests/fixtures/version-requirements.yaml
-    substitutions: {test_optional: true, expected_min_version: 2026.8.0}
+    substitutions: {test_optional: true, expected_min_version: 2026.10.0}
     secrets: false
     contract: version-composition
   - id: version-disabled-future-feature
@@ -520,37 +547,37 @@ cases:
     file: tests/fixtures/version-requirements.yaml
     substitutions:
       test_dashboard_requirements: "${ [{'source': 'dashboard', 'version': '2026.8.2'}] }"
-      expected_min_version: 2026.8.2
+      expected_min_version: 2026.10.0
     secrets: false
     contract: version-composition
   - id: version-melcutter
     file: devices/melcutter.yaml
-    substitutions: {expected_min_version: 2026.6.0}
+    substitutions: {expected_min_version: 2026.10.0}
   - id: version-lcd-wifi
     file: tests/fixtures/lcd-networking.yaml
-    substitutions: {test_interfaces: "${ ['wifi'] }", expected_min_version: 2026.7.0}
+    substitutions: {test_interfaces: "${ ['wifi'] }", expected_min_version: 2026.10.0}
     secrets: false
   - id: version-lcd-dual
     file: tests/fixtures/lcd-networking.yaml
-    substitutions: {expected_min_version: 2026.8.0}
+    substitutions: {expected_min_version: 2026.10.0}
     secrets: false
   - id: version-lcd-ethernet-on-demand
     file: tests/fixtures/lcd-networking.yaml
     substitutions:
       test_interfaces: "${ ['ethernet'] }"
       test_ethernet_boot_option: true
-      expected_min_version: 2026.8.0
+      expected_min_version: 2026.10.0
     secrets: false
   - id: reject-version-month-order
     file: tests/fixtures/version-requirements.yaml
-    substitutions: {test_first_version: 2026.9.0, test_second_version: 2026.10.0}
+    substitutions: {test_first_version: 2027.9.0, test_second_version: 2027.10.0}
     secrets: false
-    reject: Please update to at least 2026.10.0
+    reject: Please update to at least 2027.10.0
   - id: reject-version-patch-order
     file: tests/fixtures/version-requirements.yaml
-    substitutions: {test_first_version: 2026.8.9, test_second_version: 2026.8.10}
+    substitutions: {test_first_version: 2027.8.9, test_second_version: 2027.8.10}
     secrets: false
-    reject: Please update to at least 2026.8.10
+    reject: Please update to at least 2027.8.10
   - id: reject-version-format
     file: tests/fixtures/version-requirements.yaml
     substitutions: {test_first_version: 2026.bad.0}

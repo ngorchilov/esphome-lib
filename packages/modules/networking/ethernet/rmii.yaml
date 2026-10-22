@@ -13,10 +13,11 @@ defaults:
   eth_power_pin: ${ networking_ethernet.get("power_pin", "") }
   eth_power_strapping: ${ networking_ethernet.get("power_strapping", false) }
   eth_phy_addr: ${ networking_ethernet.get("phy_addr", 1) }
-  net_eth_power_module: !include ../ethernet-power.yaml
 
 packages:
-  - ${ eth_power_pin and net_eth_power_module or {} }
+  - !include
+    file: ../ethernet-power.yaml
+    condition: ${ eth_power_pin != "" }
 
 ethernet:
   type: ${eth_type}

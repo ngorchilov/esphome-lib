@@ -597,6 +597,10 @@ packages:
 - Do not return raw `{file: ..., vars: ...}` package dictionaries from expressions.
 - Validate conditional include behavior with `esphome config` before applying it broadly.
 
+The library floor is ESPHome 2026.10.0. Use native `!include` blocks with `condition:` for
+optional file-backed packages, preserving their existing vars and ids. Keep unique inline
+device behavior inline; conditional includes do not justify extracting one-use files.
+
 ## YAML Coding Standards
 
 - Avoid quotes unless YAML requires them.

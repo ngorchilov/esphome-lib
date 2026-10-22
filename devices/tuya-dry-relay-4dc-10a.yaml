@@ -51,7 +51,7 @@ packages:
         id: rf433_receiver
         pin: ${rf433_pin}
         inverted: ${rf433_inverted}
-        buffer_size: ${ (rf433 | default({})).get("buffer_size", "4kb") }
+        buffer_size: ${ (rf433 | default({})).get("buffer_size", "16kb") }
         filter: ${ (rf433 | default({})).get("filter", "150us") }
         idle: ${ (rf433 | default({})).get("idle", "4ms") }
   - !include

@@ -4,12 +4,11 @@ Board-backed firmware automatically selects the highest ESPHome version required
 packages. You do not need to calculate a combined minimum when adding a display, networking or an
 optional feature.
 
-The shared base requires 2026.5.0. Its clock-backed uptime sensor adds 2026.6.0 for the
-[`uptime` device class](https://esphome.io/changelog/2026.6.0/); clockless uptime does not add that
-requirement. The Waveshare LCD 7B adds 2026.7.0 for its I/O extension. Selecting dual networking
-adds 2026.8.0, so that combination requires 2026.8.0. Disabling dual networking removes its
-requirement; the display still requires 2026.7.0. A lower device requirement cannot reduce the
-base's minimum.
+The shared base requires **2026.10.0** for native conditional includes. Feature requirements still
+merge independently: clock-backed uptime contributes 2026.6.0, the Waveshare LCD 7B contributes
+2026.7.0, and dual networking contributes 2026.8.0. These older requirements cannot reduce the
+base's minimum. Disabling a feature removes its contribution; a future feature requiring a newer
+release will raise the resolved minimum automatically.
 
 This is the **ESPHome tool version**, not your firmware's `esphome.project.version`, SDK version,
 or a record of which version was used for testing.

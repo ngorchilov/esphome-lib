@@ -2,8 +2,8 @@ substitutions:
   name: melcutter-v2
   friendly_name: MELcutter V2
   esphome_requirements:
-    - source: climate.mitsubishi_cn105.set_remote_temperature
-      version: 2026.5.0
+    - source: mitsubishi_cn105.hub
+      version: 2026.10.0
 
   # Default Home Assistant entity_id used as the external temperature source.
   # Can be an empty string.
@@ -39,22 +39,24 @@ globals:
     restore_value: false
     initial_value: 'false'
 
+mitsubishi_cn105:
+  id: hp_protocol
+  uart_id: HP_UART
+  update_interval: 2s
+  telemetry_request_min_interval: 2s
+
 # Climate entity configuration
 climate:
   - platform: mitsubishi_cn105
     id: hp
     name: Heat Pump
-    uart_id: HP_UART
+    mitsubishi_cn105_id: hp_protocol
     visual:
       min_temperature: 16
       max_temperature: 31
       temperature_step:
         target_temperature: 1
         current_temperature: 0.5
-    update_interval: 2s
-    # Match the previous config's fast current-temperature polling.
-    # Increase to 60s, the native component default, if the AC reports noisy room temperatures.
-    current_temperature_min_interval: 2s
 
 # Native mitsubishi_cn105 does not use these external-component options:
 # - fahrenheit_compatibility: Home Assistant handles unit display.
@@ -106,8 +108,8 @@ sensor:
             id(remote_temperature_last_refresh) = millis();
             id(remote_temperature_override_active) = true;
             ESP_LOGI("remote_temp", "Remote temperature: %.2f C", x);
-        - climate.mitsubishi_cn105.set_remote_temperature:
-            id: hp
+        - mitsubishi_cn105.set_remote_temperature:
+            id: hp_protocol
             temperature: !lambda 'return x;'
 
 interval:
@@ -126,8 +128,8 @@ interval:
             - logger.log:
                 level: WARN
                 format: Remote temperature refresh timed out, clearing Mitsubishi CN105 override
-            - climate.mitsubishi_cn105.clear_remote_temperature:
-                id: hp
+            - mitsubishi_cn105.clear_remote_temperature:
+                id: hp_protocol
             - lambda: |-
                 id(remote_temperature_override_active) = false;
       - if:

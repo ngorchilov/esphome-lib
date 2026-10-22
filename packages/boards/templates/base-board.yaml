@@ -2,17 +2,18 @@ substitutions:
   name: base-board
   friendly_name: Base Board
   esphome_requirements:
-    # Conditional packages and reliable !include vars substitution in lambdas.
+    # Native conditional includes in shared package assemblers.
     - source: esphome-lib.base
-      version: 2026.5.0
+      version: 2026.10.0
 
   log_level: INFO
   has_internal_temperature: true
-  internal_temperature_module: !include ../../modules/internal-temperature.yaml
 
 packages:
   - !include ../../modules/networking.yaml
-  - ${ has_internal_temperature and internal_temperature_module or {} }
+  - !include
+    file: ../../modules/internal-temperature.yaml
+    condition: ${has_internal_temperature}
 
 esphome:
   name: ${name}

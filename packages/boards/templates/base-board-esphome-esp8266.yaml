@@ -6,6 +6,9 @@ substitutions:
 packages:
   - !include base-board-esphome.yaml
 
+esp8266:
+  toolchain: arduino
+
 logger:
   baud_rate: 0
 

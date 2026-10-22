@@ -49,144 +49,6 @@ defaults:
   waveshare_8di8ro_input7: ${ waveshare_8di8ro_digital_inputs.get("input7", {}) }
   waveshare_8di8ro_input8: ${ waveshare_8di8ro_digital_inputs.get("input8", {}) }
 
-  waveshare_8di8ro_relay1_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_1
-        output_id: waveshare_8di8ro_relay_1_output
-        name: Relay 1
-        number: 0
-        config: ${waveshare_8di8ro_relay1}
-  waveshare_8di8ro_relay2_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_2
-        output_id: waveshare_8di8ro_relay_2_output
-        name: Relay 2
-        number: 1
-        config: ${waveshare_8di8ro_relay2}
-  waveshare_8di8ro_relay3_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_3
-        output_id: waveshare_8di8ro_relay_3_output
-        name: Relay 3
-        number: 2
-        config: ${waveshare_8di8ro_relay3}
-  waveshare_8di8ro_relay4_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_4
-        output_id: waveshare_8di8ro_relay_4_output
-        name: Relay 4
-        number: 3
-        config: ${waveshare_8di8ro_relay4}
-  waveshare_8di8ro_relay5_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_5
-        output_id: waveshare_8di8ro_relay_5_output
-        name: Relay 5
-        number: 4
-        config: ${waveshare_8di8ro_relay5}
-  waveshare_8di8ro_relay6_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_6
-        output_id: waveshare_8di8ro_relay_6_output
-        name: Relay 6
-        number: 5
-        config: ${waveshare_8di8ro_relay6}
-  waveshare_8di8ro_relay7_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_7
-        output_id: waveshare_8di8ro_relay_7_output
-        name: Relay 7
-        number: 6
-        config: ${waveshare_8di8ro_relay7}
-  waveshare_8di8ro_relay8_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
-    vars:
-      relay:
-        id: waveshare_8di8ro_relay_8
-        output_id: waveshare_8di8ro_relay_8_output
-        name: Relay 8
-        number: 7
-        config: ${waveshare_8di8ro_relay8}
-
-  waveshare_8di8ro_input1_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_1
-        name: Digital Input 1
-        pin: GPIO4
-        config: ${waveshare_8di8ro_input1}
-  waveshare_8di8ro_input2_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_2
-        name: Digital Input 2
-        pin: GPIO5
-        config: ${waveshare_8di8ro_input2}
-  waveshare_8di8ro_input3_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_3
-        name: Digital Input 3
-        pin: GPIO6
-        config: ${waveshare_8di8ro_input3}
-  waveshare_8di8ro_input4_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_4
-        name: Digital Input 4
-        pin: GPIO7
-        config: ${waveshare_8di8ro_input4}
-  waveshare_8di8ro_input5_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_5
-        name: Digital Input 5
-        pin: GPIO8
-        config: ${waveshare_8di8ro_input5}
-  waveshare_8di8ro_input6_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_6
-        name: Digital Input 6
-        pin: GPIO9
-        config: ${waveshare_8di8ro_input6}
-  waveshare_8di8ro_input7_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_7
-        name: Digital Input 7
-        pin: GPIO10
-        config: ${waveshare_8di8ro_input7}
-  waveshare_8di8ro_input8_module: !include
-    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
-    vars:
-      input:
-        id: waveshare_8di8ro_input_8
-        name: Digital Input 8
-        pin: GPIO11
-        config: ${waveshare_8di8ro_input8}
-
 packages:
   - !include
     file: ../boards/espressif/esp32-s3-devkitc-1.yaml
@@ -195,23 +57,150 @@ packages:
         ${ dict(dict(waveshare_8di8ro_networking_selection, **waveshare_8di8ro_networking),
           ethernet=dict(waveshare_8di8ro_networking.get('ethernet', {}), **waveshare_8di8ro_ethernet)) }
   - ${ waveshare_8di8ro_ha_clock_sync_package if waveshare_8di8ro_networking_settings.time_source == 'homeassistant' else {} }
-  - ${waveshare_8di8ro_relay1_module}
-  - ${waveshare_8di8ro_relay2_module}
-  - ${waveshare_8di8ro_relay3_module}
-  - ${waveshare_8di8ro_relay4_module}
-  - ${waveshare_8di8ro_relay5_module}
-  - ${waveshare_8di8ro_relay6_module}
-  - ${waveshare_8di8ro_relay7_module}
-  - ${waveshare_8di8ro_relay8_module}
-  - ${ waveshare_8di8ro_input1.get("enabled", true) and waveshare_8di8ro_input1_module or {} }
-  - ${ waveshare_8di8ro_input2.get("enabled", true) and waveshare_8di8ro_input2_module or {} }
-  - ${ waveshare_8di8ro_input3.get("enabled", true) and waveshare_8di8ro_input3_module or {} }
-  - ${ waveshare_8di8ro_input4.get("enabled", true) and waveshare_8di8ro_input4_module or {} }
-  - ${ waveshare_8di8ro_input5.get("enabled", true) and waveshare_8di8ro_input5_module or {} }
-  - ${ waveshare_8di8ro_input6.get("enabled", true) and waveshare_8di8ro_input6_module or {} }
-  - ${ waveshare_8di8ro_input7.get("enabled", true) and waveshare_8di8ro_input7_module or {} }
-  - ${ waveshare_8di8ro_input8.get("enabled", true) and waveshare_8di8ro_input8_module or {} }
-
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_1
+        output_id: waveshare_8di8ro_relay_1_output
+        name: Relay 1
+        number: 0
+        config: ${waveshare_8di8ro_relay1}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_2
+        output_id: waveshare_8di8ro_relay_2_output
+        name: Relay 2
+        number: 1
+        config: ${waveshare_8di8ro_relay2}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_3
+        output_id: waveshare_8di8ro_relay_3_output
+        name: Relay 3
+        number: 2
+        config: ${waveshare_8di8ro_relay3}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_4
+        output_id: waveshare_8di8ro_relay_4_output
+        name: Relay 4
+        number: 3
+        config: ${waveshare_8di8ro_relay4}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_5
+        output_id: waveshare_8di8ro_relay_5_output
+        name: Relay 5
+        number: 4
+        config: ${waveshare_8di8ro_relay5}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_6
+        output_id: waveshare_8di8ro_relay_6_output
+        name: Relay 6
+        number: 5
+        config: ${waveshare_8di8ro_relay6}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_7
+        output_id: waveshare_8di8ro_relay_7_output
+        name: Relay 7
+        number: 6
+        config: ${waveshare_8di8ro_relay7}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/relay.yaml
+    vars:
+      relay:
+        id: waveshare_8di8ro_relay_8
+        output_id: waveshare_8di8ro_relay_8_output
+        name: Relay 8
+        number: 7
+        config: ${waveshare_8di8ro_relay8}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input1.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_1
+        name: Digital Input 1
+        pin: GPIO4
+        config: ${waveshare_8di8ro_input1}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input2.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_2
+        name: Digital Input 2
+        pin: GPIO5
+        config: ${waveshare_8di8ro_input2}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input3.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_3
+        name: Digital Input 3
+        pin: GPIO6
+        config: ${waveshare_8di8ro_input3}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input4.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_4
+        name: Digital Input 4
+        pin: GPIO7
+        config: ${waveshare_8di8ro_input4}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input5.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_5
+        name: Digital Input 5
+        pin: GPIO8
+        config: ${waveshare_8di8ro_input5}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input6.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_6
+        name: Digital Input 6
+        pin: GPIO9
+        config: ${waveshare_8di8ro_input6}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input7.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_7
+        name: Digital Input 7
+        pin: GPIO10
+        config: ${waveshare_8di8ro_input7}
+  - !include
+    file: waveshare-esp32-s3-eth-8di-8ro/input.yaml
+    condition: ${ waveshare_8di8ro_input8.get("enabled", true) }
+    vars:
+      input:
+        id: waveshare_8di8ro_input_8
+        name: Digital Input 8
+        pin: GPIO11
+        config: ${waveshare_8di8ro_input8}
 esp32:
   flash_size: 16MB
 

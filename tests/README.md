@@ -1,7 +1,7 @@
 # Validation
 
-Use the Python interpreter from your ESPHome environment. The current CI baseline is
-ESPHome **2026.8.2**; that is a tested version, not a new minimum supported firmware version.
+Use the Python interpreter from your ESPHome environment. The CI baseline and the shared library
+minimum are **ESPHome 2026.10.0**, which provides native conditional includes.
 
 From the repository root:
 
@@ -108,10 +108,10 @@ and nested includes, dashboard additions, disabled features, LCD/network combina
 MELcutter/base collision. Invalid declarations and too-new month/patch versions must be rejected.
 These checks use config validation only; they do not require a firmware build.
 
-CI also runs focused checks at the declared minimum releases: 2026.5.0 for clockless configurations,
-2026.6.0 for timestamp uptime with HA/external clocks, and 2026.7.0 for version composition and the
-LCD appliance. The full suite stays on the current baseline. These are representative contract
-checks, not a claim that every device supports every tested release.
+All CI configuration checks run on 2026.10.0. Version-composition cases retain independent feature
+requirements below the shared floor and reject numerically ordered future requirements above it.
+The RF receiver cases check byte-sized buffers on ESP32, ESP8266 and Beken, explicit overrides,
+both dry-relay consumers, and a disabled receiver with an intentionally invalid unused pin.
 
 ## C++ And CI
 
