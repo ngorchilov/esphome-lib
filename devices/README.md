@@ -237,9 +237,11 @@ The substitutions `uart_baud_rate` (115200) and `tcp_port` (6638) select the UAR
 TCP listening port. UART framing is 8N1, with TX on GPIO1 and RX on GPIO3. Set the adapter's
 switch to UART and cross TX/RX to the target, with a shared ground.
 
-Wi-Fi uses the usual `wifi_ssid` and `wifi_password` secrets. Home Assistant API and OTA remain
-enabled, but the bridge needs neither an HA connection nor an HA clock. Connection-loss reboots
-are disabled by the shared networking defaults. Uptime reports elapsed seconds.
+Wi-Fi uses the usual `wifi_ssid` and `wifi_password` secrets. Home Assistant API, OTA and HA time
+use the shared networking defaults. TCP/UART forwarding works without an HA connection or clock
+sync, and connection-loss reboots remain disabled. Uptime publishes the boot timestamp after the
+first HA time sync, giving Home Assistant its usual relative-time display. Until that sync, uptime
+remains unknown; forwarding is already available. A later HA disconnect does not clear the timestamp.
 
 Connect with `nc esp07-serial-bridge.local 6638` (substitute your chosen name or IP).
 Native [UART TCP](https://esphome.io/components/uart_tcp/) carries raw TCP bytes with one client

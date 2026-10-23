@@ -575,8 +575,11 @@ def check(config, contract, substitutions):
         assert config["api"]["reboot_timeout"].total_milliseconds == 0
         assert config["wifi"]["reboot_timeout"].total_milliseconds == 0
         assert any(item["platform"] == "esphome" for item in config["ota"])
-        assert "time" not in config
-        assert entity(config, "sensor", "mcu_uptime")["type"] == "seconds"
+        assert entity(config, "time", "ha_time")["platform"] == "homeassistant"
+        uptime = entity(config, "sensor", "mcu_uptime")
+        assert uptime["type"] == "timestamp"
+        assert uptime["device_class"] == "uptime"
+        assert str(uptime["time_id"]) == "ha_time"
         uart = entity(config, "uart", "serial_uart")
         assert (uart["tx_pin"]["number"], uart["rx_pin"]["number"]) == (1, 3)
         assert uart["baud_rate"] == int(substitutions.get("uart_baud_rate", 115200))

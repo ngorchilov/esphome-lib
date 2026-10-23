@@ -9,14 +9,7 @@ substitutions:
   tcp_port: 6638
 
 packages:
-  - !include
-    file: ../packages/boards/espressif/esp07.yaml
-    vars:
-      networking:
-        # Keep API and OTA defaults, including API reboot_timeout: 0s.
-        # Elapsed uptime needs no Home Assistant clock.
-        time:
-          source: none
+  - !include ../packages/boards/espressif/esp07.yaml
 
 uart:
   id: serial_uart
