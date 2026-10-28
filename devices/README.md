@@ -101,6 +101,48 @@ The BL0942 module's `energy` include object is forwarded unchanged; its serial d
 GPIO11, RX GPIO10, 4800 baud and a 30-second update interval. It accepts `tx_pin`, `rx_pin`,
 `baud_rate` and `update_interval`. Changing pin overrides requires matching physical wiring.
 
+## Tuya Thermostat 716
+
+This initial profile targets the discrete BK7231N on the main PCB and a separate Tuya MCU.
+The firmware dump confirms BK7231N and contains the same datapoint schema as the archived
+[Things Data Model](../data-models/tuya/things-data-model/tuya-thermostat-716.json).
+UART1 TX GPIO11/RX GPIO10 at 9600 baud is provisional until board tracing or MCU logs confirm it.
+
+```yaml
+substitutions:
+  name: room-thermostat
+  friendly_name: Room Thermostat
+  uart_baud_rate: 9600
+
+packages:
+  - url: https://github.com/ngorchilov/esphome-lib
+    ref: main
+    refresh: 0d
+    files:
+      - devices/tuya-thermostat-716.yaml
+```
+
+`uart_tx_pin`, `uart_rx_pin`, and `uart_baud_rate` are dashboard substitutions. The primary
+climate exposes Off/Heat and Schedule/Manual presets. It waits for MCU feedback and sends no
+restored climate settings at boot. Valve activity comes from read-only DP36, including heating
+reported while power is off. A template climate avoids ESPHome 2026.10's native Tuya climate
+writing to its `active_state` datapoint when Heat is selected.
+
+Temperature values use the cloud model's factor of 0.1. The advertised setpoint range is
+5–300 °C in 0.5 °C steps; upper/lower limit controls also retain the 300 °C cloud ceiling.
+These are provisional cloud ranges, not hardware-verified limits. Temperature Unit is treated
+as a display setting; verify whether changing it affects MCU wire values. Reported adjustment
+steps and the supported-features bitmask are diagnostic entities; they do not yet change entity
+availability or control steps dynamically.
+
+Protection switches, sensor mode, calibration, switching differential, temperatures, battery
+and fault diagnostics are included. Battery values outside 0–100 report unavailable. External
+Sensor Type Code remains read-only until its numeric mapping is known. External Temperature
+and Window Open are observations even though the model marks them writable. Weekly schedule,
+backlight/night-mode and towel-rail configuration are read-only raw hex diagnostics, disabled
+by default; editing these payloads requires captured MCU examples. The device uses `ha_time`
+for the MCU clock, so disabling the shared HA clock requires another clock with that ID.
+
 ## Shared Settings
 
 Both families inherit logger defaults. Set `substitutions.log_level` or your dashboard's `logger`

@@ -1,5 +1,13 @@
 # A known_failure must fail for its documented reason; unexpected success fails CI too.
 cases:
+  - id: thermostat-716
+    file: devices/tuya-thermostat-716.yaml
+    local_components: [tuya_product]
+  - id: thermostat-716-uart-override
+    file: devices/tuya-thermostat-716.yaml
+    substitutions: {uart_baud_rate: 115200}
+  - id: kickstart-bk7231n-tuya
+    file: kickstart/kickstart-bk7231n-tuya.yaml
   - id: esp07-serial-bridge
     file: devices/esp07-serial-bridge.yaml
     contract: serial-bridge

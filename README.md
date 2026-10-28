@@ -135,6 +135,7 @@ their own native entities rather than that relay API.
 | [Feyree Three-Phase EVSE](devices/evse-feyree-three-phase.yaml) | Realtek UART component; own datapoint meanings. |
 | [Pro Breeze Dehumidifier](devices/pro-breeze-dehumidifier.yaml) | ESP-07 serial replacement; fan interface. |
 | [JUMMICO Dehumidifier](devices/jummico-dehumidifier.yaml) | ESP-07 serial replacement; physical swing remains local-only. |
+| [Tuya Thermostat 716](devices/tuya-thermostat-716.yaml) | Discrete BK7231N, Tuya MCU; [provisional settings](devices/README.md#tuya-thermostat-716). |
 | [MELcutter](devices/melcutter.yaml) | External CN105 driver; [HA response script](devices/README.md#melcutter). |
 | [MELcutter V2](devices/melcutter-v2.yaml) | Native CN105 driver; different exposed capabilities. |
 | [SCHEEAIR Nova 100](devices/fan-scheeair-nova-100.yaml) | Tuya MCU fan. |

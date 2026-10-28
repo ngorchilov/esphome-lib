@@ -1,0 +1,6 @@
+substitutions:
+  name: kickstart-bk7231n-tuya
+  friendly_name: Kickstart BK7231N Tuya
+
+packages:
+  - !include ../packages/boards/beken/bk7231n-tuya.yaml

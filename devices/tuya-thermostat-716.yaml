@@ -1,0 +1,405 @@
+# Model #716: discrete BK7231N and a separate thermostat MCU.
+# Model e5vyik is also present in the stock firmware's stored schema.
+# TODO: Verify UART1 wiring and 9600 baud against the board/MCU traffic.
+# Cloud ranges are retained, including the 300 °C setpoint/limit ceiling.
+# DP23 is treated as a display unit; verify that wire temperatures stay in °C.
+# DP30/106/116 remain read-only hex diagnostics until raw payloads are verified.
+# DP114 has no sensor-type mapping; DP115 is observed temperature despite cloud rw.
+
+substitutions:
+  name: tuya-thermostat-716
+  friendly_name: Tuya Thermostat 716
+  uart_tx_pin: GPIO11
+  uart_rx_pin: GPIO10
+  uart_baud_rate: 9600
+
+packages:
+  - !include ../packages/boards/beken/bk7231n-tuya.yaml
+  - !include ../packages/modules/tuya-product.yaml
+
+uart:
+  id: tuya_uart
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
+  baud_rate: ${uart_baud_rate}
+  rx_buffer_size: 1024
+
+tuya:
+  id: thermostat_mcu
+  uart_id: tuya_uart
+  time_id: ha_time
+  on_datapoint_update:
+    - sensor_datapoint: 1
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            id(thermostat).set_mode(x ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_OFF);
+            id(thermostat).publish_state();
+        - script.execute: thermostat_update_action
+
+    - sensor_datapoint: 2
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            if (x > 1) return;
+            id(thermostat).set_custom_preset(x == 0 ? "Schedule" : "Manual");
+            id(thermostat).publish_state();
+
+    - sensor_datapoint: 16
+      datapoint_type: int
+      then:
+        - climate.template.publish:
+            id: thermostat
+            target_temperature: !lambda return x * 0.1f;
+
+    - sensor_datapoint: 36
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            if (x > 1) {
+              id(thermostat_valve_open).invalidate_state();
+              return;
+            }
+            id(thermostat_valve_open).publish_state(x == 1);
+        - script.execute: thermostat_update_action
+
+    - sensor_datapoint: 45
+      datapoint_type: bitmask
+      then:
+        - lambda: |-
+            id(thermostat_internal_sensor_fault).publish_state((x & 0x01) != 0);
+            id(thermostat_external_sensor_fault).publish_state((x & 0x02) != 0);
+            id(thermostat_low_battery).publish_state((x & 0x04) != 0);
+
+    - sensor_datapoint: 101
+      datapoint_type: uint
+      then:
+        # The description defines feature bits, despite typeSpec.scale being 1.
+        - text_sensor.template.publish:
+            id: thermostat_supported_features
+            state: !lambda return std::to_string(x);
+
+# Native tuya climate in ESPHome 2026.10 writes its active_state DP on HEAT.
+# DP36 is read-only. This facade writes only DP1/2/16 and waits for MCU feedback.
+climate:
+  - platform: template
+    name: None
+    id: thermostat
+    sensor: thermostat_temperature
+    supports_action: true
+    supported_modes: ['OFF', HEAT]
+    custom_presets: [Schedule, Manual]
+    optimistic: false
+    restore_mode: NO_RESTORE
+    visual:
+      min_temperature: 5
+      max_temperature: 300
+      temperature_step:
+        target_temperature: 0.5
+        current_temperature: 0.1
+    set_mode_action:
+      - lambda: |-
+          if (x == climate::CLIMATE_MODE_OFF || x == climate::CLIMATE_MODE_HEAT) {
+            id(thermostat_mcu).set_boolean_datapoint_value(1, x == climate::CLIMATE_MODE_HEAT);
+          }
+    set_custom_preset_action:
+      - lambda: |-
+          if (x == "Schedule") {
+            id(thermostat_mcu).set_enum_datapoint_value(2, 0);
+          } else if (x == "Manual") {
+            id(thermostat_mcu).set_enum_datapoint_value(2, 1);
+          }
+    set_target_temperature_action:
+      - lambda: |-
+          if (!std::isfinite(x) || x < 5.0f || x > 300.0f) return;
+          id(thermostat_mcu).set_integer_datapoint_value(16, std::lround(x * 2.0f) * 5);
+
+script:
+  - id: thermostat_update_action
+    then:
+      - lambda: |-
+          if (!id(thermostat_valve_open).has_state()) return;
+          // Report actual valve activity, including frost protection while power is off.
+          id(thermostat).action = id(thermostat_valve_open).state
+              ? climate::CLIMATE_ACTION_HEATING
+              : (id(thermostat).mode == climate::CLIMATE_MODE_OFF
+                  ? climate::CLIMATE_ACTION_OFF : climate::CLIMATE_ACTION_IDLE);
+          id(thermostat).publish_state();
+
+switch:
+  - platform: tuya
+    name: Open Window Detection
+    id: thermostat_window_detection
+    entity_category: config
+    tuya_id: thermostat_mcu
+    switch_datapoint: 8
+
+  - platform: tuya
+    name: Frost Protection
+    id: thermostat_frost_protection
+    entity_category: config
+    tuya_id: thermostat_mcu
+    switch_datapoint: 10
+
+  - platform: tuya
+    name: Child Lock
+    id: thermostat_child_lock
+    entity_category: config
+    tuya_id: thermostat_mcu
+    switch_datapoint: 40
+
+  - platform: tuya
+    name: Adaptive Heating
+    id: thermostat_adaptive_heating
+    entity_category: config
+    tuya_id: thermostat_mcu
+    switch_datapoint: 120
+
+select:
+  - platform: tuya
+    name: Temperature Unit
+    id: thermostat_temperature_unit
+    entity_category: config
+    tuya_id: thermostat_mcu
+    enum_datapoint: 23
+    options:
+      0: Celsius
+      1: Fahrenheit
+
+  - platform: tuya
+    name: Workday Configuration
+    id: thermostat_workdays
+    entity_category: config
+    tuya_id: thermostat_mcu
+    enum_datapoint: 31
+    options:
+      0: 5+2
+      1: 6+1
+      2: 7 Days
+
+  - platform: tuya
+    name: Sensor Mode
+    id: thermostat_sensor_mode
+    entity_category: config
+    tuya_id: thermostat_mcu
+    enum_datapoint: 113
+    options:
+      0: Internal
+      1: External
+      2: Both
+
+number:
+  - platform: tuya
+    name: Upper Temperature Limit
+    id: thermostat_upper_limit
+    entity_category: config
+    tuya_id: thermostat_mcu
+    number_datapoint: 19
+    unit_of_measurement: °C
+    device_class: temperature
+    min_value: 5
+    max_value: 300
+    step: 1
+    multiply: 10
+    mode: box
+
+  - platform: tuya
+    name: Lower Temperature Limit
+    id: thermostat_lower_limit
+    entity_category: config
+    tuya_id: thermostat_mcu
+    number_datapoint: 26
+    unit_of_measurement: °C
+    device_class: temperature
+    min_value: 5
+    max_value: 300
+    step: 1
+    multiply: 10
+    mode: box
+
+  - platform: tuya
+    name: Temperature Calibration
+    id: thermostat_calibration
+    entity_category: config
+    tuya_id: thermostat_mcu
+    number_datapoint: 109
+    unit_of_measurement: °C
+    device_class: temperature
+    min_value: -9.9
+    max_value: 9.9
+    step: 0.1
+    multiply: 10
+    mode: box
+
+  - platform: tuya
+    name: Switching Differential
+    id: thermostat_switching_differential
+    entity_category: config
+    tuya_id: thermostat_mcu
+    number_datapoint: 112
+    unit_of_measurement: °C
+    device_class: temperature
+    min_value: 0
+    max_value: 10
+    step: 0.1
+    multiply: 10
+    mode: box
+
+sensor:
+  - platform: tuya
+    name: Temperature
+    id: thermostat_temperature
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 24
+    unit_of_measurement: °C
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: tuya
+    name: External Temperature
+    id: thermostat_external_temperature
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 115
+    unit_of_measurement: °C
+    device_class: temperature
+    state_class: measurement
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: tuya
+    name: Battery Level
+    id: thermostat_battery
+    entity_category: diagnostic
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 107
+    unit_of_measurement: '%'
+    device_class: battery
+    state_class: measurement
+    accuracy_decimals: 0
+    filters:
+      # 101 means no battery, not a fully charged battery.
+      - lambda: |-
+          return x >= 0.0f && x <= 100.0f ? x : NAN;
+
+  - platform: tuya
+    name: Temperature Adjustment Step
+    id: thermostat_temperature_step
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 102
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: tuya
+    name: Temperature Calibration Step
+    id: thermostat_calibration_step
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 108
+    unit_of_measurement: °C
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.1
+
+  - platform: tuya
+    name: External Sensor Type Code
+    id: thermostat_external_sensor_type
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 114
+    accuracy_decimals: 0
+
+binary_sensor:
+  - platform: template
+    name: Valve Open
+    id: thermostat_valve_open
+    device_class: opening
+
+  - platform: tuya
+    name: Window Open
+    id: thermostat_window_open
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 121
+    device_class: window
+
+  - platform: tuya
+    name: Valve Graph State
+    id: thermostat_valve_graph_state
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 110
+    device_class: opening
+
+  - platform: template
+    name: Internal Sensor Fault
+    id: thermostat_internal_sensor_fault
+    entity_category: diagnostic
+    device_class: problem
+
+  - platform: template
+    name: External Sensor Fault
+    id: thermostat_external_sensor_fault
+    entity_category: diagnostic
+    device_class: problem
+
+  - platform: template
+    name: Low Battery
+    id: thermostat_low_battery
+    entity_category: diagnostic
+    device_class: battery
+
+text_sensor:
+  - platform: tuya
+    name: Model
+    id: thermostat_model
+    entity_category: diagnostic
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 105
+
+  - platform: tuya
+    name: Software Version
+    id: thermostat_software_version
+    entity_category: diagnostic
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 111
+
+  - platform: template
+    name: Supported Features Bitmask
+    id: thermostat_supported_features
+    entity_category: diagnostic
+    disabled_by_default: true
+    update_interval: never
+
+  - platform: tuya
+    name: Weekly Schedule Raw
+    id: thermostat_schedule_raw
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 30
+
+  - platform: tuya
+    name: Backlight Configuration Raw
+    id: thermostat_backlight_raw
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 106
+
+  - platform: tuya
+    name: Towel Rail Configuration Raw
+    id: thermostat_towel_raw
+    entity_category: diagnostic
+    disabled_by_default: true
+    tuya_id: thermostat_mcu
+    sensor_datapoint: 116

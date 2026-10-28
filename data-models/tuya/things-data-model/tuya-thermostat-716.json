@@ -1,0 +1,458 @@
+{
+  "modelId": "e5vyik",
+  "services": [
+    {
+      "actions": [],
+      "code": "",
+      "description": "",
+      "events": [],
+      "name": "Default Service",
+      "properties": [
+        {
+          "abilityId": 1,
+          "accessMode": "rw",
+          "code": "switch",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_power3"
+          },
+          "name": "Power",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 2,
+          "accessMode": "rw",
+          "code": "mode",
+          "description": "",
+          "extensions": {
+            "attribute": "128"
+          },
+          "name": "Operating Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "auto",
+              "manual"
+            ]
+          }
+        },
+        {
+          "abilityId": 8,
+          "accessMode": "rw",
+          "code": "window_check",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_shake",
+            "attribute": "1024"
+          },
+          "name": "Open Window Detection",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 10,
+          "accessMode": "rw",
+          "code": "frost",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-chushuang"
+          },
+          "name": "Frost Protection",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 16,
+          "accessMode": "rw",
+          "code": "temp_set",
+          "description": "Actual temperature multiplied by 10.",
+          "extensions": {
+            "iconName": "icon-dp_temp"
+          },
+          "name": "Target Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 3000,
+            "min": 50,
+            "scale": 1,
+            "step": 5,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 19,
+          "accessMode": "rw",
+          "code": "upper_temp",
+          "description": "Upper target temperature limit; actual temperature multiplied by 10.",
+          "extensions": {
+            "iconName": "icon-dp_c"
+          },
+          "name": "Upper Temperature Limit",
+          "typeSpec": {
+            "type": "value",
+            "max": 3000,
+            "min": 50,
+            "scale": 1,
+            "step": 10,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 23,
+          "accessMode": "rw",
+          "code": "temp_unit_convert",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_loop"
+          },
+          "name": "Temperature Unit",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "c",
+              "f"
+            ]
+          }
+        },
+        {
+          "abilityId": 24,
+          "accessMode": "ro",
+          "code": "temp_current",
+          "description": "Actual temperature multiplied by 10.",
+          "extensions": {
+            "iconName": "icon-wendu"
+          },
+          "name": "Current Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": -300,
+            "scale": 1,
+            "step": 1,
+            "unit": "℃"
+          }
+        },
+        {
+          "abilityId": 26,
+          "accessMode": "rw",
+          "code": "lower_temp",
+          "description": "Actual temperature multiplied by 10.",
+          "extensions": {
+            "iconName": "icon-dp_c"
+          },
+          "name": "Lower Temperature Limit",
+          "typeSpec": {
+            "type": "value",
+            "max": 3000,
+            "min": 50,
+            "scale": 1,
+            "step": 10,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 30,
+          "accessMode": "rw",
+          "code": "week_program3",
+          "description": "Each period uses bytes 1–2 for time and bytes 3–4 for temperature. Six periods; defaults: 06:00 20°C, 08:00 15°C, 11:30 15°C, 13:30 15°C, 17:00 22°C, 22:00 15°C. Each period occupies 4 bytes. Multiply temperatures with decimal places by 10 when transmitting; transmit integer temperatures unchanged. Example: 06:00 35.0 is sent as 06 00 01 5e. 6*4*2 = 48 bytes; a seven-day workday schedule uses 6*4 = 24 bytes.",
+          "extensions": {
+            "iconName": "icon-zhouchengxu"
+          },
+          "name": "Weekly Schedule (Workdays)",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 31,
+          "accessMode": "rw",
+          "code": "work_days",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-zhouchengxu"
+          },
+          "name": "Workday Configuration",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "5_2",
+              "6_1",
+              "7"
+            ]
+          }
+        },
+        {
+          "abilityId": 36,
+          "accessMode": "ro",
+          "code": "valve_state",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-tcl_function_vs2"
+          },
+          "name": "Valve State",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "close",
+              "open"
+            ]
+          }
+        },
+        {
+          "abilityId": 40,
+          "accessMode": "rw",
+          "code": "child_lock",
+          "description": "",
+          "extensions": {
+            "iconName": "icon-dp_lock"
+          },
+          "name": "Child Lock",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 45,
+          "accessMode": "ro",
+          "code": "fault",
+          "description": "e1: Internal sensor temperature abnormal.\ne2: External sensor temperature abnormal.\ne3: Low battery; replace the batteries promptly.",
+          "extensions": {
+            "iconName": "icon-dp_notice",
+            "scope": "fault"
+          },
+          "name": "Fault Alarm",
+          "typeSpec": {
+            "type": "bitmap",
+            "label": [
+              "e1",
+              "e2",
+              "e3"
+            ],
+            "maxlen": 3
+          }
+        },
+        {
+          "abilityId": 101,
+          "accessMode": "ro",
+          "code": "support_features",
+          "description": "Supported device features; each bit indicates support. bit0: Weekly programming; bit1: Daily programming; bit2: Towel rail; bit3: Timer; bit4: Power consumption statistics; bit5: Temperature unit conversion; bit6: Battery; bit7: Key card; bit8: Frost protection; bit9: Air outlet temperature; bit10: Wi-Fi; bit11: Night mode; bit12: Temperature calibration.",
+          "name": "Supported Features",
+          "typeSpec": {
+            "type": "value",
+            "max": 2147483647,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 102,
+          "accessMode": "ro",
+          "code": "temp_adjust_step",
+          "description": "Target temperature adjustment step multiplied by 10. A value of 5 means a step of 0.5.",
+          "name": "Temperature Adjustment Step",
+          "typeSpec": {
+            "type": "value",
+            "max": 50,
+            "min": 1,
+            "scale": 1,
+            "step": 5,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 105,
+          "accessMode": "ro",
+          "code": "mfg_model",
+          "description": "",
+          "name": "Model",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 106,
+          "accessMode": "rw",
+          "code": "light_mode",
+          "description": "Bytes 0–1: Backlight fully off start time, in minutes since 00:00.\nBytes 2–3: Backlight fully off end time, in minutes since 00:00.\nBytes 4–5: Delay between screen off and night mode activation, in seconds.\nByte 6: Backlight brightness between screen off and night mode activation, 1–100.\nByte 7: Whether night mode is enabled.",
+          "name": "Backlight Off Configuration",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 107,
+          "accessMode": "ro",
+          "code": "battery_percent",
+          "description": "Values from 0 to 100 are valid; values outside this range indicate no battery.",
+          "name": "Battery Level",
+          "typeSpec": {
+            "type": "value",
+            "max": 101,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": "%"
+          }
+        },
+        {
+          "abilityId": 108,
+          "accessMode": "ro",
+          "code": "temp_calib_step",
+          "description": "A value of 1 means an adjustment step of 0.1.",
+          "name": "Temperature Calibration Step",
+          "typeSpec": {
+            "type": "value",
+            "max": 50,
+            "min": 1,
+            "scale": 1,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 109,
+          "accessMode": "rw",
+          "code": "temp_calib",
+          "description": "Temperature calibration value; a value of 1 means 0.1.",
+          "name": "Temperature Calibration",
+          "typeSpec": {
+            "type": "value",
+            "max": 99,
+            "min": -99,
+            "scale": 1,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 110,
+          "accessMode": "ro",
+          "code": "graph_valve_state",
+          "description": "Valve state used only for chart display.",
+          "extensions": {
+            "scope": "",
+            "trigger": "direct"
+          },
+          "name": "Valve State",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 111,
+          "accessMode": "ro",
+          "code": "soft_version",
+          "description": "",
+          "name": "Software Version",
+          "typeSpec": {
+            "type": "string",
+            "maxlen": 255
+          }
+        },
+        {
+          "abilityId": 112,
+          "accessMode": "rw",
+          "code": "switch_diff",
+          "description": "Switching differential.",
+          "name": "Switching Differential",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 1,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 113,
+          "accessMode": "rw",
+          "code": "sensor_type",
+          "description": "",
+          "name": "Sensor Mode",
+          "typeSpec": {
+            "type": "enum",
+            "range": [
+              "IN",
+              "OUT",
+              "ALL"
+            ]
+          }
+        },
+        {
+          "abilityId": 114,
+          "accessMode": "rw",
+          "code": "floor_sensor_type",
+          "description": "",
+          "name": "External Sensor Type",
+          "typeSpec": {
+            "type": "value",
+            "max": 100,
+            "min": 0,
+            "scale": 0,
+            "step": 1,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 115,
+          "accessMode": "rw",
+          "code": "floor_temp",
+          "description": "",
+          "name": "External Sensor Temperature",
+          "typeSpec": {
+            "type": "value",
+            "max": 1000,
+            "min": -300,
+            "scale": 1,
+            "step": 10,
+            "unit": ""
+          }
+        },
+        {
+          "abilityId": 116,
+          "accessMode": "rw",
+          "code": "towel_config",
+          "description": "",
+          "name": "Towel Rail Timer Configuration",
+          "typeSpec": {
+            "type": "raw",
+            "maxlen": 128
+          }
+        },
+        {
+          "abilityId": 120,
+          "accessMode": "rw",
+          "code": "self_adaptive_heat",
+          "description": "0: Disable adaptive heating.\n1: Enable adaptive heating.",
+          "name": "Adaptive Heating",
+          "typeSpec": {
+            "type": "bool"
+          }
+        },
+        {
+          "abilityId": 121,
+          "accessMode": "rw",
+          "code": "window_state",
+          "description": "0: Window closed.\n1: Window open.",
+          "extensions": {
+            "scope": ""
+          },
+          "name": "Window State",
+          "typeSpec": {
+            "type": "bool"
+          }
+        }
+      ]
+    }
+  ]
+}

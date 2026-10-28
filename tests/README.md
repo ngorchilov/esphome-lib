@@ -113,6 +113,15 @@ requirements below the shared floor and reject numerically ordered future requir
 The RF receiver cases check byte-sized buffers on ESP32, ESP8266 and Beken, explicit overrides,
 both dry-relay consumers, and a disabled receiver with an intentionally invalid unused pin.
 
+The Model 716 thermostat cases validate the generic BK7231N Tuya board and a UART baud override.
+Its cloud-based profile still needs physical UART, range and feature verification. The host test
+executes the device's actual lambdas to check command datapoints, feedback ordering, read-only
+valve activity, fault bits, temperature scaling and the battery-absent sentinel:
+
+```sh
+python tests/thermostat_host_test.py
+```
+
 ## C++ And CI
 
 YAML configuration-only changes require config validation only. Compile firmware only after
